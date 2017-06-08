@@ -54,15 +54,19 @@ lean_cohomology :: lean_cohomology(std::string meshfile, uint32_t conductor_id, 
 	
 	t_gauss.tic();
 	// gmatrix<int64_t> gm(gaussmat);
+	std::cerr << "Rank : " << std::endl;
     gmatrix<int> gm(gaussmat);
-	
+	std::cerr << "Rank : " << std::endl;
 	// std::ofstream matrix_out;
 	// matrix_out.open("./output/matrix.txt");
 	// matrix_out << gm << std::endl;
 	// matrix_out.close();
 
-    gm=gm.transpose();
-
+    //gm=gm.transpose();
+std::cerr << "Rank : " << std::endl;
+    std::cerr << "Rank : " << gm.number_nonzero_rows() << std::endl;
+    std::cerr << "aaa  : " << gm.number_of_zero_rows() << std::endl;
+    std::cerr << "Det  : " << gm.determinant()         << std::endl;
     // gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
 	gmatrix<int> change_of_basis = gm.gaussElimination();
     std::cerr << "Rank : " << gm.number_nonzero_rows() << std::endl;
@@ -73,29 +77,36 @@ lean_cohomology :: lean_cohomology(std::string meshfile, uint32_t conductor_id, 
     // gm.write_to_file(sf1.c_str());
     // change_of_basis.write_to_file(sf2.c_str());
 	
-	std::vector<bool> gen_comb(n_lazy,false);
+	std::vector<int> gen_comb(n_lazy,0);
 	uint32_t n_ind_gens=0;
 	
-	for (uint32_t k=0; k<n_lazy; k++)
+	for (uint32_t k=0; k<n_lazy; ++k)
 	{
 		bool row_is_zero=true;
-		for (uint32_t j=0; j<n_lazy;j++)
+		std::vector<int> new_gen_comb = gen_comb;
+		for (uint32_t j=0; j<n_lazy;++j)
 		{
 			if (abs(gm.Mat(k,j)) > 1e-12)
 			{
 				row_is_zero=false;
 				break;
 			}
+			else if (abs(change_of_basis.Mat(j,k)) > 1e-12)
+			{
+				new_gen_comb[j]+= change_of_basis.Mat(j,k);
+			} 
 		}
 		
 		if (row_is_zero)
 		{
 			// std::cout << "found true generator" << std::endl;
 			n_ind_gens++;
-			gen_comb[k]=true;
+			gen_comb=std::move(new_gen_comb);
 		}
 		
 	}
+
+
 	
 	t_gauss.toc();
 	t_lean.toc();
@@ -103,20 +114,30 @@ lean_cohomology :: lean_cohomology(std::string meshfile, uint32_t conductor_id, 
 	std::cout << "Computing basis of null space of l.n. matrix took: " << t_gauss << " s" << std::endl;
 	std::cout << "Lean cohomology computation took: " << t_lean << " s" << std::endl;
 	
-	
-	// std::ofstream h1_final;
-	// h1_final.open("./output/h1_final.txt");
+	t_lean.tic();
+	std::ofstream h1_final;
+	h1_final.open("./h1_final.txt");
 
-	// for (uint32_t ee=0; ee<edges_size(); ee++)
-	// {
-		// for (auto gg : HomoCoHomo.first[ee])
-		// {
-			// if (gen_comb[abs(gg)]==true)
-				// h1_final << print_edge(abs(gg),ee,!signbit(gg),0,255,0);
-		// }
-	// }
+	for (uint32_t ee=0; ee<edges_size(); ++ee)
+	{
+		int final_coeff = 0;
+		for (auto gg : HomoCoHomo.first[ee])
+		{
+			if (gen_comb[abs(gg)]>0)
+				final_coeff += gen_comb[abs(gg)];
+			else if (gen_comb[abs(gg)]>0)
+				final_coeff -= gen_comb[abs(gg)];			
+		}
+		if (final_coeff != 0)
+			h1_final << abs(*_etn_list[ee].begin()) << " " 
+				 << abs(*_etn_list[ee].rbegin()) << " " << final_coeff << std::endl;
+		//h1_final << print_edge(abs(gg),ee,!signbit(gg),0,255,0);
+	}
 	
-	// h1_final.close();
+	h1_final.close();
+	t_lean.toc();
+	
+	std::cout << "Output of the final H^1 basis to file took: " << t_lean << " s" << std::endl;
 }
 
 

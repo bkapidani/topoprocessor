@@ -198,7 +198,7 @@ template <typename T>
 gmatrix<T> gmatrix<T>::transpose()
 {
     std::vector< std::vector<T> > newMatrix;
-    for ( size_t i = 0 ; i != this->mat[0].size(); ++i )
+    for ( size_t i = 0 ; i != this->mat.size(); ++i )
     {
         std::vector<T> v;
         for ( size_t j = 0 ; j != this->mat.size() ; ++j )
