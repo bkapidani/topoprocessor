@@ -116,10 +116,13 @@ lean_cohomology :: lean_cohomology(std::string meshfile, uint32_t conductor_id, 
 		int final_coeff = 0;
 		for (auto gg : HomoCoHomo.first[ee])
 		{
-			if (gen_comb[abs(gg)]>0)
-				final_coeff += gen_comb[abs(gg)];
-			else if (gen_comb[abs(gg)]>0)
-				final_coeff -= gen_comb[abs(gg)];
+			if (gen_comb[abs(gg)] != 0)
+			{
+				if (gg > 0)
+					final_coeff += gen_comb[abs(gg)];
+				else if (gg < 0)
+					final_coeff -= gen_comb[abs(gg)];
+			}
 		}
 		if (final_coeff != 0)
 			h1_final << abs(*_etn_list[ee].begin()) << " " 
