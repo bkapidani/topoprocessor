@@ -54,19 +54,13 @@ lean_cohomology :: lean_cohomology(std::string meshfile, uint32_t conductor_id, 
 	
 	t_gauss.tic();
 	// gmatrix<int64_t> gm(gaussmat);
-	std::cerr << "Rank : " << std::endl;
     gmatrix<int> gm(gaussmat);
-	std::cerr << "Rank : " << std::endl;
 	// std::ofstream matrix_out;
 	// matrix_out.open("./output/matrix.txt");
 	// matrix_out << gm << std::endl;
 	// matrix_out.close();
 
     //gm=gm.transpose();
-std::cerr << "Rank : " << std::endl;
-    std::cerr << "Rank : " << gm.number_nonzero_rows() << std::endl;
-    std::cerr << "aaa  : " << gm.number_of_zero_rows() << std::endl;
-    std::cerr << "Det  : " << gm.determinant()         << std::endl;
     // gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
 	gmatrix<int> change_of_basis = gm.gaussElimination();
     std::cerr << "Rank : " << gm.number_nonzero_rows() << std::endl;
@@ -94,7 +88,8 @@ std::cerr << "Rank : " << std::endl;
 			else if (abs(change_of_basis.Mat(j,k)) > 1e-12)
 			{
 				new_gen_comb[j]+= change_of_basis.Mat(j,k);
-			} 
+				std::cout << new_gen_comb[j] << std::endl;
+			}
 		}
 		
 		if (row_is_zero)
@@ -106,8 +101,6 @@ std::cerr << "Rank : " << std::endl;
 		
 	}
 
-
-	
 	t_gauss.toc();
 	t_lean.toc();
 	
@@ -126,7 +119,7 @@ std::cerr << "Rank : " << std::endl;
 			if (gen_comb[abs(gg)]>0)
 				final_coeff += gen_comb[abs(gg)];
 			else if (gen_comb[abs(gg)]>0)
-				final_coeff -= gen_comb[abs(gg)];			
+				final_coeff -= gen_comb[abs(gg)];
 		}
 		if (final_coeff != 0)
 			h1_final << abs(*_etn_list[ee].begin()) << " " 
