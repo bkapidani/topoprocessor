@@ -869,7 +869,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	
 	std::cout << " * * * Reading GMSH format mesh * * * ";
 	std::cout << std::endl;
-	// std::ofstream os("netgen_version.mesh");
+	std::ofstream os("netgen_version.mesh");
 	tctot.tic();
 	/************************ Read useless stuff ************************/
 
@@ -883,7 +883,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	char *endptr;
 	
 	lines = strtot<uint32_t>(data, &endptr);
-	// os << lines << std::endl;
+	os << lines << std::endl;
 	auto dummy = mf.get_line();
 	// pts.reserve(lines);
 	
@@ -899,7 +899,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 
 		auto t = parser::read_point_line<double>(endptr, &endptr);
 		
-		// os << std::get<0>(t) << " " << std::get<1>(t) << " " << std::get<2>(t) << std::endl;
+		os << std::get<0>(t) << " " << std::get<1>(t) << " " << std::get<2>(t) << std::endl;
 		
 		std::vector<double> point = { std::get<0>(t),std::get<1>(t),std::get<2>(t) };		
 		pts.push_back(point);
@@ -923,7 +923,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	linecount = 0;
 	const char *new_data = mf.mem();
 	lines = strtot<uint32_t>(new_data, &endptr);
-	// os << lines << std::endl;
+	os << lines << std::endl;
 
 	std::vector< tm_tuple > temp_tet;
 	std::vector< surface_type > temp_surf_tri;
@@ -972,7 +972,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 				// std::cout << d << " ";
 				d = conductor_id;
 			}
-			// os << d << " " << p0+1 << " " << p1+1 << " " << p2+1 << " " << p3+1 << std::endl;
+			os << d << " " << p0+1 << " " << p1+1 << " " << p2+1 << " " << p3+1 << std::endl;
 			
 			auto tuple = std::make_tuple(volume_type(p0, p1, p2, p3), d);
 			temp_tet.push_back( tuple );
@@ -996,7 +996,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	
 	std::cout << "Reading elements: " << linecount;
 	std::cout << "/" << lines  << " - " << tc << " seconds" << std::endl;
-	// os << num_of_tets << std::endl;
+	os << num_of_tets << std::endl;
 	
 	/************************ Sort ************************/
 	std::cout << "Sorting data...";
@@ -1229,7 +1229,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	linecount = 0;
 	// auto num_of_tets=lines;
 	// lines = strtot<uint32_t>(endptr, &endptr);
-	// os << temp_surf_tri.size() << std::endl;
+	os << temp_surf_tri.size() << std::endl;
 	tc.tic();
 	while (linecount < temp_surf_tri.size())
 	{
@@ -1254,7 +1254,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 		uint32_t       p2( std::get<2>(t) );
 		uint32_t       bid( temp_surf_lab[linecount]);
 		
-		// os << bid << " " << p0+1 << " " << p1+1 << " " << p2+1 << std::endl;
+		os << bid << " " << p0+1 << " " << p1+1 << " " << p2+1 << std::endl;
 		
 		surface_type   tri( p0, p1, p2 );
 		
@@ -1267,7 +1267,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 		linecount++;
 	}
 	
-	// os.close();
+	os.close();
 	
 	tc.toc();
 	
