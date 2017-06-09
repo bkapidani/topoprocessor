@@ -28,6 +28,7 @@
 const long double PI = 3.141592653589793238L;
 
 
+const std::runtime_error 							cond_bnd_error(std::string("ERROR: Conductor on domain boundary!"));
 
 namespace parser {
 
@@ -59,7 +60,74 @@ read_tetrahedron_line(const char *str, char **endptr)
     
     return std::make_tuple(t1, t2-1, t3-1, t4-1, t5-1);
 }
+
+template<typename T>
+std::tuple<T, T, T, T, T, T>
+read_element_line(const char *str, char **endptr)
+{
+    T t0, t1, t2, t3, t4, t5;
+	
+	// std::ofstream os;
+	// os.open("./debug/parser_tets.dat", std::ios::out | std::ios::app );
     
+	t0 = strtot<T>(str, endptr);
+    t1 = strtot<T>(*endptr, endptr);
+	
+	if (t1 == 4) //tetrehedron
+	{
+		t0 = strtot<T>(*endptr, endptr);
+		t0 = strtot<T>(*endptr, endptr);
+		
+		t0 = t1;
+		t1 = strtot<T>(*endptr, endptr);
+		t2 = strtot<T>(*endptr, endptr);
+		t3 = strtot<T>(*endptr, endptr);
+		t4 = strtot<T>(*endptr, endptr);
+		t5 = strtot<T>(*endptr, endptr);
+		
+		
+		// os << t0 << " " << t1 << " " << t2 << " " << t3 << " " << t4 << " " << t5 << std::endl;  
+	}
+	else if (t1 == 2) //triangle
+	{
+		t0 = strtot<T>(*endptr, endptr);
+		t0 = strtot<T>(*endptr, endptr);
+		
+		t0 = t1;
+		t1 = strtot<T>(*endptr, endptr);
+		t2 = strtot<T>(*endptr, endptr);
+		t3 = strtot<T>(*endptr, endptr);
+		t4 = strtot<T>(*endptr, endptr);
+		t5 = 1;
+	}
+	else if (t1 == 1) //physical line
+	{
+		t0 = t1;
+		T n_of_tags = strtot<T>(*endptr, endptr);
+		for (size_t k = 0; k < n_of_tags; k++)
+		{
+			T t_token = strtot<T>(*endptr, endptr);
+			if (k==0)
+			{
+				t1 = t_token;
+			}
+		}
+		
+		t2 = strtot<T>(*endptr, endptr);
+		t3 = strtot<T>(*endptr, endptr);
+		t4 = 1;
+		t5 = 1;
+	}	
+	else
+	{
+		t0 = t1 = 0;
+		t2 = t3 = t4 = t5 = 1;
+	}
+    
+	// os.close();
+    return std::make_tuple(t0, t1, t2-1, t3-1, t4-1, t5-1);
+}
+
 template<typename T>
 std::tuple<T, T, T, T>
 read_triangle_line(const char *str, char **endptr)
@@ -101,7 +169,7 @@ using sm_tuple 				= std::tuple< surface_type, uint32_t >;
 class lean_cohomology
 {	
 	public:
-		lean_cohomology(std::string ,uint32_t, uint32_t);
+		lean_cohomology(std::string , std::string, uint32_t, uint32_t);
 		bool 									ESTT(std::vector<std::vector<int>>&);
 		size_t 									volumes_size() { return volumes.size(); }
 		size_t 									surfaces_size() { return surfaces.size(); }
@@ -145,7 +213,15 @@ class lean_cohomology
 		std::vector<cluster_list>  					_ftv_list;
 		std::vector<cluster_list> 					_vtf_list;
 		
+		
+		void MyThrow(const std::runtime_error& e)
+		{
+			std::cout << "Input file error: " << e.what() << std::endl;
+			throw e;
+		}
+
 		bool 										read_mesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
+		bool 										read_gmesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
 		void 										unique(std::vector<label_edge_type>&, std::vector<uint32_t>&);
 		void 										unique(std::vector<label_surface_type>&, std::vector<uint32_t>&);	
 		pair<uint32_t,sgnint32_t<int32_t> > 		check_boundary(uint32_t , const std::vector<bool>& );

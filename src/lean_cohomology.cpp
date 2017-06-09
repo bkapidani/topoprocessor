@@ -1,7 +1,7 @@
 //file lean_cohomology.cpp
 #include "lean_cohomology.hpp"
 
-lean_cohomology :: lean_cohomology(std::string meshfile, uint32_t conductor_id, uint32_t insulator_id)
+lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uint32_t conductor_id, uint32_t insulator_id)
 	: insulator_id(insulator_id), conductor_id(conductor_id)
 {
 	timecounter t_read, t_dk, t_hdk, t_estt, t_gauss, t_lean;
@@ -9,7 +9,10 @@ lean_cohomology :: lean_cohomology(std::string meshfile, uint32_t conductor_id, 
 	std::vector<uint32_t> intersurface, physical_nodes, physical_edges;
 	f2d=e2d=n2d=0;	
 	t_read.tic();
-    read_mesh(meshfile,intersurface,physical_edges,physical_nodes);
+	if (mesher == "netgen")
+		read_mesh(meshfile,intersurface,physical_edges,physical_nodes);
+	else if (mesher == "gmsh")
+		read_gmesh(meshfile,intersurface,physical_edges,physical_nodes);
 	t_read.toc();
 	std::cout << "Loading complex took: " << t_read << " s" << std::endl;
 
@@ -55,10 +58,10 @@ lean_cohomology :: lean_cohomology(std::string meshfile, uint32_t conductor_id, 
 	t_gauss.tic();
 	// gmatrix<int64_t> gm(gaussmat);
     gmatrix<int> gm(gaussmat);
-	// std::ofstream matrix_out;
-	// matrix_out.open("./output/matrix.txt");
-	// matrix_out << gm << std::endl;
-	// matrix_out.close();
+	std::ofstream matrix_out;
+	matrix_out.open("./ln_matrix.txt");
+	matrix_out << gm << std::endl;
+	matrix_out.close();
 
     //gm=gm.transpose();
     // gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
@@ -88,7 +91,7 @@ lean_cohomology :: lean_cohomology(std::string meshfile, uint32_t conductor_id, 
 			else if (abs(change_of_basis.Mat(j,k)) > 1e-12)
 			{
 				new_gen_comb[j]+= change_of_basis.Mat(j,k);
-				std::cout << new_gen_comb[j] << std::endl;
+				// std::cout << new_gen_comb[j] << std::endl;
 			}
 		}
 		
@@ -717,15 +720,16 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 				auto vol1= abs(*vols.begin());
 				if (domains[vol1] == conductor_id)
 				{
-					std::cout << "Possibile?" << std::endl;
-					intersurface[k]++;
-					for (auto ee : _fte_list[k])
-					{
-						if (!physical_edges[abs(ee)])
-							e2d++;
-						physical_edges[abs(ee)]++;
-					}
-					f2d++;
+					const std::runtime_error 	cond_bnd_error(std::string(" conductor on domain boundary!"));
+					MyThrow(cond_bnd_error);
+					// intersurface[k]++;
+					// for (auto ee : _fte_list[k])
+					// {
+						// if (!physical_edges[abs(ee)])
+							// e2d++;
+						// physical_edges[abs(ee)]++;
+					// }
+					// f2d++;
 				}
 				break;
 			}
@@ -780,7 +784,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	
 	/************************ Read boundary surfaces ************************/
 	linecount = 0;
-	auto num_of_tets=lines;
+	// auto num_of_tets=lines;
 	lines = strtot<uint32_t>(endptr, &endptr);
 	
 	tc.tic();
@@ -847,6 +851,455 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	
 	return true;
 }
+
+bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uint32_t>& intersurface, std::vector<uint32_t>& physical_edges, std::vector<uint32_t>& physical_nodes)
+{	
+	timecounter tc, tctot;
+	
+	/* Open file */
+	if (_filename.size() == 0)
+	{
+		std::cout << "Invalid mesh file name" << std::endl;
+		return false;
+	}
+	
+	uint32_t	lines, linecount;
+	
+	mapped_file mf(_filename);
+	
+	std::cout << " * * * Reading GMSH format mesh * * * ";
+	std::cout << std::endl;
+	// std::ofstream os("netgen_version.mesh");
+	tctot.tic();
+	/************************ Read useless stuff ************************/
+
+	for ( size_t i=0; i<4; i++)
+		auto t = mf.get_line();
+
+	/************************ Read points ************************/
+	linecount = 0;
+	
+	const char *data = mf.mem();
+	char *endptr;
+	
+	lines = strtot<uint32_t>(data, &endptr);
+	// os << lines << std::endl;
+	auto dummy = mf.get_line();
+	// pts.reserve(lines);
+	
+	tc.tic();
+	while (linecount < lines)
+	{
+		if ( (linecount%100000) == 0 )
+		{
+			std::cout << "Reading points: " << linecount;
+			std::cout << "/" << lines << "\r";
+			std::cout.flush();
+		}
+
+		auto t = parser::read_point_line<double>(endptr, &endptr);
+		
+		// os << std::get<0>(t) << " " << std::get<1>(t) << " " << std::get<2>(t) << std::endl;
+		
+		std::vector<double> point = { std::get<0>(t),std::get<1>(t),std::get<2>(t) };		
+		pts.push_back(point);
+		
+		/* Do something with that point */
+		dummy = mf.get_line();
+		linecount++;
+	}
+	tc.toc();
+	
+	std::cout << "Reading points: " << linecount;
+	std::cout << "/" << lines << " - " << tc << " seconds" << std::endl;
+	/************************ Read useless stuff ************************/
+	
+	for ( size_t i=0; i<2; i++)
+	{
+		auto t = mf.get_line();
+		// std::cout << t << std::endl;
+	}
+	/************************ Read elements ************************/
+	linecount = 0;
+	const char *new_data = mf.mem();
+	lines = strtot<uint32_t>(new_data, &endptr);
+	// os << lines << std::endl;
+
+	std::vector< tm_tuple > temp_tet;
+	std::vector< surface_type > temp_surf_tri;
+	std::vector< uint32_t > temp_surf_lab;
+	// std::vector< em_tuple > temp_bnd_edge; 
+	temp_tet.reserve(lines);
+	temp_surf_lab.reserve(lines);
+	temp_surf_tri.reserve(lines);
+	uint32_t num_of_tets=0;
+	tc.tic();
+	while (linecount < lines)
+	{
+		if ( (linecount%100000) == 0 )
+		{
+			std::cout << "Reading elements: " << linecount;
+			std::cout << "/" << lines << "\r";
+			std::cout.flush();
+		}
+
+		dummy = mf.get_line();
+		const char *new_data = mf.mem();
+		auto t = parser::read_element_line<uint32_t>(new_data, &endptr);
+		auto element_label = std::get<0>(t);
+		
+		if (element_label == 4)
+		{
+			// auto t = parser::read_tetrahedron_line<uint32_t>(endptr, &endptr);
+			
+			//auto t = parser::read_array<uint32_t, 5>(mf.get_line());
+			num_of_tets++;
+			std::vector<uint32_t> vectet(4);
+			vectet[0] = std::get<2>(t);
+			vectet[1] = std::get<3>(t);
+			vectet[2] = std::get<4>(t);
+			vectet[3] = std::get<5>(t);
+			std::sort(vectet.begin(),vectet.end());
+			
+			uint32_t       p0(vectet[0]);
+			uint32_t       p1(vectet[1]);
+			uint32_t       p2(vectet[2]);
+			uint32_t       p3(vectet[3]);
+			uint32_t       d(std::get<1>(t));
+			
+			if (d != insulator_id)
+			{
+				// std::cout << d << " ";
+				d = conductor_id;
+			}
+			// os << d << " " << p0+1 << " " << p1+1 << " " << p2+1 << " " << p3+1 << std::endl;
+			
+			auto tuple = std::make_tuple(volume_type(p0, p1, p2, p3), d);
+			temp_tet.push_back( tuple );
+		}
+		else if (element_label == 2)
+		{
+			// std::cout << "I'm here with a triangle!" << std::endl;
+			uint32_t       p0( std::get<2>(t) );
+			uint32_t       p1( std::get<3>(t) );
+			uint32_t       p2( std::get<4>(t) );
+			uint32_t       bid( std::get<1>(t) );
+			
+			surface_type   tri( p0, p1, p2 );
+			temp_surf_tri.push_back(tri);
+			temp_surf_lab.push_back(bid);
+		}
+		
+		linecount++;
+	}
+	tc.toc();
+	
+	std::cout << "Reading elements: " << linecount;
+	std::cout << "/" << lines  << " - " << tc << " seconds" << std::endl;
+	// os << num_of_tets << std::endl;
+	
+	/************************ Sort ************************/
+	std::cout << "Sorting data...";
+	std::cout.flush();
+	
+	tc.tic();
+	
+	/* sort tetrahedra, make unique and move them in geometry */
+		
+	struct {
+		bool operator()(const tm_tuple& t1, const tm_tuple& t2)
+		{
+			return (std::get<0>(t1) < std::get<0>(t2));
+		}
+	} mycomp;
+
+	std::sort(temp_tet.begin(), temp_tet.end(), mycomp);
+	
+	// _vtf_list.resize(lines);
+	uint32_t tot=0;	
+
+	
+	std::vector<label_surface_type> temp_tri0;
+	temp_tri0.resize(4*lines);
+	std::vector<int32_t> vol_signs;
+	
+	// vol_signs.reserve(lines);
+	// volumes.reserve(lines);
+	// domains.reserve(lines);
+	
+	for (auto tet : temp_tet)
+	{
+		auto t = std::get<0>(tet);
+		volumes.push_back(t);
+		
+		uint32_t       p0(std::get<0>(t));
+		uint32_t       p1(std::get<1>(t));
+		uint32_t       p2(std::get<2>(t));
+		uint32_t       p3(std::get<3>(t));
+
+		temp_tri0[tot]           = std::make_pair(surface_type(p0, p1, p2),tot);
+		temp_tri0[tot+lines]     = std::make_pair(surface_type(p0, p1, p3),tot+lines);
+		temp_tri0[tot+2*lines]   = std::make_pair(surface_type(p0, p2, p3),tot+2*lines);
+		temp_tri0[tot+3*lines]   = std::make_pair(surface_type(p1, p2, p3),tot+3*lines);
+		tot++;
+	
+		std::vector<double> v1 { pts[p1][0]-pts[p0][0], pts[p1][1]-pts[p0][1],pts[p1][2]-pts[p0][2] };
+		std::vector<double> v2 { pts[p2][0]-pts[p0][0], pts[p2][1]-pts[p0][1],pts[p2][2]-pts[p0][2] };
+		std::vector<double> v3 { pts[p3][0]-pts[p0][0], pts[p3][1]-pts[p0][1],pts[p3][2]-pts[p0][2] };		
+
+		int32_t sgn  = this->stddot(v1, stdcross(v2, v3))/double(6)>0? 1 : -1;
+		vol_signs.push_back(sgn);
+		domains.push_back(std::get<1>(tet));
+	}
+	std::vector<tm_tuple>().swap(temp_tet);
+	std::vector<uint32_t> labels(4*lines);
+	surfaces.reserve(4*lines);
+	unique(temp_tri0, labels); //this also fills the surfaces vector
+	std::vector<label_surface_type>().swap(temp_tri0);
+	
+	_ftv_list.resize(surfaces.size());
+	// _vtf_list.reserve(volumes.size());
+	
+	for (uint32_t k=0; k<lines; k++)
+	{
+		// std::cout << labels[k] << " " << _ftv_list.size() << std::endl;
+		sgnint32_t<int32_t> v1(k,-vol_signs[k]);
+		sgnint32_t<int32_t> v2(k,vol_signs[k]);
+		
+		_ftv_list[labels[k]].push_back(v1); 
+		_ftv_list[labels[k+lines]].push_back(v2); 
+		_ftv_list[labels[k+2*lines]].push_back(v1);
+		_ftv_list[labels[k+3*lines]].push_back(v2);		
+		
+		sgnint32_t<int32_t> f1(labels[k],-vol_signs[k]);
+		sgnint32_t<int32_t> f2(labels[k+lines],vol_signs[k]);
+		sgnint32_t<int32_t> f3(labels[k+2*lines],-vol_signs[k]);
+		sgnint32_t<int32_t> f4(labels[k+3*lines],vol_signs[k]);
+		
+		std::vector<sgnint32_t<int32_t>> dummy(4);		
+		_vtf_list.push_back(dummy);
+		_vtf_list[k][0] = f1; 
+		_vtf_list[k][1] = f2; 
+		_vtf_list[k][2] = f3;
+		_vtf_list[k][3] = f4;
+	}
+	
+	std::vector<uint32_t>().swap(labels);
+	lines = surfaces.size();
+	intersurface.resize(lines,0);
+	// _fte_list.resize(lines);
+	tot = 0;
+	std::vector<label_edge_type> temp_edge0(3*lines);
+	
+	for (auto t : surfaces)
+	{
+		uint32_t       p0(std::get<0>(t));
+		uint32_t       p1(std::get<1>(t));
+		uint32_t       p2(std::get<2>(t));
+
+		temp_edge0[tot]          =  std::make_pair(edge_type(p0, p1),tot);
+		temp_edge0[tot+lines]    =  std::make_pair(edge_type(p0, p2),tot+lines);
+		temp_edge0[tot+2*lines]  =  std::make_pair(edge_type(p1, p2),tot+2*lines);
+		tot++;
+	}
+	
+	std::vector<uint32_t> e_labels(3*lines);
+	unique(temp_edge0, e_labels);
+	std::vector<label_edge_type>().swap(temp_edge0);
+	_etf_list.resize(edges.size());
+	// _fte_list.reserve(surfaces.size());
+	// _etn_list.resize(edges.size());
+	physical_edges.resize(edges_size(),0);
+	
+	for (uint32_t k=0; k<lines; k++)
+	{
+		
+		sgnint32_t<int32_t> f1(k, 1);
+		sgnint32_t<int32_t> f2(k,-1);
+		sgnint32_t<int32_t> f3(k, 1);
+		
+		_etf_list[e_labels[k]].push_back(f1);
+		_etf_list[e_labels[k+lines]].push_back(f2); 
+		_etf_list[e_labels[k+2*lines]].push_back(f3);
+
+		// std::cout << labels[k] << " " << labels[k+lines] << " " << labels[k+2*lines] << std::endl;
+		
+		sgnint32_t<int32_t> e1(e_labels[k],1);
+		sgnint32_t<int32_t> e2(e_labels[k+lines],-1);
+		sgnint32_t<int32_t> e3(e_labels[k+2*lines],1);
+		
+		std::vector<sgnint32_t<int32_t>> dummy(3);		
+		_fte_list.push_back(dummy);
+		
+		_fte_list[k][0] = e1;
+		_fte_list[k][1] = e2;
+		_fte_list[k][2] = e3;
+		
+		auto vols = _ftv_list[k];
+		
+		switch (vols.size()) 
+		{
+			case 2: 
+			{
+				auto vol1= abs(*vols.begin());
+				auto vol2= abs(*(std::prev(vols.end())));
+				
+				if ((domains[vol1] == insulator_id && domains[vol2] == conductor_id) || 
+					(domains[vol1] == conductor_id && domains[vol2] == insulator_id))
+				{
+					intersurface[k]++;
+					for (auto ee : _fte_list[k])
+					{
+						if (!physical_edges[abs(ee)])
+							e2d++;
+						physical_edges[abs(ee)]++;
+					}
+					f2d++;
+				}			
+				break;
+			}
+			case 1:
+			{
+				auto vol1= abs(*vols.begin());
+				if (domains[vol1] == conductor_id)
+				{
+					const std::runtime_error 	cond_bnd_error(std::string(" conductor on domain boundary!"));
+					MyThrow(cond_bnd_error);
+					// intersurface[k]++;
+					// for (auto ee : _fte_list[k])
+					// {
+						// if (!physical_edges[abs(ee)])
+							// e2d++;
+						// physical_edges[abs(ee)]++;
+					// }
+					// f2d++;
+				}
+				break;
+			}
+			case 0:
+			{
+				throw std::invalid_argument("Conductor boundary cannot be on mesh boundary!");
+				break;
+			}
+		}	
+	}
+	
+	std::vector<uint32_t>().swap(e_labels);
+	_nte_list.resize(pts.size());
+	// _etn_list.reserve(edges.size());
+	physical_nodes.resize(pts.size(),0);
+	
+	for (uint32_t k = 0; k < edges.size(); k++)
+	{
+		auto t = edges[k];
+		
+		uint32_t       p0(std::get<0>(t));
+		uint32_t       p1(std::get<1>(t));
+		
+		sgnint32_t<int32_t> n1(p0,-1);
+		sgnint32_t<int32_t> n2(p1, 1);
+		
+		std::vector<sgnint32_t<int32_t>> dummy(2);		
+		_etn_list.push_back(dummy);
+		_etn_list[k][0] = n1;
+		_etn_list[k][1] = n2;
+		
+		sgnint32_t<int32_t> e1(k,-1);
+		sgnint32_t<int32_t> e2(k, 1);
+		
+		_nte_list[p0].push_back(e1);
+		_nte_list[p1].push_back(e2);
+		
+		if (physical_edges[k])
+		{
+			for (auto nn : _etn_list[k])
+			{
+				if (!physical_nodes[abs(nn)])
+					n2d++;
+				physical_nodes[abs(nn)]++;
+			}
+		}
+	}
+	
+	tc.toc();
+	
+	std::cout << "done - " << tc << " seconds" << std::endl;
+	
+	/************************ Read boundary surfaces ************************/
+	linecount = 0;
+	// auto num_of_tets=lines;
+	// lines = strtot<uint32_t>(endptr, &endptr);
+	// os << temp_surf_tri.size() << std::endl;
+	tc.tic();
+	while (linecount < temp_surf_tri.size())
+	{
+		/*if (ifs.fail())
+		{
+			std::cout << "Error while reading boundary surfaces" << std::endl;
+			return false;
+		}*/
+		
+		if ( (linecount%50000) == 0 )
+		{
+			std::cout << "Reading triangle: " << linecount;
+			std::cout << "/" << temp_surf_tri.size() << "\r";
+			std::cout.flush();
+		}
+		
+		auto t = temp_surf_tri[linecount];
+
+		
+		uint32_t       p0( std::get<0>(t) );
+		uint32_t       p1( std::get<1>(t) );
+		uint32_t       p2( std::get<2>(t) );
+		uint32_t       bid( temp_surf_lab[linecount]);
+		
+		// os << bid << " " << p0+1 << " " << p1+1 << " " << p2+1 << std::endl;
+		
+		surface_type   tri( p0, p1, p2 );
+		
+		if (!physical_surfaces[bid].size())
+			physical_surfaces[bid].resize(surfaces.size(),0);
+
+		auto itor = std::lower_bound(surfaces.begin(),surfaces.end(),tri);
+		physical_surfaces[bid][std::distance(surfaces.begin(),itor)]++;
+		
+		linecount++;
+	}
+	
+	// os.close();
+	
+	tc.toc();
+	
+	std::cout << "Reading triangle: " << linecount;
+	std::cout << "/" << temp_surf_tri.size()  << " - " << tc << " seconds"  << std::endl;
+	
+	tctot.toc();
+	// std::cout << cyan << "Total time spent in reading mesh: ";
+	// std::cout << tctot << " seconds" << nocolor << std::endl;
+	
+	// for (const auto& nn : _vtf_list)
+		// assert(nn.size() == 4);
+	
+	// for (const auto& nn : _ftv_list)
+		// assert(nn.size() == 2 || nn.size() == 1);
+	
+	// for (const auto& nn : _fte_list)
+		// assert(nn.size() == 3);
+	
+	// for (const auto& nn : _etf_list)
+	// {
+		// assert(nn.size() >= 2);
+	// }
+	
+	// for (const auto& nn : _nte_list)
+		// assert(nn.size() >= 3);
+	// for (const auto& nn : _etn_list)
+		// assert(nn.size() == 2);	
+	
+	return true;
+}
+
 
 /*const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: face_in_conductor(sgnint32_t<int32_t>  f) const
 {
