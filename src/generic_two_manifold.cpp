@@ -192,7 +192,13 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 	
 	// for (size_t i=0; i<h1_multithreading.size(); i++)
 		// h1_multithreading[i].join();
-	
+	std::ofstream os("homology_gens.txt", std::ofstream::out | std::ofstream::app);
+	for (uint32_t fff = 0; fff < vol_mesh->surfaces_size(); ++fff)
+	{
+		if (physical_surface[fff]>0)
+			os << vol_mesh->print_face(9,fff,true,160,160,160);
+	}
+	os.close();
 	this->Ngen=remaining_edges.size();
 	return std::make_pair(h1b,tc);
 }
@@ -200,7 +206,7 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32_t& ee)
 {
 	// n_gen++;
-	
+	std::ofstream os("homology_gens.txt", std::ofstream::out | std::ofstream::app);
 	auto ff = vol_mesh->etn(ee);
 	uint32_t u = abs(*(ff.begin()));
 	uint32_t v = abs(*(std::prev(ff.end())));
@@ -216,7 +222,7 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
 	p1_pushback_mutex.lock();
 	h1b[added_edge].push_back(n_gen);
 	p1_pushback_mutex.unlock();
-	// os << vol_mesh->print_edge(n_gen,added_edge,true,0,255,255);
+	os << vol_mesh->print_edge(n_gen,added_edge,true,0,255,255);
 	std::vector<uint32_t> HomologyEdges;
 	HomologyEdges.push_back(added_edge);
 	
@@ -310,7 +316,7 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
 			s_edge = added_edge;
 			t_edge = *HomologyEdges.begin();
 			HomologyEdges.insert(HomologyEdges.begin(),added_edge);
-			// os << vol_mesh->print_edge(n_gen,added_edge,coeff>0,0,255,255);
+			os << vol_mesh->print_edge(n_gen,added_edge,coeff>0,0,255,255);
 		}
 		else
 		{
@@ -321,7 +327,7 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
 			s_edge = HomologyEdges.back();
 			t_edge = added_edge;				
 			HomologyEdges.push_back(added_edge);
-			// os << vol_mesh->print_edge(n_gen,added_edge,coeff<0,0,255,255);
+			os << vol_mesh->print_edge(n_gen,added_edge,coeff<0,0,255,255);
 		}
 		
 		TwoSidedAlg(n_gen,s_edge,t_edge);
@@ -332,6 +338,7 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
 			s_edge = HomologyEdges.back();
 			t_edge = *HomologyEdges.begin();
 			TwoSidedAlg(n_gen,s_edge,t_edge);
+			
 			break;
 		}
 		
@@ -343,10 +350,12 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
 		added_edge_v=added_edge;
 		or_edge_v=or_edge;
 	}
+	os.close();
 }
 
 void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& this_edge, const uint32_t& next_edge)
 {
+	std::ofstream os("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
 	timecounter t_tc;
 	t_tc.tic();
 	// auto this_edge = *input.begin();
@@ -463,8 +472,8 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 		
 		t_tc.tic();
 		auto head = target;
-		// os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
-		// os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
+		os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
+		os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
 		
 		while (parent[head] != source)
 		{	
@@ -487,8 +496,8 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 		
 			head = parent[head];		
 			
-			// os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
-			// os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
+			os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
+			os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
 			
 		}
 		
@@ -511,9 +520,11 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 		}
 		
 		t_tc.toc();
+		
 		// std::cout << "Coefficient computation: " << t_tc << " s" << std::endl;
 	}
 	
+	os.close();
 	/*std::ofstream dbg;
 	if (n_gen != 1)
 		dbg.open("./output/net_currents.txt", std::ofstream::out | std::ofstream::app);
@@ -549,5 +560,5 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 		}
 	}
 	dbg.close();*/
-	// os.close();
+	
 }

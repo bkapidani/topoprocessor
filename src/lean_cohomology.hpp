@@ -34,6 +34,21 @@ namespace parser {
 
 template<typename T>
 std::tuple<T, T, T>
+read_gmsh_point_line(const char *str, char **endptr)
+{
+    T t0, t1, t2, t3;
+    
+	t0 = strtot<T>(str, endptr); 
+    t1 = strtot<T>(*endptr, endptr);
+    t2 = strtot<T>(*endptr, endptr);
+    t3 = strtot<T>(*endptr, endptr);
+    
+    //return std::make_tuple(t1/1000.0, t2/1000.0, t3/1000.0);
+    return std::make_tuple(t1, t2, t3);
+}
+
+template<typename T>
+std::tuple<T, T, T>
 read_point_line(const char *str, char **endptr)
 {
     T t1, t2, t3;
