@@ -29,8 +29,8 @@ lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uin
 	std::cout << "Computing h^1(dk) and thinned currents took: " << t_hdk << " s" << std::endl;		
 	
 	t_estt.tic();
-	std::vector<int> vg(n_lazy,0);
-	std::vector<std::vector<int>> gaussmat(n_lazy,vg);
+	std::vector<double> vg(n_lazy,0);
+	std::vector<std::vector<double>> gaussmat(n_lazy,vg);
 	if (!ESTT(gaussmat))
 		throw std::invalid_argument("Failed to complete ESTT routine!");
 	
@@ -57,90 +57,83 @@ lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uin
 	
 	t_gauss.tic();
 	// gmatrix<int64_t> gm(gaussmat);
-    gmatrix<int> gm(gaussmat);
+    gmatrix<double> gm(gaussmat);
 	std::ofstream matrix_out;
 	matrix_out.open("./ln_matrix.txt");
 	matrix_out << gm << std::endl;
 	matrix_out.close();
 
     //gm=gm.transpose();
-    // gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
-	gmatrix<int> change_of_basis = gm.gaussElimination();
+    gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
+	// gmatrix<int32_t> change_of_basis = gm.gaussElimination();
     std::cerr << "Rank : " << gm.number_nonzero_rows() << std::endl;
     std::cerr << "aaa  : " << gm.number_of_zero_rows() << std::endl;
     std::cerr << "Det  : " << gm.determinant()         << std::endl;
-	// std::string sf1("./xRuben/matrix_after_elimination.dat");
+	std::string sf1("./matrix_after_elimination.dat");
 	// std::string sf2("./xRuben/change_of_basis.dat");
-    // gm.write_to_file(sf1.c_str());
+    gm.write_to_file(sf1.c_str());
     // change_of_basis.write_to_file(sf2.c_str());
 	
-	std::vector<int> gen_comb(n_lazy,0);
+	std::vector<double> gen_comb(n_lazy,0);
 	uint32_t n_ind_gens=0;
 	
-	for (uint32_t k=0; k<n_lazy; ++k)
+	for (uint32_t k=gm.number_nonzero_rows(); k<n_lazy; ++k)
 	{
 		bool row_is_zero=true;
-		std::vector<int> new_gen_comb = gen_comb;
+		// std::vector<int> new_gen_comb = gen_comb;
 		for (uint32_t j=0; j<n_lazy;++j)
 		{
 			if (abs(gm.Mat(k,j)) > 1e-12)
 			{
 				row_is_zero=false;
+				std::cout << "Unexpected behaviour!" << std::endl;
 				break;
 			}
 			else if (abs(change_of_basis.Mat(j,k)) > 1e-12)
 			{
-				new_gen_comb[j]+= change_of_basis.Mat(j,k);
+				gen_comb[j]+= change_of_basis.Mat(j,k);
 				// std::cout << new_gen_comb[j] << std::endl;
 			}
 		}
 		
-		if (row_is_zero)
-		{
-			// std::cout << "found true generator" << std::endl;
-			n_ind_gens++;
-			gen_comb=std::move(new_gen_comb);
-		}
-		
+		// gen_comb=std::move(new_gen_comb);
 	}
 
 	t_gauss.toc();
-	t_lean.toc();
-	
 	std::cout << "Computing basis of null space of l.n. matrix took: " << t_gauss << " s" << std::endl;
-	std::cout << "Lean cohomology computation took: " << t_lean << " s" << std::endl;
-	
-	t_lean.tic();
-	std::ofstream h1_final;
+
+	std::ofstream h1_final, cuts_final;
 	h1_final.open("./h1_final.txt");
+	// cuts_final.open("./the_final_cut.txt");
 
 	for (uint32_t ee=0; ee<edges_size(); ++ee)
 	{
-		int final_coeff = 0;
-		for (auto gg : HomoCoHomo.first[ee])
+		double final_coeff = 0;
+		for (auto bb : vect_stt_coeffs[ee])
 		{
+			auto gg = bb.first;
 			if (gen_comb[abs(gg)] != 0)
-			{
-				if (gg > 0)
-					final_coeff += gen_comb[abs(gg)];
-				else if (gg < 0)
-					final_coeff -= gen_comb[abs(gg)];
-			}
+				final_coeff += double(bb.second)*gen_comb[abs(gg)];
 		}
 		if (final_coeff != 0)
+		{
 			h1_final << abs(*_etn_list[ee].begin()) << " " 
 				 << abs(*_etn_list[ee].rbegin()) << " " << final_coeff << std::endl;
-		//h1_final << print_edge(abs(gg),ee,!signbit(gg),0,255,0);
+			
+			// auto dual_face_vector = print_dual_face(1,ee,final_coeff>0,0,128+final_coeff,0);
+			// for (auto df : dual_face_vector)
+				// cuts_final << df;
+		}
 	}
 	
 	h1_final.close();
+	// cuts_final.close();
 	t_lean.toc();
-	
-	std::cout << "Output of the final H^1 basis to file took: " << t_lean << " s" << std::endl;
+	std::cout << "Lean cohomology computation took: " << t_lean << " s" << std::endl;	
 }
 
 
-bool lean_cohomology :: ESTT(std::vector<std::vector<int>>& gmat)
+bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
 {
 	std::vector<uint32_t> 										colour(pts.size()), p_queue;	
 	std::vector<bool> 											wired(edges.size(),false), in_stack(surfaces.size());
@@ -156,7 +149,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<int>>& gmat)
 	sgnint32_t<int32_t>  curr_n;
 
 	// std::ofstream os_dummy;
-	// os_dummy.open("./output/cuts.txt");
+	// os_dummy.open("cuts.txt");
 	// os_dummy.close();
 
 	
@@ -253,14 +246,9 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<int>>& gmat)
 			return false;
 		}
 	}
-	
-	// cout << endl << unchecked << endl;
 		
-	// if (nnz < pts.size())
-		// return false;
-	// else
+	this->vect_stt_coeffs = std::move(vect_stt_coeffs);
 
-	// std::cout << "Terminates!" << std::endl;
 	return true;
 }
 
@@ -287,13 +275,13 @@ pair<uint32_t,sgnint32_t<int32_t> > lean_cohomology :: check_boundary(uint32_t j
 	return std::make_pair(open,ff);
 }
 
-void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, std::vector<pair<uint32_t,sgnint32_t<int32_t>>>& cotree_stack, std::vector<bool>& in_stack, std::vector<std::vector<std::pair<uint16_t, int16_t>>>& vect_stt_coeffs, std::vector<std::vector<int>>& gmat)
+void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, std::vector<pair<uint32_t,sgnint32_t<int32_t>>>& cotree_stack, std::vector<bool>& in_stack, std::vector<std::vector<std::pair<uint16_t, int16_t>>>& vect_stt_coeffs, std::vector<std::vector<double>>& gmat)
 {
 	sgnint32_t<int32_t>  curr_e=cotree_stack[j].second;
 	uint32_t 			 curr_f=cotree_stack[j].first;
 	
 	// std::ofstream os;
-	// os.open("./output/cuts.txt", std::ofstream::out | std::ofstream::app);
+	// os.open("cuts.txt", std::ofstream::out | std::ofstream::app);
 
 	
 	std::vector<int16_t> sum(n_lazy,0);
@@ -328,7 +316,7 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, std
 	}
 
 	// std::ofstream dbg;
-	// dbg.open("./output/dbg.txt", std::ofstream::out | std::ofstream::app);
+	// dbg.open("dbg.txt", std::ofstream::out | std::ofstream::app);
 		
 	for (uint16_t gen=0; gen < n_lazy; gen++)
 	{

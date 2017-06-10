@@ -185,7 +185,7 @@ class lean_cohomology
 {	
 	public:
 		lean_cohomology(std::string , std::string, uint32_t, uint32_t);
-		bool 									ESTT(std::vector<std::vector<int>>&);
+		bool 									ESTT(std::vector<std::vector<double>>&);
 		size_t 									volumes_size() { return volumes.size(); }
 		size_t 									surfaces_size() { return surfaces.size(); }
 		size_t 									edges_size() { return edges.size(); }
@@ -213,6 +213,7 @@ class lean_cohomology
 		std::pair<h1_2d_basis,thinned_currents> 	HomoCoHomo;
 		uint32_t 									insulator_id, conductor_id, surface_id, n_lazy;
 		std::map<uint32_t,std::vector<uint32_t>> 	physical_surfaces;
+		std::vector<std::vector<std::pair<uint16_t, int16_t>>> 		vect_stt_coeffs;
 		std::vector<uint32_t> 						domains;
 		std::vector<volume_type> 					volumes;
 		std::vector<surface_type> 					surfaces;
@@ -245,7 +246,7 @@ class lean_cohomology
 		void 										set_boundary(uint32_t , const std::vector<bool>&, 
 																std::vector<pair<uint32_t,sgnint32_t<int32_t>>>&, 
 																std::vector<bool>&, std::vector<std::vector<std::pair<uint16_t, int16_t>>>&,
-																std::vector<std::vector<int>>& );
+																std::vector<std::vector<double>>& );
 };
 
 class generic_two_manifold
@@ -257,17 +258,19 @@ class generic_two_manifold
 		std::uint32_t Nodes() 			{ return this->n; }
 		std::uint32_t Edges() 			{ return this->e; }
 		std::uint32_t Faces() 			{ return this->f; }
-		std::map<uint32_t, std::vector<int16_t> > rel_abs_cohomology(const uint32_t& );
-		std::pair<h1_2d_basis,thinned_currents>   H_to_CoH(const std::vector<uint32_t>&, const std::vector<uint32_t>&, const std::vector<uint32_t>& );
+		std::map<uint32_t, std::vector<int16_t> > 	rel_abs_cohomology(const uint32_t& );
+		std::pair<h1_2d_basis,thinned_currents>   	H_to_CoH(const std::vector<uint32_t>&, const std::vector<uint32_t>&, const std::vector<uint32_t>& );
+		//std::vector<int> 							RetrieveCoH(const std::vector<int>& );
 		
 	private:
 		lean_cohomology* 				vol_mesh;
+		bool							debuggy=false;
 		h1_2d_basis 					h1b;
 		thinned_currents 				tc;
-		std::vector<bool>  				p_colour;
-		std::map<uint32_t,uint32_t> 	p_parent, p_paredge, p_distance;
+		std::vector<bool>  				p_colour, d_colour;
+		std::map<uint32_t,uint32_t> 	p_parent, p_paredge, p_distance, d_parent, d_paredge, d_distance;
 		std::mutex 						p1_pushback_mutex, p2_pushback_mutex;
-		std::vector<uint32_t> 			physical_surface, physical_edges;
+		std::vector<uint32_t> 			physical_surface, physical_edges, remaining_edges;
 		static const bool 				output_verbose = false;
 		uint32_t 						f,e,n;
 		uint16_t 						Ngen;

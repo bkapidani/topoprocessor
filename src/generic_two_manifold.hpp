@@ -32,7 +32,6 @@ using thinned_currents = std::vector<std::vector<int32_t>>;
 
 class generic_two_manifold
 {
-	
 	public:
 		typedef uint16_t handle_gen_index;
 		typedef uint16_t hole_gen_index;
@@ -46,7 +45,6 @@ class generic_two_manifold
 		std::uint32_t Faces() { return this->f; }
 		std::map<uint32_t, std::vector<int16_t> > rel_abs_cohomology(const uint32_t& );
 		std::pair<h1_2d_basis,thinned_currents>   H_to_CoH();
-{
 		
 	private:
 		lean_cohomology* vol_mesh;
@@ -67,5 +65,7 @@ class generic_two_manifold
 		std::map<uint32_t, std::set<sgnint32_t<int32_t> > > etn;	
 		std::map<uint32_t, std::set<sgnint32_t<int32_t> > > nte;
 		std::map<uint32_t, std::vector<double> > pts;
+		std::vector<bool>  				p_colour, d_colour;
+		std::map<uint32_t,uint32_t> 	p_parent, p_paredge, p_distance, d_parent, d_paredge, d_distance;
 		uint16_t Ngen, Nhandles;
 };

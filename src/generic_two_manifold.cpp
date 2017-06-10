@@ -20,7 +20,7 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 	std::vector<uint32_t> p_queue, d_queue;
 	
 	std::vector<bool>  				p_colour(this->vol_mesh->nodes_size(),false), d_colour(this->vol_mesh->surfaces_size(),false);
-	std::map<uint32_t,uint32_t> 	p_parent, p_paredge, p_distance;
+	std::map<uint32_t,uint32_t> 	p_parent, p_paredge, p_distance, d_parent, d_paredge, d_distance;
 	// std::map<uint32_t,uint32_t> 	t_parent, t_paredge;
 	// std::vector<bool>  							p_colour(this->vol_mesh->nodes_size(),false), d_colour(this->vol_mesh->surfaces_size(),false);
 	// std::vector<uint32_t> 						p_parent(this->vol_mesh->nodes_size()), p_paredge(this->vol_mesh->nodes_size());
@@ -128,7 +128,11 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 								d_colour[ff]=true;
 								// d_parent[ff]=qtop;
 
-								// d_paredge[ff]=ee;
+								// d_paredge[ff]=ee
+								
+								d_distance[ff]=d_distance[qtop]+1;
+								d_parent[ff]=qtop;
+								d_paredge[ff]=ee;
 
 								d_queue.push_back(ff);
 								cotree_edges[ee]=false;
@@ -174,9 +178,12 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 		this->p_parent=std::move(p_parent);
 		this->p_paredge=std::move(p_paredge);
 		this->p_distance=std::move(p_distance);
+		this->d_colour=std::move(d_colour);
+		this->d_parent=std::move(d_parent);
+		this->d_paredge=std::move(d_paredge);
+		this->d_distance=std::move(d_distance);
 		this->physical_edges=std::move(physical_edges);
-		this->physical_surface=std::move(physical_surface);
-		
+		this->physical_surface=std::move(physical_surface);		
 		
 		for (int32_t i=1; i <= remaining_edges.size(); i++)
 		{
@@ -192,14 +199,19 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 	
 	// for (size_t i=0; i<h1_multithreading.size(); i++)
 		// h1_multithreading[i].join();
-	std::ofstream os("homology_gens.txt", std::ofstream::out | std::ofstream::app);
-	for (uint32_t fff = 0; fff < vol_mesh->surfaces_size(); ++fff)
+	if (debuggy)
 	{
-		if (physical_surface[fff]>0)
-			os << vol_mesh->print_face(9,fff,true,160,160,160);
+		std::ofstream os("homology_gens.txt", std::ofstream::out | std::ofstream::app);
+		for (uint32_t fff = 0; fff < vol_mesh->surfaces_size(); ++fff)
+		{
+			if (physical_surface[fff]>0)
+				os << vol_mesh->print_face(9,fff,true,160,160,160);
+		}
+		os.close();
 	}
-	os.close();
+	
 	this->Ngen=remaining_edges.size();
+	this->remaining_edges=std::move(remaining_edges);
 	return std::make_pair(h1b,tc);
 }
 
@@ -222,7 +234,8 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
 	p1_pushback_mutex.lock();
 	h1b[added_edge].push_back(n_gen);
 	p1_pushback_mutex.unlock();
-	os << vol_mesh->print_edge(n_gen,added_edge,true,0,255,255);
+	if (debuggy)
+		os << vol_mesh->print_edge(n_gen,added_edge,true,0,255,255);
 	std::vector<uint32_t> HomologyEdges;
 	HomologyEdges.push_back(added_edge);
 	
@@ -316,7 +329,8 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
 			s_edge = added_edge;
 			t_edge = *HomologyEdges.begin();
 			HomologyEdges.insert(HomologyEdges.begin(),added_edge);
-			os << vol_mesh->print_edge(n_gen,added_edge,coeff>0,0,255,255);
+			if (debuggy)
+				os << vol_mesh->print_edge(n_gen,added_edge,coeff>0,0,255,255);
 		}
 		else
 		{
@@ -327,7 +341,8 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
 			s_edge = HomologyEdges.back();
 			t_edge = added_edge;				
 			HomologyEdges.push_back(added_edge);
-			os << vol_mesh->print_edge(n_gen,added_edge,coeff<0,0,255,255);
+			if (debuggy)
+				os << vol_mesh->print_edge(n_gen,added_edge,coeff<0,0,255,255);
 		}
 		
 		TwoSidedAlg(n_gen,s_edge,t_edge);
@@ -352,6 +367,155 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
 	}
 	os.close();
 }
+
+/*
+std::vector<int> generic_two_manifold :: RetrieveCoH(const std::vector<int>& gen_comb)
+{
+	std::vector<int> ret(vol_mesh->edges_size(),0);
+	for (auto n_gen= 0; n_gen < gen_comb.size(); ++n_gen)
+	{
+		if (gen_comb[n_gen] != 0)
+		{
+			std::ofstream os("cohomology_gens.txt", std::ofstream::out | std::ofstream::app);
+			int32_t gcvalue = gen_comb[n_gen]; //this is the value i have to multiply for
+			
+			auto ee = remaining_edges[n_gen];
+			auto ff = vol_mesh->etf(ee);
+			
+			uint8_t nfound = 0;
+			uint32_t utest, u, v;
+			
+			for (auto testf : ff)
+			{
+				if (nfound == 0)
+				{
+					utest = abs(testf);
+					if (physical_surface[utest]>0)
+					{
+						u = utest;
+						++nfound;
+					}
+				}
+				else if (nfound == 1)
+				{
+					utest = abs(testf);
+					if (physical_surface[utest]>0)
+					{
+						v = utest;
+						break;
+					}
+				}
+			}
+			
+			uint32_t added_edge_u = ee;
+			uint32_t added_edge_v = ee;
+			uint32_t added_edge   = ee;
+			uint32_t added_edge_small;
+			int16_t or_edge=1;
+			int16_t or_edge_v = 1;
+			int16_t or_edge_u = 1;
+			int16_t or_edge_small;
+			
+			p1_pushback_mutex.lock();
+			h1b[added_edge].push_back(n_gen);
+			p1_pushback_mutex.unlock();
+			os << vol_mesh->print_edge(n_gen,added_edge,true,0,255,255);
+			std::vector<uint32_t> HomologyEdges;
+			HomologyEdges.push_back(added_edge);
+			
+			bool from_small_to_big=true;
+			int16_t c_pr_edge, c_added_edge;
+			uint32_t small,big;
+			
+			while (true)
+			{
+				if (d_distance[u]<d_distance[v])
+				{
+					small = u;
+					big = v;
+					added_edge = added_edge_v;
+					or_edge = or_edge_v;
+					added_edge_small = added_edge_u;
+					or_edge_small = or_edge_u;
+					from_small_to_big = !from_small_to_big;
+				}
+				else
+				{
+					small = v;
+					big = u;
+					added_edge = added_edge_u;
+					or_edge = or_edge_u;
+					added_edge_small = added_edge_v;
+					or_edge_small = or_edge_v;
+				}
+				
+				for (auto nn : vol_mesh->etf(added_edge))
+				{
+					if (physical_surface[nn] && abs(nn) == big)
+					{
+						c_pr_edge    = nn<0 ? -1 : 1;
+						break;
+					}
+				}
+				
+				for (auto nn : vol_mesh->etf(d_paredge[big]))
+				{
+					if (physical_surface[nn] && abs(nn) == big)
+					{
+						c_added_edge = nn<0 ? -1 : 1;
+						break;
+					}
+				}
+				
+				if (c_added_edge<0)
+					or_edge*= c_pr_edge;
+				else
+					or_edge*=-c_pr_edge;
+
+				added_edge = d_paredge[big];
+				int16_t coeff = (d_parent[big]<big)? 1:-1;
+				uint32_t s_edge,t_edge;
+				
+				if (from_small_to_big)
+				{
+					p1_pushback_mutex.lock();
+					h1b[added_edge].push_back(coeff*n_gen);
+					p1_pushback_mutex.unlock();
+					
+					os << vol_mesh->print_edge(n_gen,added_edge,coeff>0,0,255,255);
+				}
+				else
+				{
+					p1_pushback_mutex.lock();
+					h1b[added_edge].push_back((-coeff)*n_gen);
+					p1_pushback_mutex.unlock();
+					
+					os << vol_mesh->print_edge(n_gen,added_edge,coeff<0,0,255,255);
+				}
+				
+				
+				if (d_parent[big] == small)
+				{
+					
+					break;
+				}
+				
+				u=small;
+				from_small_to_big = !from_small_to_big;
+				added_edge_u=added_edge_small;
+				or_edge_u=or_edge_small;
+				v=d_parent[big];
+				added_edge_v=added_edge;
+				or_edge_v=or_edge;
+			}
+			os.close();
+		
+		}
+		
+	}
+	return ret;
+}
+*/
 
 void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& this_edge, const uint32_t& next_edge)
 {
@@ -387,15 +551,15 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 	// });
 	
 	// std::thread t_tr([&] {	
-		for (auto face : vol_mesh->etf(next_edge))
-		{
-			auto ff = abs(face);
-			auto vols = vol_mesh->ftv(ff);
-			for (auto vol : vols)
-				if (vol_mesh->is_conductor(abs(vol))) 
-					if (abs(vol)<target)
-						target=abs(vol);
-		}
+	for (auto face : vol_mesh->etf(next_edge))
+	{
+		auto ff = abs(face);
+		auto vols = vol_mesh->ftv(ff);
+		for (auto vol : vols)
+			if (vol_mesh->is_conductor(abs(vol))) 
+				if (abs(vol)<target)
+					target=abs(vol);
+	}
 	// });
 	
 	// s_tr.join();
@@ -472,8 +636,11 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 		
 		t_tc.tic();
 		auto head = target;
-		os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
-		os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
+		if (debuggy)
+		{
+			os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
+			os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
+		}
 		
 		while (parent[head] != source)
 		{	
@@ -496,9 +663,11 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 		
 			head = parent[head];		
 			
-			os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
-			os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
-			
+			if (debuggy)
+			{
+				os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
+				os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
+			}			
 		}
 		
 		for (auto vv : vol_mesh->ftv(par_e[head]))
@@ -525,40 +694,4 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 	}
 	
 	os.close();
-	/*std::ofstream dbg;
-	if (n_gen != 1)
-		dbg.open("./output/net_currents.txt", std::ofstream::out | std::ofstream::app);
-	else
-		dbg.open("./output/net_currents.txt");
-	
-	for (size_t j=0; j<vol_mesh->volumes_size(); j++ )
-	{
-		int32_t net_current=0;
-		std::vector<sgnint32_t<int32_t>> faces;
-		for (auto ff : vol_mesh->vtf(j))
-		{
-			faces.push_back(ff);
-			for (auto val : tc[abs(ff)])
-				if (abs(val) == n_gen)
-					net_current+= ff.Sgn()*val;
-		}
-		
-		if (net_current != 0)
-		{
-				
-			dbg << "Net current at vol. " << j << ": "
-				<< net_current << " with boundary: [";
-					  
-			for (auto ff : faces)
-			{
-				dbg << ff << "(";
-				for (auto val : tc[abs(ff)])
-					dbg << val << " ";
-				dbg << ") ";
-			}
-			dbg << "]" << std::endl;
-		}
-	}
-	dbg.close();*/
-	
 }
