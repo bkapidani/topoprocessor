@@ -1,11 +1,11 @@
 //file lean_cohomology.cpp
 #include "lean_cohomology.hpp"
 
-lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uint32_t conductor_id, uint32_t insulator_id)
+lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uint32_t conductor_id, uint32_t insulator_id, bool lean_or_lazy)
 	: insulator_id(insulator_id), conductor_id(conductor_id)
 {
 	timecounter t_read, t_dk, t_hdk, t_estt, t_gauss, t_lean;
-	
+	this->lean_or_lazy = lean_or_lazy;
 	std::vector<uint32_t> intersurface, physical_nodes, physical_edges;
 	f2d=e2d=n2d=0;	
 	t_read.tic();
@@ -36,76 +36,70 @@ lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uin
 	
 	t_estt.toc();
 	std::cout << "Computing cuts took: " << t_estt << " s" << std::endl;		
-
-	// arma::umat locations;
-	// locations.resize(2, gmat.size());
-	
-	// arma::Col<double> values;
-	// values.resize(gmat.size());
-	// values.zeros();
-	
-	
-	// for (uint32_t i = 0; i < gmat.size(); i++)
-	// {	
-		// locations(0,i) = std::get<0>(gmat.at(i));
-		// locations(1,i) = std::get<1>(gmat.at(i));
-		// values(i)      = std::get<2>(gmat.at(i));
-	// }
-	
-	// gmat.clear();
-	// arma::SpMat<double> gaussmat(true, locations, values, n_lazy, n_lazy);
-	
-	t_gauss.tic();
-	// gmatrix<int64_t> gm(gaussmat);
-    gmatrix<double> gm(gaussmat);
-	std::ofstream matrix_out;
-	matrix_out.open("./ln_matrix.txt");
-	matrix_out << gm << std::endl;
-	matrix_out.close();
-
-    //gm=gm.transpose();
-    gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
-	// gmatrix<int32_t> change_of_basis = gm.gaussElimination();
-    std::cerr << "Rank : " << gm.number_nonzero_rows() << std::endl;
-    std::cerr << "aaa  : " << gm.number_of_zero_rows() << std::endl;
-    std::cerr << "Det  : " << gm.determinant()         << std::endl;
-	std::string sf1("./matrix_after_elimination.dat");
-	// std::string sf2("./xRuben/change_of_basis.dat");
-    gm.write_to_file(sf1.c_str());
-    // change_of_basis.write_to_file(sf2.c_str());
 	
 	std::vector<double> gen_comb(n_lazy,0);
-	uint32_t n_ind_gens=0;
-	
-	for (uint32_t k=gm.number_nonzero_rows(); k<n_lazy; ++k)
+	if (lean_or_lazy)
 	{
-		bool row_is_zero=true;
-		// std::vector<int> new_gen_comb = gen_comb;
-		for (uint32_t j=0; j<n_lazy;++j)
-		{
-			if (abs(gm.Mat(k,j)) > 1e-12)
-			{
-				row_is_zero=false;
-				std::cout << "Unexpected behaviour!" << std::endl;
-				break;
-			}
-			else if (abs(change_of_basis.Mat(j,k)) > 1e-12)
-			{
-				gen_comb[j]+= change_of_basis.Mat(j,k);
-				// std::cout << new_gen_comb[j] << std::endl;
-			}
-		}
+		t_gauss.tic();
+		// gmatrix<int64_t> gm(gaussmat);
+		gmatrix<double> gm(gaussmat);
+		// std::ofstream matrix_out;
+		// matrix_out.open("./ln_matrix.txt");
+		// matrix_out << gm << std::endl;
+		// matrix_out.close();
+
+		//gm=gm.transpose();
+		gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
+		// gmatrix<int32_t> change_of_basis = gm.gaussElimination();
+		std::cout << "Kernel dimension: " << gm.number_nonzero_rows() << std::endl;
+		std::cout << "Determinant: " << gm.determinant()         << std::endl;
+		// std::string sf1("./matrix_after_elimination.dat");
+		// std::string sf2("./xRuben/change_of_basis.dat");
+		// gm.write_to_file(sf1.c_str());
+		// change_of_basis.write_to_file(sf2.c_str());
 		
-		// gen_comb=std::move(new_gen_comb);
+		
+		uint32_t n_ind_gens=0;
+		
+		for (uint32_t k=gm.number_nonzero_rows(); k<n_lazy; ++k)
+		{
+			bool row_is_zero=true;
+			// std::vector<int> new_gen_comb = gen_comb;
+			for (uint32_t j=0; j<n_lazy;++j)
+			{
+				if (abs(gm.Mat(k,j)) > 1e-12)
+				{
+					row_is_zero=false;
+					std::cout << "Unexpected behaviour!" << std::endl;
+					break;
+				}
+				else if (abs(change_of_basis.Mat(j,k)) > 1e-12)
+				{
+					gen_comb[j]+= change_of_basis.Mat(j,k);
+					// std::cout << new_gen_comb[j] << std::endl;
+				}
+			}
+			
+			// gen_comb=std::move(new_gen_comb);
+		}
+
+		t_gauss.toc();
+		std::cout << "Computing basis of null space of l.n. matrix took: " << t_gauss << " s" << std::endl;
+	}
+	else
+	{
+		std::vector<double> ones_gen_comb(n_lazy,1);
+		gen_comb = std::move(ones_gen_comb);
 	}
 
-	t_gauss.toc();
-	std::cout << "Computing basis of null space of l.n. matrix took: " << t_gauss << " s" << std::endl;
+	// cuts_final.close();
+	t_lean.toc();
+	std::cout << "Lean cohomology computation took: " << t_lean << " s" << std::endl;
 
+	t_gauss.tic();
 	std::ofstream h1_final, cuts_final;
 	h1_final.open("./h1_final.txt");
 	// cuts_final.open("./the_final_cut.txt");
-
 	for (uint32_t ee=0; ee<edges_size(); ++ee)
 	{
 		double final_coeff = 0;
@@ -125,11 +119,9 @@ lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uin
 				// cuts_final << df;
 		}
 	}
-	
 	h1_final.close();
-	// cuts_final.close();
-	t_lean.toc();
-	std::cout << "Lean cohomology computation took: " << t_lean << " s" << std::endl;	
+	t_gauss.toc();
+	std::cout << "Output to file took: " << t_lean << " s" << std::endl;	
 }
 
 
@@ -332,13 +324,15 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, std
 			// auto dual_face_vector = print_dual_face(gen+1,abs(curr_e),edge_coeff>0,0,255,0);
 			// for (auto df : dual_face_vector)
 				// os << df;
-			
-			for (auto val : HomoCoHomo.first[abs(curr_e)])
+			if (lean_or_lazy)
 			{
-				double chain_val = signbit(val) ? -1 : 1;
-				gmat[uint32_t(gen)][uint32_t(abs(val)-1)]+=chain_val*edge_coeff;
-				
-				// std::cout << "Gmat(" << uint32_t(gen) << "," << uint32_t(abs(val)-1) << ") += " << chain_val*edge_coeff << std::endl;
+				for (auto val : HomoCoHomo.first[abs(curr_e)])
+				{
+					double chain_val = signbit(val) ? -1 : 1;
+					gmat[uint32_t(gen)][uint32_t(abs(val)-1)]+=chain_val*edge_coeff;
+					
+					// std::cout << "Gmat(" << uint32_t(gen) << "," << uint32_t(abs(val)-1) << ") += " << chain_val*edge_coeff << std::endl;
+				}
 			}
 		}
 		

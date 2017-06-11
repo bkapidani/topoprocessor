@@ -184,7 +184,7 @@ using sm_tuple 				= std::tuple< surface_type, uint32_t >;
 class lean_cohomology
 {	
 	public:
-		lean_cohomology(std::string , std::string, uint32_t, uint32_t);
+		lean_cohomology(std::string , std::string, uint32_t, uint32_t, bool);
 		bool 									ESTT(std::vector<std::vector<double>>&);
 		size_t 									volumes_size() { return volumes.size(); }
 		size_t 									surfaces_size() { return surfaces.size(); }
@@ -228,6 +228,7 @@ class lean_cohomology
 		/* triangle -> cluster of volume IDs around it */
 		std::vector<cluster_list>  					_ftv_list;
 		std::vector<cluster_list> 					_vtf_list;
+		bool										lean_or_lazy;
 		
 		
 		void MyThrow(const std::runtime_error& e)
