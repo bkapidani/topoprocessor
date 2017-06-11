@@ -121,7 +121,7 @@ lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uin
 	}
 	h1_final.close();
 	t_gauss.toc();
-	std::cout << "Output to file took: " << t_lean << " s" << std::endl;	
+	std::cout << "Output to file took: " << t_gauss << " s" << std::endl;	
 }
 
 
