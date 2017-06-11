@@ -7,7 +7,8 @@ lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uin
 	timecounter t_read, t_dk, t_hdk, t_estt, t_gauss, t_lean;
 	this->lean_or_lazy = lean_or_lazy;
 	std::vector<uint32_t> intersurface, physical_nodes, physical_edges;
-	f2d=e2d=n2d=0;	
+	f2d=e2d=n2d=0;
+	t_lean.tic();
 	t_read.tic();
 	if (mesher == "netgen")
 		read_mesh(meshfile,intersurface,physical_edges,physical_nodes);
@@ -21,7 +22,7 @@ lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uin
 	t_dk.toc();
 	std::cout << "Extracting conductor boundary took: " << t_dk << " s" << std::endl;	
 
-	t_lean.tic();
+	
 	t_hdk.tic();
 	HomoCoHomo = cond_ins_interface.H_to_CoH(intersurface,physical_edges, physical_nodes);
 	n_lazy = cond_ins_interface.number_of_gens();
