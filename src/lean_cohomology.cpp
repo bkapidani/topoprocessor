@@ -852,7 +852,14 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	
 	std::cout << " * * * Reading GMSH format mesh * * * ";
 	std::cout << std::endl;
-	std::ofstream os("netgen_version.mesh");
+	
+	std::stringstream sng;
+	uint32_t string_ind=0;
+	while (_filename[string_ind] != '.')
+		sng << _filename[string_ind++];
+	
+	sng << ".mesh";
+	std::ofstream os(sng.str().c_str());
 	tctot.tic();
 	/************************ Read useless stuff ************************/
 
@@ -866,7 +873,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	char *endptr;
 	
 	lines = strtot<uint32_t>(data, &endptr);
-	// os << lines << std::endl;
+	os << lines << std::endl;
 	auto dummy = mf.get_line();
 	// pts.reserve(lines);
 	
@@ -882,7 +889,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 
 		auto t = parser::read_gmsh_point_line<double>(endptr, &endptr);
 		
-		// os << std::get<0>(t) << " " << std::get<1>(t) << " " << std::get<2>(t) << std::endl;
+		os << std::get<0>(t) << " " << std::get<1>(t) << " " << std::get<2>(t) << std::endl;
 		
 		std::vector<double> point = { std::get<0>(t),std::get<1>(t),std::get<2>(t) };		
 		pts.push_back(point);
@@ -979,7 +986,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	
 	std::cout << "Reading elements: " << linecount;
 	std::cout << "/" << lines  << " - " << tc << " seconds" << std::endl;
-	// os << num_of_tets << std::endl;
+	os << num_of_tets << std::endl;
 	
 	/************************ Sort ************************/
 	std::cout << "Sorting data...";
@@ -1009,7 +1016,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	// vol_signs.reserve(lines);
 	// volumes.reserve(lines);
 	// domains.reserve(lines);
-	
+	// os << temp_tet.size() << std::endl;
 	for (auto tet : temp_tet)
 	{
 		auto t = std::get<0>(tet);
@@ -1029,10 +1036,12 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 		std::vector<double> v1 { pts[p1][0]-pts[p0][0], pts[p1][1]-pts[p0][1],pts[p1][2]-pts[p0][2] };
 		std::vector<double> v2 { pts[p2][0]-pts[p0][0], pts[p2][1]-pts[p0][1],pts[p2][2]-pts[p0][2] };
 		std::vector<double> v3 { pts[p3][0]-pts[p0][0], pts[p3][1]-pts[p0][1],pts[p3][2]-pts[p0][2] };		
-
+	
 		int32_t sgn  = this->stddot(v1, stdcross(v2, v3))/double(6)>0? 1 : -1;
 		vol_signs.push_back(sgn);
 		domains.push_back(std::get<1>(tet));
+		
+		os << std::get<1>(tet) << " " << p0+1 << " " << p1+1 << " " << p2+1 << " " << p3+1 << std::endl;
 	}
 	std::vector<tm_tuple>().swap(temp_tet);
 	std::vector<uint32_t> labels(4*lines);
@@ -1212,7 +1221,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	linecount = 0;
 	// auto num_of_tets=lines;
 	// lines = strtot<uint32_t>(endptr, &endptr);
-	// os << temp_surf_tri.size() << std::endl;
+	os << temp_surf_tri.size() << std::endl;
 	tc.tic();
 	while (linecount < temp_surf_tri.size())
 	{
@@ -1237,7 +1246,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 		uint32_t       p2( std::get<2>(t) );
 		uint32_t       bid( temp_surf_lab[linecount]);
 		
-		// os << bid << " " << p0+1 << " " << p1+1 << " " << p2+1 << std::endl;
+		os << bid << " " << p0+1 << " " << p1+1 << " " << p2+1 << std::endl;
 		
 		surface_type   tri( p0, p1, p2 );
 		
