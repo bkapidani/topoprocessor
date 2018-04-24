@@ -48,7 +48,7 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 			root++;
 		}
 		// if (root < 100)
-			// std::cout << "----" << root << "----" << std::endl;
+			// std::cout << "    ----" << root << "----" << std::endl;
 		p_colour[root]=true;
 		p_distance[root]=0;
 		p_queue.push_back(root);
@@ -57,7 +57,7 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 		while (k < p_queue.size())
 		{	
 			uint32_t qtop = p_queue[k];
-			// std::cout << "----" << qtop << "----" << std::endl;
+			// std::cout << "    ----" << qtop << "----" << std::endl;
 			for (const auto& signed_ee : vol_mesh->nte(qtop))
 			{
 				uint32_t ee = abs(signed_ee);
@@ -88,7 +88,7 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 			
 			k++;
 		}
-		// std::cout << "----" << root << "----" << std::endl;
+		// std::cout << "    ----" << root << "----" << std::endl;
 	}
 
 	k=0;
@@ -100,7 +100,7 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 		
 		while (d_colour[root_dual] || !physical_surface[root_dual])
 			root_dual++;
-		// std::cout << "----" << root_dual << "----" << std::endl;
+		// std::cout << "    ----" << root_dual << "----" << std::endl;
 		d_colour[root_dual]=true;
 		// d_distance[root_dual]=0;
 		d_queue.push_back(root_dual);
@@ -109,7 +109,7 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 		
 		while (k < d_queue.size())
 		{	
-			// std::cout << "test_bug" << std::endl;
+			// std::cout << "    test_bug" << std::endl;
 			qtop = d_queue[k];
 			
 			for (auto& signed_ee : vol_mesh->fte(qtop))
@@ -159,7 +159,7 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 
 
 	t_h1.toc();
-	std::cout << "Tree primal, tree dual took: " << t_h1 << " s" << std::endl;
+	std::cout << "    Tree primal, tree dual took: " << t_h1 << " s" << std::endl;
 	// Homology generators
 	int16_t n_gen = 0;
 
@@ -170,7 +170,7 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
 		// std::ofstream os;
 		// os.open("./output/h1_lazy.txt");
 			
-		std::cout << "# of lazy generators : " << remaining_edges.size() << std::endl;
+		std::cout << "    # of lazy generators : " << remaining_edges.size() << std::endl;
 
 		// this->h1b=std::move(h1b);
 		// this->tc=std::move(tc);
@@ -566,8 +566,8 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 	// t_tr.join();
 	t_tc.toc();
 	
-	// std::cout << "Build up: " << t_tc << " s" << std::endl;
-	// std::cout << "Sorting: " << t_tc << " s" << std::endl;
+	// std::cout << "    Build up: " << t_tc << " s" << std::endl;
+	// std::cout << "    Sorting: " << t_tc << " s" << std::endl;
 	if (target != source)
 	{
 		t_tc.tic();
@@ -626,13 +626,13 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 				}
 				
 				os.close();
-				// std::cout << "boh" << std::endl;
+				// std::cout << "    boh" << std::endl;
 				throw std::invalid_argument("Problem in TS algorithm");
 			}
 		}
 
 		t_tc.toc();
-		// std::cout << "Breadth first search: " << t_tc << " s" << std::endl;
+		// std::cout << "    Breadth first search: " << t_tc << " s" << std::endl;
 		
 		t_tc.tic();
 		auto head = target;
@@ -690,7 +690,7 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
 		
 		t_tc.toc();
 		
-		// std::cout << "Coefficient computation: " << t_tc << " s" << std::endl;
+		// std::cout << "    Coefficient computation: " << t_tc << " s" << std::endl;
 	}
 	
 	os.close();

@@ -184,7 +184,7 @@ using sm_tuple 				= std::tuple< surface_type, uint32_t >;
 class lean_cohomology
 {	
 	public:
-		lean_cohomology(std::string , std::string, uint32_t, uint32_t, bool);
+		lean_cohomology(std::string , std::string, uint32_t, uint32_t, bool, bool);
 		bool 									ESTT(std::vector<std::vector<double>>&);
 		size_t 									volumes_size() { return volumes.size(); }
 		size_t 									surfaces_size() { return surfaces.size(); }
@@ -214,7 +214,7 @@ class lean_cohomology
 		uint32_t 									insulator_id, conductor_id, surface_id, n_lazy;
 		std::map<uint32_t,std::vector<uint32_t>> 	physical_surfaces;
 		std::vector<std::vector<std::pair<uint16_t, int16_t>>> 		vect_stt_coeffs;
-		std::vector<uint32_t> 						domains;
+		std::vector<uint32_t> 						domains;	
 		std::vector<volume_type> 					volumes;
 		std::vector<surface_type> 					surfaces;
 		std::vector<edge_type> 						edges;
@@ -228,12 +228,12 @@ class lean_cohomology
 		/* triangle -> cluster of volume IDs around it */
 		std::vector<cluster_list>  					_ftv_list;
 		std::vector<cluster_list> 					_vtf_list;
-		bool										lean_or_lazy;
+		bool										lean_or_lazy, sullivan;
 		
 		
 		void MyThrow(const std::runtime_error& e)
 		{
-			std::cout << "Input file error: " << e.what() << std::endl;
+			std::cout << " Input file error: " << e.what() << std::endl;
 			throw e;
 		}
 
@@ -248,6 +248,18 @@ class lean_cohomology
 																std::vector<pair<uint32_t,sgnint32_t<int32_t>>>&, 
 																std::vector<bool>&, std::vector<std::vector<std::pair<uint16_t, int16_t>>>&,
 																std::vector<std::vector<double>>& );
+		/*Sullivan algorithm functions*/
+		void 										MinCost(std::vector<int32_t>, uint32_t);
+		bool 										ResMaxFlow(std::vector<int32_t>&, const uint32_t&, const uint32_t&, const uint32_t&, const int32_t&);
+		void 										UpdateMinCut(std::vector<int32_t>&);
+		std::vector<int32_t>						flow,face_coeff_in_the_chain, capacities;
+		/*stuff for linking number retrieval*/
+		double 							LinkingNumber(const std::vector<std::array<double,3>>&, const std::vector<std::array<double,3>>&);
+		double 							SolidAngleQuadrilateral(const std::array<double,3>& a, 
+																const std::array<double,3>& b, 
+																const std::array<double,3>& c,
+																const std::array<double,3>& d);
+		double							SolidAngleTriangle(const std::array<double,3>& a, const std::array<double,3>& b, const std::array<double,3>& c);
 };
 
 class generic_two_manifold
@@ -277,7 +289,6 @@ class generic_two_manifold
 		uint16_t 						Ngen;
 		void 							TwoSidedAlg(const int16_t&, const uint32_t&, const uint32_t&);
 		void 							RetrieveGenAndTC(const int16_t&, const uint32_t&);
-
 };
 
 #endif

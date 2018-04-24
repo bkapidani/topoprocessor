@@ -1,11 +1,16 @@
 //file lean_cohomology.cpp
 #include "lean_cohomology.hpp"
 
-lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uint32_t conductor_id, uint32_t insulator_id, bool lean_or_lazy)
-	: insulator_id(insulator_id), conductor_id(conductor_id)
+lean_cohomology :: lean_cohomology(std::string mesher, 
+                                   std::string meshfile, 
+								   uint32_t conductor_id, 
+								   uint32_t insulator_id, 
+								   bool lean_or_lazy,
+								   bool sullivan)
+	: insulator_id(insulator_id), conductor_id(conductor_id), lean_or_lazy(lean_or_lazy), sullivan(sullivan)
 {
 	timecounter t_read, t_dk, t_hdk, t_estt, t_gauss, t_lean;
-	this->lean_or_lazy = lean_or_lazy;
+	// this->lean_or_lazy = lean_or_lazy;
 	std::vector<uint32_t> intersurface, physical_nodes, physical_edges;
 	f2d=e2d=n2d=0;
 	t_lean.tic();
@@ -15,19 +20,19 @@ lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uin
 	else if (mesher == "gmsh")
 		read_gmesh(meshfile,intersurface,physical_edges,physical_nodes);
 	t_read.toc();
-	std::cout << "Loading complex took: " << t_read << " s" << std::endl;
+	std::cout << "    Loading complex took: " << t_read << " s" << std::endl;
 
 	t_dk.tic();
 	generic_two_manifold cond_ins_interface(intersurface,physical_edges,physical_nodes, this);
 	t_dk.toc();
-	std::cout << "Extracting conductor boundary took: " << t_dk << " s" << std::endl;	
+	std::cout << "    Extracting conductor boundary took: " << t_dk << " s" << std::endl;	
 
 	
 	t_hdk.tic();
 	HomoCoHomo = cond_ins_interface.H_to_CoH(intersurface,physical_edges, physical_nodes);
 	n_lazy = cond_ins_interface.number_of_gens();
 	t_hdk.toc();
-	std::cout << "Computing h^1(dk) and thinned currents took: " << t_hdk << " s" << std::endl;		
+	std::cout << "    Computing h^1(dk) and thinned currents took: " << t_hdk << " s" << std::endl;		
 	
 	t_estt.tic();
 	std::vector<double> vg(n_lazy,0);
@@ -36,9 +41,10 @@ lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uin
 		throw std::invalid_argument("Failed to complete ESTT routine!");
 	
 	t_estt.toc();
-	std::cout << "Computing cuts took: " << t_estt << " s" << std::endl;		
+	std::cout << "    Computing cuts took: " << t_estt << " s" << std::endl;		
 	
-	std::vector<double> gen_comb(n_lazy,0);
+	// std::vector<double> gen_comb(n_lazy,0);
+	std::vector<std::vector<double>> gen_comb;
 	if (lean_or_lazy)
 	{
 		t_gauss.tic();
@@ -52,79 +58,112 @@ lean_cohomology :: lean_cohomology(std::string mesher, std::string meshfile, uin
 		//gm=gm.transpose();
 		gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
 		// gmatrix<int32_t> change_of_basis = gm.gaussElimination();
-		std::cout << "Kernel dimension: " << gm.number_nonzero_rows() << std::endl;
-		std::cout << "Determinant: " << gm.determinant()         << std::endl;
+		std::cout << "    Kernel dimension: " << gm.number_nonzero_rows() << std::endl;
+		std::cout << "    Determinant: " << gm.determinant()         << std::endl;
 		// std::string sf1("./matrix_after_elimination.dat");
-		// std::string sf2("./xRuben/change_of_basis.dat");
+		// std::string sf2("./change_of_basis.dat");
 		// gm.write_to_file(sf1.c_str());
 		// change_of_basis.write_to_file(sf2.c_str());
 		
 		
 		uint32_t n_ind_gens=0;
-		
-		for (uint32_t k=gm.number_nonzero_rows(); k<n_lazy; ++k)
+		// std::cout << gm.number_nonzero_rows() << std::endl;
+		// for (uint32_t k=gm.number_nonzero_rows(); k<n_lazy; ++k)
+		for (uint32_t k=0; k<gm.number_nonzero_rows(); ++k)
 		{
-			bool row_is_zero=true;
-			// std::vector<int> new_gen_comb = gen_comb;
+			// bool row_is_zero=true;
+			std::vector<double> new_gen_comb(n_lazy,0);
 			for (uint32_t j=0; j<n_lazy;++j)
 			{
-				if (abs(gm.Mat(k,j)) > 1e-12)
+				// if (abs(gm.Mat(k,j)) > 1e-12)
+				// {
+					// row_is_zero=false;
+					// std::cout << "    Unexpected behaviour!" << std::endl;
+					// break;
+				// }
+				if (std::fabs(change_of_basis.Mat(j,k)) > 1e-12)
 				{
-					row_is_zero=false;
-					std::cout << "Unexpected behaviour!" << std::endl;
-					break;
-				}
-				else if (abs(change_of_basis.Mat(j,k)) > 1e-12)
-				{
-					gen_comb[j]+= change_of_basis.Mat(j,k);
-					// std::cout << new_gen_comb[j] << std::endl;
+					// gen_comb[j]+= change_of_basis.Mat(j,k);
+					new_gen_comb[j] = change_of_basis.Mat(j,k);
+					// std::cout << "    ciao " << j << " " << new_gen_comb[j] << std::endl;
 				}
 			}
 			
+			gen_comb.push_back(new_gen_comb);
 			// gen_comb=std::move(new_gen_comb);
 		}
 
 		t_gauss.toc();
-		std::cout << "Computing basis of null space of l.n. matrix took: " << t_gauss << " s" << std::endl;
+		std::cout << "    Computing basis of null space of l.n. matrix took: " << t_gauss << " s" << std::endl;
 	}
 	else
 	{
-		std::vector<double> ones_gen_comb(n_lazy,1);
-		gen_comb = std::move(ones_gen_comb);
+		for (uint32_t j=0; j<n_lazy;++j)
+		{
+			std::vector<double> ones_gen_comb(n_lazy,0);
+			ones_gen_comb[j] = 1;
+			gen_comb.push_back(ones_gen_comb);
+		}
 	}
 
-	// cuts_final.close();
+	// cuts_pre_sullivan.close();
 	t_lean.toc();
-	std::cout << "Lean cohomology computation took: " << t_lean << " s" << std::endl;
+	std::cout << "    Lean cohomology computation took: " << t_lean << " s" << std::endl;
 
 	t_gauss.tic();
-	std::ofstream h1_final, cuts_final;
-	h1_final.open("./h1_final.txt");
-	// cuts_final.open("./the_final_cut.txt");
-	for (uint32_t ee=0; ee<edges_size(); ++ee)
+	std::ofstream h1_pre_sullivan, cuts_pre_sullivan;
+	h1_pre_sullivan.open("./h1_pre_sullivan.txt");
+	cuts_pre_sullivan.open("./cuts_pre_sullivan.txt", std::ofstream::out | std::ofstream::app);
+	h1_pre_sullivan << gen_comb.size() << std::endl;
+	
+	// ofstream cuts_post_sullivan;
+	// cuts_post_sullivan.open("./cuts_post_sullivan.txt");
+	// cuts_post_sullivan.close();
+	
+	for (uint32_t indigen=0; indigen<gen_comb.size(); ++indigen)
 	{
-		double final_coeff = 0;
-		for (auto bb : vect_stt_coeffs[ee])
+		std::vector<std::tuple<uint32_t,uint32_t,double>> coefficients;
+		std::vector<int32_t> start_s(edges_size());
+		for (uint32_t ee=0; ee<edges_size(); ++ee)
 		{
-			auto gg = bb.first;
-			if (gen_comb[abs(gg)] != 0)
-				final_coeff += double(bb.second)*gen_comb[abs(gg)];
+			double final_coeff = 0;
+			for (auto bb : vect_stt_coeffs[ee])
+			{
+				auto gg = bb.first;
+				// std::cout << gg << "-----" << bb.second << std::endl;
+				if (gen_comb[indigen][abs(gg)-1] != 0)
+					final_coeff += double(bb.second)*gen_comb[indigen][abs(gg)-1];
+			}
+			if (std::fabs(final_coeff) > 1e-12)
+			{
+				coefficients.push_back(std::make_tuple(abs(*_etn_list[ee].begin()),abs(*_etn_list[ee].rbegin()),final_coeff));
+				// h1_pre_sullivan << abs(*_etn_list[ee].begin()) << " " 
+					 // << abs(*_etn_list[ee].rbegin()) << " " << final_coeff << std::endl;
+				start_s[ee] = std::round(final_coeff);
+				
+				auto dual_face_vector = print_dual_face(indigen%9+1,ee,final_coeff>0,255,255,0);
+				for (auto df : dual_face_vector)
+					cuts_pre_sullivan << df;
+			}
+			else
+				start_s[ee] = 0;
 		}
-		if (final_coeff != 0)
-		{
-			h1_final << abs(*_etn_list[ee].begin()) << " " 
-				 << abs(*_etn_list[ee].rbegin()) << " " << final_coeff << std::endl;
-			
-			// auto dual_face_vector = print_dual_face(1,ee,final_coeff>0,0,128+final_coeff,0);
-			// for (auto df : dual_face_vector)
-				// cuts_final << df;
-		}
+		
+		/*Run Sullivan*/
+		if (sullivan)
+			MinCost(start_s,indigen);
+		else
+			std::remove("cuts_post_sullivan.txt");
+		
+		h1_pre_sullivan << coefficients.size() << std::endl;
+		for (auto cfs : coefficients)
+			h1_pre_sullivan << std::get<0>(cfs) << "\t" << std::get<1>(cfs) << "\t" << std::get<2>(cfs) << std::endl;
 	}
-	h1_final.close();
+	h1_pre_sullivan.close();
+	cuts_pre_sullivan.close();
 	t_gauss.toc();
-	std::cout << "Output to file took: " << t_gauss << " s" << std::endl;	
+	std::cout << "    Output to file took: " << t_gauss << " s" << std::endl;	
 }
-
 
 bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
 {
@@ -203,7 +242,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
 			
 			if (wired[curr_e]==true)
 			{
-				// std::cout << "closed edge " << curr_f << std::endl;
+				// std::cout << "    closed edge " << curr_f << std::endl;
 				for (auto signed_adj_f : etf(curr_e))
 				{	
 					uint32_t adj_f = abs(signed_adj_f);
@@ -235,7 +274,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
 		
 		if (discrepanza>0)
 		{
-			std::cout << "One cycle over all edges is insufficient: " << discrepanza << " edges still open" << std::endl;
+			std::cout << "    One cycle over all edges is insufficient: " << discrepanza << " edges still open" << std::endl;
 			return false;
 		}
 	}
@@ -332,7 +371,7 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, std
 					double chain_val = signbit(val) ? -1 : 1;
 					gmat[uint32_t(gen)][uint32_t(abs(val)-1)]+=chain_val*edge_coeff;
 					
-					// std::cout << "Gmat(" << uint32_t(gen) << "," << uint32_t(abs(val)-1) << ") += " << chain_val*edge_coeff << std::endl;
+					// std::cout << "    Gmat(" << uint32_t(gen) << "," << uint32_t(abs(val)-1) << ") += " << chain_val*edge_coeff << std::endl;
 				}
 			}
 		}
@@ -447,7 +486,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	/* Open file */
 	if (_filename.size() == 0)
 	{
-		std::cout << "Invalid mesh file name" << std::endl;
+		std::cout << "    Invalid mesh file name" << std::endl;
 		return false;
 	}
 	
@@ -455,7 +494,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	
 	mapped_file mf(_filename);
 	
-	std::cout << " * * * Reading NETGEN format mesh * * * ";
+	std::cout << "     * * * Reading NETGEN format mesh * * * ";
 	std::cout << std::endl;
 	
 	tctot.tic();
@@ -475,7 +514,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	{
 		if ( (linecount%100000) == 0 )
 		{
-			std::cout << "Reading points: " << linecount;
+			std::cout << "    Reading points: " << linecount;
 			std::cout << "/" << lines << "\r";
 			std::cout.flush();
 		}
@@ -492,7 +531,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	}
 	tc.toc();
 	
-	std::cout << "Reading points: " << linecount;
+	std::cout << "    Reading points: " << linecount;
 	std::cout << "/" << lines << " - " << tc << " seconds" << std::endl;
 	
 	/************************ Read tetrahedra ************************/
@@ -507,7 +546,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	{
 		if ( (linecount%100000) == 0 )
 		{
-			std::cout << "Reading tetrahedra: " << linecount;
+			std::cout << "    Reading tetrahedra: " << linecount;
 			std::cout << "/" << lines << "\r";
 			std::cout.flush();
 		}
@@ -535,11 +574,11 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	}
 	tc.toc();
 	
-	std::cout << "Reading tetrahedra: " << linecount;
+	std::cout << "    Reading tetrahedra: " << linecount;
 	std::cout << "/" << lines  << " - " << tc << " seconds" << std::endl;
 	
 	/************************ Sort ************************/
-	std::cout << "Sorting data...";
+	std::cout << "    Sorting data...";
 	std::cout.flush();
 	
 	tc.tic();
@@ -651,6 +690,9 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	// _etn_list.resize(edges.size());
 	physical_edges.resize(edges_size(),0);
 	
+	std::ofstream cuts_pre_sullivan("./cuts_pre_sullivan.txt");
+	std::ofstream cuts_post_sullivan("./cuts_post_sullivan.txt");
+	
 	for (uint32_t k=0; k<lines; k++)
 	{
 		
@@ -688,6 +730,18 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 					(domains[vol1] == conductor_id && domains[vol2] == insulator_id))
 				{
 					intersurface[k]++;
+					
+					if (domains[vol1] == conductor_id )
+					{
+						cuts_pre_sullivan << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+						cuts_post_sullivan << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+					}
+					else if (domains[vol2] == conductor_id )
+					{
+						cuts_pre_sullivan << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
+						cuts_post_sullivan << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);						
+					}
+					
 					for (auto ee : _fte_list[k])
 					{
 						if (!physical_edges[abs(ee)])
@@ -703,7 +757,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 				auto vol1= abs(*vols.begin());
 				if (domains[vol1] == conductor_id)
 				{
-					const std::runtime_error 	cond_bnd_error(std::string(" conductor on domain boundary!"));
+					const std::runtime_error 	cond_bnd_error(std::string(" conductor on domain boundary! (maybe you just need to swap the labels...)"));
 					MyThrow(cond_bnd_error);
 					// intersurface[k]++;
 					// for (auto ee : _fte_list[k])
@@ -724,6 +778,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 		}	
 	}
 	
+	cuts_pre_sullivan.close();
 	std::vector<uint32_t>().swap(e_labels);
 	_nte_list.resize(pts.size());
 	// _etn_list.reserve(edges.size());
@@ -763,7 +818,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	
 	tc.toc();
 	
-	std::cout << "done - " << tc << " seconds" << std::endl;
+	std::cout << "    done - " << tc << " seconds" << std::endl;
 	
 	/************************ Read boundary surfaces ************************/
 	linecount = 0;
@@ -775,13 +830,13 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	{
 		/*if (ifs.fail())
 		{
-			std::cout << "Error while reading boundary surfaces" << std::endl;
+			std::cout << "    Error while reading boundary surfaces" << std::endl;
 			return false;
 		}*/
 		
 		if ( (linecount%50000) == 0 )
 		{
-			std::cout << "Reading triangle: " << linecount;
+			std::cout << "    Reading triangle: " << linecount;
 			std::cout << "/" << lines << "\r";
 			std::cout.flush();
 		}
@@ -806,7 +861,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	}
 	tc.toc();
 	
-	std::cout << "Reading triangle: " << linecount;
+	std::cout << "    Reading triangle: " << linecount;
 	std::cout << "/" << lines  << " - " << tc << " seconds"  << std::endl;
 
 	tctot.toc();
@@ -842,7 +897,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	/* Open file */
 	if (_filename.size() == 0)
 	{
-		std::cout << "Invalid mesh file name" << std::endl;
+		std::cout << "    Invalid mesh file name" << std::endl;
 		return false;
 	}
 	
@@ -850,7 +905,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	
 	mapped_file mf(_filename);
 	
-	std::cout << " * * * Reading GMSH format mesh * * * ";
+	std::cout << "     * * * Reading GMSH format mesh * * * ";
 	std::cout << std::endl;
 	
 	std::stringstream sng;
@@ -882,7 +937,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	{
 		if ( (linecount%100000) == 0 )
 		{
-			std::cout << "Reading points: " << linecount;
+			std::cout << "    Reading points: " << linecount;
 			std::cout << "/" << lines << "\r";
 			std::cout.flush();
 		}
@@ -900,7 +955,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	}
 	tc.toc();
 	
-	std::cout << "Reading points: " << linecount;
+	std::cout << "    Reading points: " << linecount;
 	std::cout << "/" << lines << " - " << tc << " seconds" << std::endl;
 	/************************ Read useless stuff ************************/
 	
@@ -928,7 +983,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	{
 		if ( (linecount%100000) == 0 )
 		{
-			std::cout << "Reading elements: " << linecount;
+			std::cout << "    Reading elements: " << linecount;
 			std::cout << "/" << lines << "\r";
 			std::cout.flush();
 		}
@@ -969,7 +1024,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 		}
 		else if (element_label == 2)
 		{
-			// std::cout << "I'm here with a triangle!" << std::endl;
+			// std::cout << "    I'm here with a triangle!" << std::endl;
 			uint32_t       p0( std::get<2>(t) );
 			uint32_t       p1( std::get<3>(t) );
 			uint32_t       p2( std::get<4>(t) );
@@ -984,12 +1039,12 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	}
 	tc.toc();
 	
-	std::cout << "Reading elements: " << linecount;
+	std::cout << "    Reading elements: " << linecount;
 	std::cout << "/" << lines  << " - " << tc << " seconds" << std::endl;
 	os << num_of_tets << std::endl;
 	
 	/************************ Sort ************************/
-	std::cout << "Sorting data...";
+	std::cout << "    Sorting data...";
 	std::cout.flush();
 	
 	tc.tic();
@@ -1102,6 +1157,8 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	// _fte_list.reserve(surfaces.size());
 	// _etn_list.resize(edges.size());
 	physical_edges.resize(edges_size(),0);
+	std::ofstream cuts_pre_sullivan("./cuts_pre_sullivan.txt");
+	std::ofstream cuts_post_sullivan("./cuts_post_sullivan.txt");
 	
 	for (uint32_t k=0; k<lines; k++)
 	{
@@ -1140,6 +1197,17 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 					(domains[vol1] == conductor_id && domains[vol2] == insulator_id))
 				{
 					intersurface[k]++;
+					
+					if (domains[vol1] == conductor_id )
+					{
+						cuts_pre_sullivan << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+						cuts_post_sullivan << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+					}
+					else if (domains[vol2] == conductor_id )
+					{
+						cuts_pre_sullivan << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
+						cuts_post_sullivan << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
+					}
 					for (auto ee : _fte_list[k])
 					{
 						if (!physical_edges[abs(ee)])
@@ -1147,7 +1215,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 						physical_edges[abs(ee)]++;
 					}
 					f2d++;
-				}			
+				}
 				break;
 			}
 			case 1:
@@ -1176,6 +1244,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 		}	
 	}
 	
+	cuts_pre_sullivan.close();
 	std::vector<uint32_t>().swap(e_labels);
 	_nte_list.resize(pts.size());
 	// _etn_list.reserve(edges.size());
@@ -1215,7 +1284,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	
 	tc.toc();
 	
-	std::cout << "done - " << tc << " seconds" << std::endl;
+	std::cout << "    done - " << tc << " seconds" << std::endl;
 	
 	/************************ Read boundary surfaces ************************/
 	linecount = 0;
@@ -1227,13 +1296,13 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	{
 		/*if (ifs.fail())
 		{
-			std::cout << "Error while reading boundary surfaces" << std::endl;
+			std::cout << "    Error while reading boundary surfaces" << std::endl;
 			return false;
 		}*/
 		
 		if ( (linecount%50000) == 0 )
 		{
-			std::cout << "Reading triangle: " << linecount;
+			std::cout << "    Reading triangle: " << linecount;
 			std::cout << "/" << temp_surf_tri.size() << "\r";
 			std::cout.flush();
 		}
@@ -1263,58 +1332,17 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	
 	tc.toc();
 	
-	std::cout << "Reading triangle: " << linecount;
+	std::cout << "    Reading triangle: " << linecount;
 	std::cout << "/" << temp_surf_tri.size()  << " - " << tc << " seconds"  << std::endl;
 	
 	tctot.toc();
 	// std::cout << cyan << "Total time spent in reading mesh: ";
 	// std::cout << tctot << " seconds" << nocolor << std::endl;
 	
-	// for (const auto& nn : _vtf_list)
-		// assert(nn.size() == 4);
-	
-	// for (const auto& nn : _ftv_list)
-		// assert(nn.size() == 2 || nn.size() == 1);
-	
-	// for (const auto& nn : _fte_list)
-		// assert(nn.size() == 3);
-	
-	// for (const auto& nn : _etf_list)
-	// {
-		// assert(nn.size() >= 2);
-	// }
-	
-	// for (const auto& nn : _nte_list)
-		// assert(nn.size() >= 3);
-	// for (const auto& nn : _etn_list)
-		// assert(nn.size() == 2);	
-	
 	return true;
 }
 
-
-/*const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: face_in_conductor(sgnint32_t<int32_t>  f) const
-{
-	bool in_c = true;
-	std::vector<sgnint32_t<int32_t> > ret;
-	std::vector<sgnint32_t<int32_t> > false_ret;
-	
-	for ( auto vv : _ftv_list[abs(f)])
-	{
-		uint32_t dom=domains[abs(vv)];
-		if ( dom == conductor_id )
-			ret.push_back(vv);
-		else
-			in_c=false;
-	}
-	
-	if (in_c)
-		return ret;
-	else
-		return false_ret;
-}*/
-
-/*void lean_cohomology :: MinCost(std::vector<int32_t> start_s)
+void lean_cohomology :: MinCost(std::vector<int32_t> start_s,uint32_t indigen)
 {
 	uint32_t i, j, k;
 	int e_or;
@@ -1322,53 +1350,40 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	k=0;
 	
 	// Initial feasible solutions for primal and dual
-	std::vector<int32_t> fp(n_e);
-	surfaces.size()low=fp;//fp=0;	
-	surfaces.size()in_chain = start_s;
+	std::vector<int32_t> fp(edges_size()), dummy_cap(edges_size(),1);
+	capacities = std::move(dummy_cap);
+	flow=fp;//fp=0;	
+	face_coeff_in_the_chain = start_s;
 	// int maxflow=0;
-
-	// for (auto pippo : _ftv_list.at(315))
-		// std::cout << pippo.Val() << "  " << pippo.Sgn() << "  " << surfaces.size()in_chain.at(abs(pippo)) << "    ";
-
-	// std::cout << std::endl;
-	
-	// for (auto pippo : _vtf_list.at(210))
-		// std::cout << pippo.Val() << "  " << pippo.Sgn() << "  " << capacities.at(abs(pippo)) << "    ";
-	
-	// std::cout << std::endl;
-	
-	for ( uint32_t it=surfaces.size(); it<n_e; it++)
-		if (surfaces.size()in_chain.at(it) != 0)
-			std::cout << "Che cazzo sta succedendo alla faccia " << it <<"? " << surfaces.size()in_chain.at(it) << std::endl;
 	
 	// useful_variables
 	uint32_t source, sink;
 	int32_t step;
 	bool RMF_SUCCESS;
 	pair<sgnint32_t<int32_t> ,sgnint32_t<int32_t> > adj_v;
-	std::vector<int32_t> new_min_cut(n_e), dummy_cut(n_e);
+	std::vector<int32_t> new_min_cut(edges_size()), dummy_cut(edges_size());
 	
 	timecounter tc;
 	tc.tic();
 	
 	while (true)
 	{
-		while (k < n_e && ( (surfaces.size()in_chain.at(k)==0) || ((surfaces.size()in_chain.at(k)>0 && surfaces.size()low.at(k) == capacities.at(k)) || (surfaces.size()in_chain.at(k)<0 && surfaces.size()low.at(k)==-capacities.at(k))) ) )
+		while (k < edges_size() && ( (face_coeff_in_the_chain.at(k)==0) || ((face_coeff_in_the_chain.at(k)>0 && flow.at(k) == capacities.at(k)) || (face_coeff_in_the_chain.at(k)<0 && flow.at(k)==-capacities.at(k))) ) )
 			k++;
 		
-		if (k==n_e)
+		if (k==edges_size())
 		{
-			// std::cout << "Completed solution!" << std::endl;
+			// std::cout << "    Completed solution!" << std::endl;
 			break;
 		}
 		else
 		{			
-			adj_v=make_pair(*(ftv(k).begin()),*std::prev((ftv(k).end())));
+			adj_v=make_pair(*(etn(k).begin()),*std::prev((etn(k).end())));
 			
 			if (adj_v.first < 0)
 				std::swap(adj_v.first,adj_v.second);
 			
-			if (surfaces.size()in_chain.at(k)<0)
+			if (face_coeff_in_the_chain.at(k)<0)
 			{
 				source=abs(adj_v.first);
 				sink=abs(adj_v.second);
@@ -1394,33 +1409,35 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	}
 		
 	tc.toc();
-	std::cout << tc << std::endl;
+	std::cout << "    Minimizing support of generator n. " << indigen+1 << " took " << tc << " s" << std::endl;
 
-	ofstream fin_surf;
-	fin_surf.open("./debug/dbg_fin_surf.dat");
+	std::ofstream cuts_post_sullivan;
+	cuts_post_sullivan.open("./cuts_post_sullivan.txt", std::ofstream::out | std::ofstream::app);
 	
-	for ( uint32_t it=0; it<surfaces.size(); it++)
+	for ( uint32_t it=0; it<edges_size(); ++it)
 	{
-		if (surfaces.size()in_chain.at(it) < 0)
-			fin_surf << print_face(0,it,0,255.0, 255.0, 0);
-		else if (surfaces.size()in_chain.at(it) > 0)
-			fin_surf << print_face(0,it,1,255.0, 255.0, 0);
+		if (face_coeff_in_the_chain[it] != 0)
+		{
+			auto dual_face_vector = print_dual_face(indigen%9+1,it,face_coeff_in_the_chain[it]>0,255,255,0);
+				for (auto df : dual_face_vector)
+					cuts_post_sullivan << df;
+		}
 	}
 	
-	fin_surf.close();
+	cuts_post_sullivan.close();
 	return;
-}*/
+}
 
-/*bool lean_cohomology :: ResMaxFlow(std::vector<int32_t>& new_min_cut, const uint32_t& k, const uint32_t& s, const uint32_t& t, const int32_t& nmc_step)
+bool lean_cohomology :: ResMaxFlow(std::vector<int32_t>& new_min_cut, const uint32_t& k, const uint32_t& s, const uint32_t& t, const int32_t& nmc_step)
 {
 	// Minimum cost network flow with restriction on already achieved orthogonalities
 
-	std::vector<int> new_fp(n_e);
+	std::vector<int> new_fp(edges_size());
 	new_min_cut.at(k)+=nmc_step;
 	// std::map<uint32_t,uint32_t> parent;
-	std::vector<uint32_t> parent(nodes.size(),nodes.size());
-	std::vector<uint32_t> colour(nodes.size());
-	std::vector<uint32_t> par_edge(nodes.size());
+	std::vector<uint32_t> parent(nodes_size(),nodes_size());
+	std::vector<uint32_t> colour(nodes_size());
+	std::vector<uint32_t> par_edge(nodes_size());
 	// std::vector<uint32_t> distance(n_n);
 
 	// parent.at(s)=0;
@@ -1432,49 +1449,48 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	uint32_t i=0;
 	p_queue.push_back(s);
 	
-	uint32_t qtop, curr_f, curr_v;
+	uint32_t qtop, curr_f, current_node;
 	sgnint32_t<int32_t>  adj_v;
 	
 	// if (k==1)
-		// std::cout << "volumi adiacenti: " << *(surfaces.size()tv(k).begin()) << "  " << *std::prev(surfaces.size()tv(k).end()) << std::endl;
+		// std::cout << "    volumi adiacenti: " << *(ftv(k).begin()) << "  " << *std::prev(ftv(k).end()) << std::endl;
 	
 	while (i<p_queue.size() && colour.at(t)==0)
 	{
 		qtop=p_queue.at(i);
 		// adj_f=edge_list(qtop,:);
-		for (auto adj_f : volumes.size()tf(qtop))
+		for (auto adj_f : nte(qtop))
 		{	
 			
 			curr_f=abs(adj_f);
-			curr_v=abs(*(surfaces.size()tv(curr_f).begin()));
+			current_node=abs(*(etn(curr_f).begin()));
 			
-			if (curr_v==qtop)
+			if (current_node==qtop)
 			{
-				curr_v=abs(*std::prev(surfaces.size()tv(curr_f).end()));
-				adj_v=*std::prev(surfaces.size()tv(curr_f).end());
+				current_node=abs(*std::prev(etn(curr_f).end()));
+				adj_v=*std::prev(etn(curr_f).end());
 			}
 			else
-				adj_v=*(surfaces.size()tv(curr_f).begin());
+				adj_v=*(etn(curr_f).begin());
 			
 			
-			// std::cout << "faccia corrente: " << curr_f << "dim_flow " << surfaces.size()low.size() << " " << capacities.size() << std::endl;
+			// std::cout << "    faccia corrente: " << curr_f << "dim_flow " << flow.size() << " " << capacities.size() << std::endl;
 			
-			if ((curr_v != t) || (qtop != s))
+			if ((current_node != t) || (qtop != s))
 			{
 				// std::cout << curr_f << std::endl;
 				if (adj_v<0)
 				{
-					if (surfaces.size()in_chain.at(curr_f) >= 0 && surfaces.size()low.at(curr_f) < capacities.at(curr_f))
+					if (face_coeff_in_the_chain.at(curr_f) >= 0 && flow.at(curr_f) < capacities.at(curr_f))
 					{
-						if (colour.at(curr_v)==0)
+						if (colour.at(current_node)==0)
 						{
 							// dimQ=dimQ+1;
-							// std::cout << "arrivato al nodo " << curr_v << " dal lato " << curr_f << std::endl;
-							p_queue.push_back(curr_v);
-							colour.at(curr_v)+=1;
-							parent[curr_v]=qtop;
-							par_edge.at(curr_v)=curr_f;
-							// distance.at(curr_v)=distance.at(qtop)+1;
+							p_queue.push_back(current_node);
+							colour.at(current_node)+=1;
+							parent[current_node]=qtop;
+							par_edge.at(current_node)=curr_f;
+							// distance.at(current_node)=distance.at(qtop)+1;
 							new_fp.at(curr_f)=1;
 						}	
 					}
@@ -1483,17 +1499,17 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 				}
 				else 
 				{
-					if (surfaces.size()in_chain.at(curr_f) <= 0 && surfaces.size()low.at(curr_f) > -capacities.at(curr_f))
+					if (face_coeff_in_the_chain.at(curr_f) <= 0 && flow.at(curr_f) > -capacities.at(curr_f))
 					{
-						if (colour.at(curr_v)==0)
+						if (colour.at(current_node)==0)
 						{
 							// dimQ=dimQ+1;
-							// std::cout << "arrivato al nodo " << curr_v << " dal lato " << curr_f << std::endl;
-							p_queue.push_back(curr_v);
-							colour.at(curr_v)+=1;
-							parent[curr_v]=qtop;
-							par_edge.at(curr_v)=curr_f;
-							// distance.at(curr_v)=distance.at(qtop)+1;
+							// std::cout << "    arrivato al nodo " << current_node << " dal lato " << curr_f << std::endl;
+							p_queue.push_back(current_node);
+							colour.at(current_node)+=1;
+							parent[current_node]=qtop;
+							par_edge.at(current_node)=curr_f;
+							// distance.at(current_node)=distance.at(qtop)+1;
 							new_fp.at(curr_f)=-1;
 						}	
 					}
@@ -1510,101 +1526,44 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	{
 		uint32_t adj_v=t;
 		
-		while (parent.at(adj_v) < nodes.size())
+		while (parent.at(adj_v) < nodes_size())
 		{
-			// curr_f=FindIntersect(e_l, index_list.at(parent.at(adj_v)), index_list.at(adj_v), index_list.at(adj_v+1));
 			curr_f=par_edge.at(adj_v);
-			surfaces.size()low.at(curr_f)+=new_fp.at(curr_f);
+			flow.at(curr_f)+=new_fp.at(curr_f);
 			adj_v=parent.at(adj_v);
 		}
 		
 		curr_f=k;
 
-		surfaces.size()low.at(curr_f)=surfaces.size()low.at(curr_f)-nmc_step;
+		flow.at(curr_f)=flow.at(curr_f)-nmc_step;
 	   
-		// std::cout << "Aumentato flusso attraverso la faccia " << curr_f << " partendo dal nodo " << t << " al nodo " << s << std::endl;
-		// std::cout << "Il flusso alla faccia " << curr_f << " e' ora pari a " << surfaces.size()low.at(curr_f) << " a fronte di una capacita' di " << capacities.at(curr_f) << std::endl << std::endl;
+		// std::cout << "    Aumentato flusso attraverso la faccia " << curr_f << " partendo dal nodo " << t << " al nodo " << s << std::endl;
+		// std::cout << "    Il flusso alla faccia " << curr_f << " e' ora pari a " << flow.at(curr_f) << " a fronte di una capacita' di " << capacities.at(curr_f) << std::endl << std::endl;
 		return 1;
 	}
 	else
 	{
-		// std::cout << "Non sono riuscito ad aumentare il flusso attraverso la faccia " << k << " partendo dal nodo " << t << " al nodo " << s << std::endl;
-		
-		// for (auto pippo : _vtf_list.at(s))
-			// std::cout << abs(pippo) << " ";
-		// std::cout << std::endl;
-		
-		// for (auto pippo : _vtf_list.at(t))
-			// std::cout << abs(pippo) << " ";
-		// std::cout << std::endl;
-		
-		// for (auto pippo : _ftv_list.at(k))
-			// std::cout << abs(pippo) << " ";
-		// std::cout << std::endl;		
-		
+		// std::cout << "    Non sono riuscito ad aumentare il flusso attraverso la faccia " << k << " partendo dal nodo " << t << " al nodo " << s << std::endl;
 		return 0;
 	}
-}*/
+}
 
-/*void lean_cohomology :: UpdateMinCut(std::vector<int>& new_min_cut)
+void lean_cohomology :: UpdateMinCut(std::vector<int32_t>& new_min_cut)
 {
-	assert( surfaces.size()in_chain.size() == new_min_cut.size() );
+	assert( face_coeff_in_the_chain.size() == new_min_cut.size() );
 	
-	for (uint32_t i=0; i<surfaces.size()in_chain.size(); i++)
-		surfaces.size()in_chain.at(i)+=new_min_cut.at(i);
-	
-	// std::cout << "Cambiato insieme di taglio!!" << std::endl << std::endl;
-
-	// ofstream fin_surf;
-	// fin_surf.open("./debug/dbg_fin_surf.dat");
-	
-	// for ( uint32_t it=0; it<surfaces.size(); it++)
-	// {
-		// if (surfaces.size()in_chain.at(it) < 0)
-			// fin_surf << print_face(1,it,0,255.0, 255.0, 0);
-		// else if (surfaces.size()in_chain.at(it) > 0)
-			// fin_surf << print_face(1,it,1,255.0, 255.0, 0);
-	// }
-	
-	// for ( uint32_t it=surfaces.size(); it<n_e; it++)
-		// if (surfaces.size()in_chain.at(it) != 0)
-		// {
-			// for (auto pippo : _ftv_list.at(it))
-			// {
-				// std::cout << abs(pippo) << "-> ";
-				// for (auto pluto : _vtf_list.at(abs(pippo)))
-					// std::cout << abs(pluto) << " ";
-				// std::cout << std::endl;
-			// }
-			// std::cout << std::endl;	
-		// }
-	// fin_surf.close();
+	for (uint32_t i=0; i<face_coeff_in_the_chain.size(); i++)
+		face_coeff_in_the_chain.at(i)+=new_min_cut.at(i);
 	
 	return;
-}*/
+}
 
-/*double lean_cohomology :: LinkingNumber(const std::vector<std::vector<double> >& gamma0, const std::vector<std::vector<double> >& gamma1)
+double lean_cohomology :: LinkingNumber(const std::vector<std::array<double,3>>& gamma0, const std::vector<std::array<double,3>>& gamma1)
 {
-	// (const std::vector<std::vector<double> >& gamma0, const std::vector<std::vector<double> >& gamma1)
+	
 	double n = 0;
 	
-	// uint32_t i=0;
-	// uint32_t j=0;
-	// ofstream fid;
-	// fid.open("./debug/linking_number_debug.txt");
-	// while (i<gamma0.size() || j<gamma1.size())
-	// {
-		// if (i<gamma0.size())
-			// fid << print_edge(1,gamma0.at(i)[0],gamma0.at(i)[1],gamma0.at(i)[2],gamma0.at((i+1)%gamma0.size())[0],gamma0.at((i+1)%gamma0.size())[1],gamma0.at((i+1)%gamma0.size())[2]);
-		// if (j<gamma1.size())
-			// fid << print_edge(2,gamma1.at(j)[0],gamma1.at(j)[1],gamma1.at(j)[2],gamma1.at((j+1)%gamma1.size())[0],gamma1.at((j+1)%gamma1.size())[1],gamma1.at((j+1)%gamma1.size())[2]);
-		// i++;
-		// j++;
-	// }
-	
-	// fid.close();
-	
-	std::vector<double> a(3),b(3),c(3),d(3);
+	std::array<double,3> a,b,c,d;
 
 	for (uint32_t i = 0; i <gamma0.size(); i++)
 	{
@@ -1627,14 +1586,17 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	}
 
     return n/(4*PI);
-}*/
+}
 
-/*double lean_cohomology :: SolidAngleQuadrilateral(const std::vector<double>& a, const std::vector<double>& b, const std::vector<double>& c, const std::vector<double>& d)
+double lean_cohomology :: SolidAngleQuadrilateral(const std::array<double,3>& a, 
+												  const std::array<double,3>& b, 
+												  const std::array<double,3>& c,
+												  const std::array<double,3>& d)
 {
 	return SolidAngleTriangle(a, b, c) + SolidAngleTriangle(c, d, a);
-}*/
+}
 
-/*double lean_cohomology :: SolidAngleTriangle(const std::vector<double>& a, const std::vector<double>& b, const std::vector<double>& c)
+double lean_cohomology :: SolidAngleTriangle(const std::array<double,3>& a, const std::array<double,3>& b, const std::array<double,3>& c)
 {
 	double determ= a[0]*(b[1]*c[2] - b[2]*c[1])+a[1]*(b[2]*c[0]- b[0]*c[2])+a[2]*(b[0]*c[1] - b[1]*c[0]);
 
@@ -1665,7 +1627,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 		return EXIT_FAILURE;
 
 	return 2*at;
-}*/
+}
 
 const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: vtf(const int32_t& v_id) const
 {
@@ -1817,8 +1779,13 @@ std::string lean_cohomology :: print_face(const uint32_t& label, const uint32_t&
 	
 	for (auto ee : fte(f))
 	{
-		for (auto nn : etn(abs(ee)))
-			nodes.insert(abs(nn));
+		auto n1 = std::get<0>(edges[abs(ee)]);
+		auto n2 = std::get<1>(edges[abs(ee)]);
+		
+		nodes.insert(n1);
+		nodes.insert(n2);
+		// for (auto nn : etn(abs(ee)))
+			// nodes.insert(abs(nn));
 		
 		if (nodes.size() == 3)
 			break;
@@ -1909,8 +1876,13 @@ std::string lean_cohomology :: print_face(const uint32_t& f, const int32_t& orie
 	
 	for (auto ee : fte(f))
 	{
-		for (auto nn : etn(abs(ee)))
-			nodes.insert(abs(nn));
+		auto n1 = std::get<0>(edges[abs(ee)]);
+		auto n2 = std::get<1>(edges[abs(ee)]);
+		
+		nodes.insert(n1);
+		nodes.insert(n2);
+		// for (auto nn : etn(abs(ee)))
+			// nodes.insert(abs(nn));
 		
 		if (nodes.size() == 3)
 			break;
