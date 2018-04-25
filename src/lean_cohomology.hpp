@@ -181,6 +181,8 @@ using label_node_type 		= std::pair<uint32_t,uint32_t>;
 using tm_tuple 				= std::tuple< volume_type, uint32_t >;
 using sm_tuple 				= std::tuple< surface_type, uint32_t >;
 
+class generic_two_manifold;
+
 class lean_cohomology
 {	
 	public:
@@ -211,7 +213,7 @@ class lean_cohomology
 		
 	private:
 		std::pair<h1_2d_basis,thinned_currents> 	HomoCoHomo;
-		uint32_t 									insulator_id, conductor_id, surface_id, n_lazy;
+		uint32_t 					insulator_id, conductor_id, surface_id, n_lazy;
 		std::map<uint32_t,std::vector<uint32_t>> 	physical_surfaces;
 		std::vector<std::vector<std::pair<uint16_t, int16_t>>> 		vect_stt_coeffs;
 		std::vector<uint32_t> 						domains;	
@@ -226,10 +228,10 @@ class lean_cohomology
 		std::vector<cluster_list>        			_etf_list;
 		std::vector<cluster_list>        			_fte_list;	
 		/* triangle -> cluster of volume IDs around it */
-		std::vector<cluster_list>  					_ftv_list;
-		std::vector<cluster_list> 					_vtf_list;
-		bool										lean_or_lazy, sullivan;
-		
+		std::vector<cluster_list>  				_ftv_list;
+		std::vector<cluster_list> 				_vtf_list;
+		bool							lean_or_lazy, sullivan;
+		generic_two_manifold*	g2m;
 		
 		void MyThrow(const std::runtime_error& e)
 		{
@@ -237,36 +239,39 @@ class lean_cohomology
 			throw e;
 		}
 
-		bool 										read_mesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
-		bool 										read_gmesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
-		void 										unique(std::vector<label_edge_type>&, std::vector<uint32_t>&);
-		void 										unique(std::vector<label_surface_type>&, std::vector<uint32_t>&);	
-		pair<uint32_t,sgnint32_t<int32_t> > 		check_boundary(uint32_t , const std::vector<bool>& );
-		std::vector<double> 						stdcross(const std::vector<double>&, const std::vector<double>&);
-		double 										stddot(const std::vector<double>&, const std::vector<double>&);
-		void 										set_boundary(uint32_t , const std::vector<bool>&, 
-																std::vector<pair<uint32_t,sgnint32_t<int32_t>>>&, 
-																std::vector<bool>&, std::vector<std::vector<std::pair<uint16_t, int16_t>>>&,
-																std::vector<std::vector<double>>& );
+		bool read_mesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
+		bool read_gmesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
+		void unique(std::vector<label_edge_type>&, std::vector<uint32_t>&);
+		void unique(std::vector<label_surface_type>&, std::vector<uint32_t>&);	
+		pair<uint32_t,sgnint32_t<int32_t>> check_boundary(uint32_t , const std::vector<bool>& );
+		std::vector<double> stdcross(const std::vector<double>&, const std::vector<double>&);
+		double stddot(const std::vector<double>&, const std::vector<double>&);
+		void set_boundary(uint32_t, 
+				  const std::vector<bool>&,
+				  std::vector<pair<uint32_t,sgnint32_t<int32_t>>>&,
+				  std::vector<bool>&, 
+				  std::vector<std::vector<std::pair<uint16_t, 
+				  int16_t>>>&,std::vector<std::vector<double>>& );
+		
 		/*Sullivan algorithm functions*/
-		void 										MinCost(std::vector<int32_t>, uint32_t);
-		bool 										ResMaxFlow(std::vector<int32_t>&, const uint32_t&, const uint32_t&, const uint32_t&, const int32_t&);
-		void 										UpdateMinCut(std::vector<int32_t>&);
-		std::vector<int32_t>						flow,face_coeff_in_the_chain, capacities;
+		void MinCost(std::vector<int32_t>, uint32_t);
+		bool ResMaxFlow(std::vector<int32_t>&, const uint32_t&, const uint32_t&, const uint32_t&, const int32_t&);
+		void UpdateMinCut(std::vector<int32_t>&);
+		std::vector<int32_t> flow,face_coeff_in_the_chain, capacities;
 		/*stuff for linking number retrieval*/
-		double 							LinkingNumber(const std::vector<std::array<double,3>>&, const std::vector<std::array<double,3>>&);
-		double 							SolidAngleQuadrilateral(const std::array<double,3>& a, 
-																const std::array<double,3>& b, 
-																const std::array<double,3>& c,
-																const std::array<double,3>& d);
-		double							SolidAngleTriangle(const std::array<double,3>& a, const std::array<double,3>& b, const std::array<double,3>& c);
+		double LinkingNumber(const std::vector<std::array<double,3>>&, const std::vector<std::array<double,3>>&);
+		double SolidAngleQuadrilateral(const std::array<double,3>& a, 
+					       const std::array<double,3>& b, 
+					       const std::array<double,3>& c,
+					       const std::array<double,3>& d);
+		double SolidAngleTriangle(const std::array<double,3>& a, const std::array<double,3>& b, const std::array<double,3>& c);
 };
 
 class generic_two_manifold
 {
-	
+	friend class lean_cohomology;
 	public:
-		generic_two_manifold(const std::vector<uint32_t>&,const std::vector<uint32_t>&,const std::vector<uint32_t>&, lean_cohomology*);
+		generic_two_manifold(lean_cohomology*);
 		uint16_t number_of_gens() 		{ return this->Ngen; }
 		std::uint32_t Nodes() 			{ return this->n; }
 		std::uint32_t Edges() 			{ return this->e; }
@@ -277,7 +282,7 @@ class generic_two_manifold
 		
 	private:
 		lean_cohomology* 				vol_mesh;
-		bool							debuggy=false;
+		bool						debuggy=false;
 		h1_2d_basis 					h1b;
 		thinned_currents 				tc;
 		std::vector<bool>  				p_colour, d_colour;
@@ -292,3 +297,4 @@ class generic_two_manifold
 };
 
 #endif
+

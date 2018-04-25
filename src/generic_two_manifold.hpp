@@ -36,7 +36,7 @@ class generic_two_manifold
 		typedef uint16_t handle_gen_index;
 		typedef uint16_t hole_gen_index;
 		generic_two_manifold(std::string, std::vector<uint32_t>);
-		generic_two_manifold(std::map<uint32_t,std::vector<uint32_t>>, lean_cohomology*);
+		generic_two_manifold(lean_cohomology*);
 		std::vector<double> edge_barycenter(const uint32_t& );
 		std::vector<double> face_barycenter(const uint32_t& );
 		uint16_t number_of_gens() { return this->Ngen; }

@@ -1,7 +1,7 @@
 //file generic_two_manifold.cpp
 #include "lean_cohomology.hpp"
 
-generic_two_manifold :: generic_two_manifold(const std::vector<uint32_t>& physical_surface, const std::vector<uint32_t>& physical_edges, const std::vector<uint32_t>& physical_nodes, lean_cohomology *lc)
+generic_two_manifold :: generic_two_manifold(lean_cohomology *lc)
 {
 	this->vol_mesh = lc;
 	this->f = vol_mesh->f2d;

@@ -23,7 +23,7 @@ lean_cohomology :: lean_cohomology(std::string mesher,
 	std::cout << "    Loading complex took: " << t_read << " s" << std::endl;
 
 	t_dk.tic();
-	generic_two_manifold cond_ins_interface(intersurface,physical_edges,physical_nodes, this);
+	generic_two_manifold cond_ins_interface(this);
 	t_dk.toc();
 	std::cout << "    Extracting conductor boundary took: " << t_dk << " s" << std::endl;	
 
@@ -31,6 +31,7 @@ lean_cohomology :: lean_cohomology(std::string mesher,
 	t_hdk.tic();
 	HomoCoHomo = cond_ins_interface.H_to_CoH(intersurface,physical_edges, physical_nodes);
 	n_lazy = cond_ins_interface.number_of_gens();
+	this->g2m = &cond_ins_interface;
 	t_hdk.toc();
 	std::cout << "    Computing h^1(dk) and thinned currents took: " << t_hdk << " s" << std::endl;		
 	
@@ -106,19 +107,21 @@ lean_cohomology :: lean_cohomology(std::string mesher,
 		}
 	}
 
-	// cuts_pre_sullivan.close();
+	// cuts_pre_minimization.close();
 	t_lean.toc();
 	std::cout << "    Lean cohomology computation took: " << t_lean << " s" << std::endl;
 
 	t_gauss.tic();
-	std::ofstream h1_pre_sullivan, cuts_pre_sullivan;
-	h1_pre_sullivan.open("./h1_pre_sullivan.txt");
-	cuts_pre_sullivan.open("./cuts_pre_sullivan.txt", std::ofstream::out | std::ofstream::app);
-	h1_pre_sullivan << gen_comb.size() << std::endl;
+	std::ofstream h1_pre_minimization, h1_post_minimization, cuts_pre_minimization;
+	h1_pre_minimization.open("./h1_pre_minimization.txt");
+	h1_post_minimization.open("./h1_post_minimization.txt");
+	cuts_pre_minimization.open("./cuts_pre_minimization.txt", std::ofstream::out | std::ofstream::app);
+	h1_pre_minimization  << gen_comb.size() << std::endl;
+	h1_post_minimization << gen_comb.size() << std::endl;
 	
-	// ofstream cuts_post_sullivan;
-	// cuts_post_sullivan.open("./cuts_post_sullivan.txt");
-	// cuts_post_sullivan.close();
+	// ofstream cuts_post_minimization;
+	// cuts_post_minimization.open("./cuts_post_minimization.txt");
+	// cuts_post_minimization.close();
 	
 	for (uint32_t indigen=0; indigen<gen_comb.size(); ++indigen)
 	{
@@ -134,16 +137,16 @@ lean_cohomology :: lean_cohomology(std::string mesher,
 				if (gen_comb[indigen][abs(gg)-1] != 0)
 					final_coeff += double(bb.second)*gen_comb[indigen][abs(gg)-1];
 			}
-			if (std::fabs(final_coeff) > 1e-12)
+			if (std::fabs(final_coeff) > 1e-12 && !(g2m->physical_edges[ee]) )
 			{
 				coefficients.push_back(std::make_tuple(abs(*_etn_list[ee].begin()),abs(*_etn_list[ee].rbegin()),final_coeff));
-				// h1_pre_sullivan << abs(*_etn_list[ee].begin()) << " " 
+				// h1_pre_minimization << abs(*_etn_list[ee].begin()) << " " 
 					 // << abs(*_etn_list[ee].rbegin()) << " " << final_coeff << std::endl;
 				start_s[ee] = std::round(final_coeff);
 				
 				auto dual_face_vector = print_dual_face(indigen%9+1,ee,final_coeff>0,255,255,0);
 				for (auto df : dual_face_vector)
-					cuts_pre_sullivan << df;
+					cuts_pre_minimization << df;
 			}
 			else
 				start_s[ee] = 0;
@@ -153,14 +156,17 @@ lean_cohomology :: lean_cohomology(std::string mesher,
 		if (sullivan)
 			MinCost(start_s,indigen);
 		else
-			std::remove("cuts_post_sullivan.txt");
+		{
+			std::remove("cuts_post_minimization.txt");
+			std::remove("h1_post_minimization.txt");
+		}
 		
-		h1_pre_sullivan << coefficients.size() << std::endl;
+		h1_pre_minimization << coefficients.size() << std::endl;
 		for (auto cfs : coefficients)
-			h1_pre_sullivan << std::get<0>(cfs) << "\t" << std::get<1>(cfs) << "\t" << std::get<2>(cfs) << std::endl;
+			h1_pre_minimization << std::get<0>(cfs) << "\t" << std::get<1>(cfs) << "\t" << std::get<2>(cfs) << std::endl;
 	}
-	h1_pre_sullivan.close();
-	cuts_pre_sullivan.close();
+	h1_pre_minimization.close();
+	cuts_pre_minimization.close();
 	t_gauss.toc();
 	std::cout << "    Output to file took: " << t_gauss << " s" << std::endl;	
 }
@@ -690,8 +696,8 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 	// _etn_list.resize(edges.size());
 	physical_edges.resize(edges_size(),0);
 	
-	std::ofstream cuts_pre_sullivan("./cuts_pre_sullivan.txt");
-	std::ofstream cuts_post_sullivan("./cuts_post_sullivan.txt");
+	std::ofstream cuts_pre_minimization("./cuts_pre_minimization.txt");
+	std::ofstream cuts_post_minimization("./cuts_post_minimization.txt");
 	
 	for (uint32_t k=0; k<lines; k++)
 	{
@@ -733,13 +739,13 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 					
 					if (domains[vol1] == conductor_id )
 					{
-						cuts_pre_sullivan << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
-						cuts_post_sullivan << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+						cuts_pre_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+						cuts_post_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
 					}
 					else if (domains[vol2] == conductor_id )
 					{
-						cuts_pre_sullivan << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
-						cuts_post_sullivan << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);						
+						cuts_pre_minimization  << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
+						cuts_post_minimization << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
 					}
 					
 					for (auto ee : _fte_list[k])
@@ -757,8 +763,8 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 				auto vol1= abs(*vols.begin());
 				if (domains[vol1] == conductor_id)
 				{
-					const std::runtime_error 	cond_bnd_error(std::string(" conductor on domain boundary! (maybe you just need to swap the labels...)"));
-					MyThrow(cond_bnd_error);
+					//const std::runtime_error cond_bnd_error(std::string(" conductor on domain boundary! (maybe you just need to swap the labels...)"));
+					//MyThrow(cond_bnd_error);
 					// intersurface[k]++;
 					// for (auto ee : _fte_list[k])
 					// {
@@ -772,13 +778,13 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 			}
 			case 0:
 			{
-				throw std::invalid_argument("Conductor boundary cannot be on mesh boundary!");
+				throw std::invalid_argument("The whole domain must be trivial!");
 				break;
 			}
 		}	
 	}
 	
-	cuts_pre_sullivan.close();
+	cuts_pre_minimization.close();
 	std::vector<uint32_t>().swap(e_labels);
 	_nte_list.resize(pts.size());
 	// _etn_list.reserve(edges.size());
@@ -1157,8 +1163,8 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 	// _fte_list.reserve(surfaces.size());
 	// _etn_list.resize(edges.size());
 	physical_edges.resize(edges_size(),0);
-	std::ofstream cuts_pre_sullivan("./cuts_pre_sullivan.txt");
-	std::ofstream cuts_post_sullivan("./cuts_post_sullivan.txt");
+	std::ofstream cuts_pre_minimization("./cuts_pre_minimization.txt");
+	std::ofstream cuts_post_minimization("./cuts_post_minimization.txt");
 	
 	for (uint32_t k=0; k<lines; k++)
 	{
@@ -1200,13 +1206,13 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 					
 					if (domains[vol1] == conductor_id )
 					{
-						cuts_pre_sullivan << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
-						cuts_post_sullivan << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+						cuts_pre_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+						cuts_post_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
 					}
 					else if (domains[vol2] == conductor_id )
 					{
-						cuts_pre_sullivan << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
-						cuts_post_sullivan << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
+						cuts_pre_minimization << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
+						cuts_post_minimization << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
 					}
 					for (auto ee : _fte_list[k])
 					{
@@ -1244,7 +1250,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
 		}	
 	}
 	
-	cuts_pre_sullivan.close();
+	cuts_pre_minimization.close();
 	std::vector<uint32_t>().swap(e_labels);
 	_nte_list.resize(pts.size());
 	// _etn_list.reserve(edges.size());
@@ -1368,7 +1374,9 @@ void lean_cohomology :: MinCost(std::vector<int32_t> start_s,uint32_t indigen)
 	
 	while (true)
 	{
-		while (k < edges_size() && ( (face_coeff_in_the_chain.at(k)==0) || ((face_coeff_in_the_chain.at(k)>0 && flow.at(k) == capacities.at(k)) || (face_coeff_in_the_chain.at(k)<0 && flow.at(k)==-capacities.at(k))) ) )
+		while (k < edges_size() && ( (face_coeff_in_the_chain.at(k)==0) ||
+                                             ((face_coeff_in_the_chain.at(k)>0 && flow.at(k) == capacities.at(k)) || 
+					      (face_coeff_in_the_chain.at(k)<0 && flow.at(k)==-capacities.at(k))) ) )
 			k++;
 		
 		if (k==edges_size())
@@ -1388,9 +1396,9 @@ void lean_cohomology :: MinCost(std::vector<int32_t> start_s,uint32_t indigen)
 				source=abs(adj_v.first);
 				sink=abs(adj_v.second);
 				step=1;
-		    }
-		    else
-		    {
+		    	}
+		    	else
+		    	{
 				source=abs(adj_v.second);
 				sink=abs(adj_v.first);
 				step=-1;
@@ -1405,26 +1413,47 @@ void lean_cohomology :: MinCost(std::vector<int32_t> start_s,uint32_t indigen)
 			else;
 		}
 
+		// Resetting should not really be needed
 		k=0;
 	}
 		
 	tc.toc();
 	std::cout << "    Minimizing support of generator n. " << indigen+1 << " took " << tc << " s" << std::endl;
 
-	std::ofstream cuts_post_sullivan;
-	cuts_post_sullivan.open("./cuts_post_sullivan.txt", std::ofstream::out | std::ofstream::app);
+	std::ofstream cuts_post_minimization, h1_post_minimization;
+	cuts_post_minimization.open("./cuts_post_minimization.txt", std::ofstream::out | std::ofstream::app);	
+	h1_post_minimization.open("./h1_post_minimization.txt", std::ofstream::out | std::ofstream::app);
 	
+	std::vector<int32_t> coeff_cf_array;
+	std::vector<std::array<uint32_t,2>> coeff_id_array;
+	uint32_t n_coeff=0;
+
 	for ( uint32_t it=0; it<edges_size(); ++it)
 	{
 		if (face_coeff_in_the_chain[it] != 0)
 		{
 			auto dual_face_vector = print_dual_face(indigen%9+1,it,face_coeff_in_the_chain[it]>0,255,255,0);
 				for (auto df : dual_face_vector)
-					cuts_post_sullivan << df;
+					cuts_post_minimization << df;
+			if (!g2m->physical_edges[it])
+			{
+				n_coeff++;
+				coeff_id_array.push_back(std::array<uint32_t,2>({abs(*(_etn_list[it].begin())),
+										 abs(*(_etn_list[it].rbegin()))}));
+				coeff_cf_array.push_back(face_coeff_in_the_chain[it]);
+			}
 		}
 	}
+
+	h1_post_minimization << n_coeff << std::endl;
+	for (uint32_t ii=0; ii<n_coeff; ++ii)
+		h1_post_minimization << coeff_id_array[ii][0] << " "
+				     << coeff_id_array[ii][1] << " "
+				     << coeff_cf_array[ii]    << std::endl;
 	
-	cuts_post_sullivan.close();
+	cuts_post_minimization.close();
+	h1_post_minimization.close();
+	
 	return;
 }
 
