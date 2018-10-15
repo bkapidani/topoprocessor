@@ -9,7 +9,7 @@ endif ( CYGWIN )
 # -Wsign-conversion
 
 if ( ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
-	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=native -std=c++1y -fdiagnostics-color=always \
+	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -std=c++1y -fdiagnostics-color=always \
 	-fpermissive")
 	set(LINK_LIBS ${LINK_LIBS} -lpthread) # hack, must be fixed
 endif( )

@@ -806,7 +806,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
                
                if (debuggy)
                {
-                  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
+                  //~ std::cout << __FILE__ << ":" << __LINE__ << std::endl;
                   if (is_conductor(vol1))
                   {
                      cuts_pre_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
