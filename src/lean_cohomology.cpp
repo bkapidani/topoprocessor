@@ -207,8 +207,6 @@ lean_cohomology :: lean_cohomology(std::string mesher,
        std::remove("h1_post_minimization.txt");
        std::remove("cuts_pre_minimization.txt");
     }
-    //~ t_sullivan.toc();
-    //~ std::cout << "    Minimization of generator support took: " << t_sullivan << " s" << std::endl;
     
     h1_pre_minimization.close();
     if (debuggy)
@@ -217,31 +215,24 @@ lean_cohomology :: lean_cohomology(std::string mesher,
 
 bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
 {
-   std::vector<uint32_t>                               colour(pts.size()), p_queue;   
-   std::vector<bool>                                  wired(edges.size(),false), in_stack(surfaces.size());
-   std::vector< pair <uint32_t,sgnint32_t<int32_t> > >       cotree_stack;
-   std::vector<std::vector<std::pair<uint16_t, int16_t>>>       vect_stt_coeffs(edges.size());
+   std::vector<uint32_t>                                    colour(pts.size()), p_queue;   
+   std::vector<bool>                                        wired(edges.size(),false), in_stack(surfaces.size());
+   std::vector< pair <uint32_t,sgnint32_t<int32_t> > >      cotree_stack;
+   std::vector<std::vector<std::pair<uint16_t, int16_t>>>   vect_stt_coeffs(edges.size());
    
-   // std::vector<uint32_t>                            parent(pts.size()), par_edge(pts.size());
-   std::map<uint32_t,uint32_t>                         parent, par_edge;
+   std::map<uint32_t,uint32_t>                              parent, distance, par_edge;
 
    pair<uint32_t,sgnint32_t<int32_t> > dummy;
    int32_t adj_f, adj_v;
    uint32_t root, k, nnz, j, qtop;
    sgnint32_t<int32_t>  curr_n;
 
-   // std::ofstream os_dummy;
-   // os_dummy.open("cuts.txt");
-   // os_dummy.close();
-
-   
    srand (time(NULL));
-   // p_queue.push_back(rand() % pts.size());
    
-   // p_queue.reserve(pts.size());
    p_queue.push_back(0);
    colour[0]++;
    k=nnz=0;
+   distance[0] = 0;
    
    while (k<p_queue.size())
    {
@@ -259,6 +250,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
             p_queue.push_back(abs(curr_n));
             colour[abs(curr_n)]++;
             parent[abs(curr_n)]=qtop;
+            distance[abs(curr_n)] = distance[qtop]+1;
             par_edge[abs(curr_n)]=abs(curr_e);
             wired[abs(curr_e)]=true;
             nnz++;
@@ -269,8 +261,6 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
       colour[qtop]++;
       k++;
    }
-
-   // cotree_stack.reserve(surfaces.size());
    
    for(j=0; j<surfaces.size(); j++)
    {
@@ -281,18 +271,18 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
          in_stack[j]=true;
       }
    }
-
+   
+   
+   j=0;
+   
    while (nnz < wired.size())
    {
-      j=0;
-      
       while (j < cotree_stack.size())
       {
          uint32_t curr_e = abs(cotree_stack[j].second);
          
          if (wired[curr_e]==true)
          {
-            // std::cout << "    closed edge " << curr_f << std::endl;
             for (auto signed_adj_f : etf(curr_e))
             {   
                uint32_t adj_f = abs(signed_adj_f);
@@ -318,14 +308,49 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
          j++;
       }
       
-      // TEMPORARY FAIL - IMPLEMENT LINKING NUMBER INSTEAD
-      
       auto discrepanza= wired.size()-nnz;
       
       if (discrepanza>0)
       {
          std::cout << "    One cycle over all edges is insufficient: " << discrepanza << " edges still open" << std::endl;
-         return false;
+         
+         uint32_t it=0;
+         while (it<wired.size() && wired[it]) it++;
+         
+         if (it<wired.size())
+         {
+            std::cout << "    Setting random cotree edge value by l.n. computations" << std::endl;
+            
+            std::vector<std::array<double,3>> loop;
+            RetrieveLoop(parent,distance,it,loop);
+            std::vector<double> new_coeffs = LinkingNumber(loop);
+            
+            for (uint16_t gen=0; gen < n_lazy; ++gen)
+            {
+               auto edge_coeff = int16_t(std::round(new_coeffs[gen]));
+               if (edge_coeff != 0)
+               {
+                  vect_stt_coeffs[it].push_back(std::make_pair(gen+1,edge_coeff));
+                  
+                  if (be_lean_not_lazy)
+                  {
+                     for (auto val : HomoCoHomo.first[it])
+                     {
+                        double chain_val = signbit(val) ? -1 : 1;
+                        gmat[uint32_t(gen)][uint32_t(abs(val)-1)]+=chain_val*edge_coeff;
+                     }
+                  }
+               }
+            }
+            
+            wired[it]==true; nnz++;
+            cotree_stack.push_back(std::make_pair(uint32_t(0),sgnint32_t<int32_t>({it,1})));
+         }
+         else
+         {
+            std::cout << "    BUG: No cotree edges left to be set!" << std::endl;
+            return false;
+         }
       }
    }
       
@@ -361,24 +386,19 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, std
 {
    sgnint32_t<int32_t>  curr_e=cotree_stack[j].second;
    uint32_t           curr_f=cotree_stack[j].first;
-   
-   // std::ofstream os;
-   // os.open("cuts.txt", std::ofstream::out | std::ofstream::app);
 
    
    std::vector<int16_t> sum(n_lazy,0);
    std::vector<int16_t> coeff(n_lazy,0);
    
-   for (auto gen : HomoCoHomo.second[curr_f])      
+   for (auto gen : HomoCoHomo.second[curr_f])
       coeff[abs(gen)-1] += signbit(gen) ? -1 : 1;
    
    for (auto signed_adj_e : _fte_list[curr_f])
    {
-      // cout << "shit happens" << endl;
       uint32_t adj_e = abs(signed_adj_e);
       int16_t edge_coeff= signed_adj_e<0 ? -1 : +1;
       
-      // if (vect_stt_coeffs[adj_e].size()>0)
       for (auto f_gen : vect_stt_coeffs[adj_e])
          sum[f_gen.first-1]+=f_gen.second*edge_coeff;
          
@@ -396,44 +416,80 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, std
          }
       }
    }
-
-   // std::ofstream dbg;
-   // dbg.open("dbg.txt", std::ofstream::out | std::ofstream::app);
       
-   for (uint16_t gen=0; gen < n_lazy; gen++)
+   for (uint16_t gen=0; gen < n_lazy; ++gen)
    {
-
-      // dbg << "gen: " << gen+1 << "  face: " << abs(curr_f) << "  coeff: " << coeff[gen] << "   sum: " << sum[gen];
-      
       int16_t edge_coeff = curr_e<0 ? -(coeff[gen]-sum[gen]) : (coeff[gen]-sum[gen]);
 
       if (edge_coeff != 0)
       {
          vect_stt_coeffs[abs(curr_e)].push_back(std::make_pair(gen+1,edge_coeff));
          
-         // auto dual_face_vector = print_dual_face(gen+1,abs(curr_e),edge_coeff>0,0,255,0);
-         // for (auto df : dual_face_vector)
-            // os << df;
          if (be_lean_not_lazy)
          {
             for (auto val : HomoCoHomo.first[abs(curr_e)])
             {
                double chain_val = signbit(val) ? -1 : 1;
                gmat[uint32_t(gen)][uint32_t(abs(val)-1)]+=chain_val*edge_coeff;
-               
-               // std::cout << "    Gmat(" << uint32_t(gen) << "," << uint32_t(abs(val)-1) << ") += " << chain_val*edge_coeff << std::endl;
             }
          }
       }
-      
-      // dbg << "   result: " << edge_coeff*curr_e.Sgn() << std::endl;
    }
-   
-   // dbg.close();
-   // os.close();
 
    return;
 }
+
+void lean_cohomology :: RetrieveLoop(std::map<uint32_t,uint32_t>& p_parent,
+                                     std::map<uint32_t,uint32_t>& p_distance,
+                                     const uint32_t& ee, std::vector<std::array<double,3>>& gamma0)
+{
+   std::deque<std::array<double,3>> pts_deque;
+   auto ff = _etn_list[ee];
+
+   uint32_t u = abs(*(ff.begin()));
+   uint32_t v = abs(*(ff.rbegin()));
+      
+   bool from_small_to_big=true;
+   uint32_t small,big;
+   
+   pts_deque.push_front(pts[u]);
+   pts_deque.push_back(pts[v]);
+   
+   while (true)
+   {
+      if (p_distance[u]<p_distance[v])
+      {
+         small = u;
+         big = v;
+         from_small_to_big = !from_small_to_big;
+      }
+      else
+      {
+         small = v;
+         big = u;
+      }
+
+      
+      if (from_small_to_big)
+         pts_deque.push_front(pts[p_parent[big]]);
+      else
+         pts_deque.push_back(pts[p_parent[big]]);
+      
+      if (p_parent[big] == small)
+         break;
+      
+      u=small;
+      from_small_to_big = !from_small_to_big;
+      v=p_parent[big];
+   }
+   
+   while (!pts_deque.empty())
+   {
+      gamma0.push_back(pts_deque.front());
+      pts_deque.pop_front();
+   }
+}
+
 
 void lean_cohomology :: unique(std::vector<label_surface_type>& arr, std::vector<uint32_t>& new_labels)
 {
@@ -572,7 +628,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       auto t = parser::read_point_line<double>(endptr, &endptr);
       
       
-      std::vector<double> point = { std::get<0>(t),std::get<1>(t),std::get<2>(t) };      
+      std::array<double,3> point = { std::get<0>(t),std::get<1>(t),std::get<2>(t) };      
       pts.push_back(point);
       
       /* Do something with that point */
@@ -1028,7 +1084,7 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
       
       os << std::get<0>(t) << " " << std::get<1>(t) << " " << std::get<2>(t) << std::endl;
       
-      std::vector<double> point = { std::get<0>(t),std::get<1>(t),std::get<2>(t) };      
+      std::array<double,3> point = { std::get<0>(t),std::get<1>(t),std::get<2>(t) };      
       pts.push_back(point);
       
       /* Do something with that point */
@@ -1577,9 +1633,6 @@ bool lean_cohomology :: ResMaxFlow(std::vector<int32_t>& new_min_cut, const uint
    uint32_t qtop, curr_f, current_node;
    sgnint32_t<int32_t>  adj_v;
    
-   // if (k==1)
-      // std::cout << "    volumi adiacenti: " << *(ftv(k).begin()) << "  " << *std::prev(ftv(k).end()) << std::endl;
-   
    while (i<p_queue.size() && colour.at(t)==0)
    {
       qtop=p_queue.at(i);
@@ -1628,13 +1681,10 @@ bool lean_cohomology :: ResMaxFlow(std::vector<int32_t>& new_min_cut, const uint
                {
                   if (colour.at(current_node)==0)
                   {
-                     // dimQ=dimQ+1;
-                     // std::cout << "    arrivato al nodo " << current_node << " dal lato " << curr_f << std::endl;
                      p_queue.push_back(current_node);
                      colour.at(current_node)+=1;
                      parent[current_node]=qtop;
                      par_edge.at(current_node)=curr_f;
-                     // distance.at(current_node)=distance.at(qtop)+1;
                      new_fp.at(curr_f)=-1;
                   }   
                }
@@ -1662,13 +1712,10 @@ bool lean_cohomology :: ResMaxFlow(std::vector<int32_t>& new_min_cut, const uint
 
       flow.at(curr_f)=flow.at(curr_f)-nmc_step;
       
-      // std::cout << "    Aumentato flusso attraverso la faccia " << curr_f << " partendo dal nodo " << t << " al nodo " << s << std::endl;
-      // std::cout << "    Il flusso alla faccia " << curr_f << " e' ora pari a " << flow.at(curr_f) << " a fronte di una capacita' di " << capacities.at(curr_f) << std::endl << std::endl;
       return 1;
    }
    else
    {
-      // std::cout << "    Non sono riuscito ad aumentare il flusso attraverso la faccia " << k << " partendo dal nodo " << t << " al nodo " << s << std::endl;
       return 0;
    }
 }
@@ -1712,6 +1759,58 @@ double lean_cohomology :: LinkingNumber(const std::vector<std::array<double,3>>&
 
     return n/(4*PI);
 }
+
+std::vector<double> lean_cohomology :: LinkingNumber(const std::vector<std::array<double,3>>& gamma0)
+{
+   std::vector<double> ret(n_lazy,0);
+   
+   //~ std::array<double,3> a,b,c,d;
+   for (uint32_t f=0;f<surfaces_size();++f)
+   {
+      if (_ftv_list[f].size()==2)
+      {
+         for (auto gen : HomoCoHomo.second[f])
+         {
+            double coeff = signbit(gen) ? -1 : 1;
+            for (uint32_t i = 0; i <gamma0.size(); ++i)
+            {
+               std::array<double,3> a,b,c,d;
+               std::array<double,3> gamma11,gamma10;
+               gamma11[0] =  vol_barycenter(abs(_ftv_list[f][0]))[0];
+               gamma10[0] =  vol_barycenter(abs(_ftv_list[f][1]))[0];
+               gamma11[1] =  vol_barycenter(abs(_ftv_list[f][0]))[1];
+               gamma10[1] =  vol_barycenter(abs(_ftv_list[f][1]))[1];
+               gamma11[2] =  vol_barycenter(abs(_ftv_list[f][0]))[2];
+               gamma10[2] =  vol_barycenter(abs(_ftv_list[f][1]))[2];
+               
+               if ( coeff < 0 )
+                  std::swap(gamma11,gamma10);
+                  
+               if ( !(_ftv_list[f][0]<0) )
+                  std::swap(gamma11,gamma10);
+               
+               a[0] = gamma10[0]-gamma0.at(i)[0];
+               a[1] = gamma10[1]-gamma0.at(i)[1];
+               a[2] = gamma10[2]-gamma0.at(i)[2];
+               b[0] = gamma10[0]-gamma0.at((i+1) % gamma0.size())[0];
+               b[1] = gamma10[1]-gamma0.at((i+1) % gamma0.size())[1];
+               b[2] = gamma10[2]-gamma0.at((i+1) % gamma0.size())[2];
+               c[0] = gamma11[0]-gamma0.at((i+1) % gamma0.size())[0];
+               c[1] = gamma11[1]-gamma0.at((i+1) % gamma0.size())[1];
+               c[2] = gamma11[2]-gamma0.at((i+1) % gamma0.size())[2];
+               d[0] = gamma11[0]-gamma0.at(i)[0];
+               d[1] = gamma11[1]-gamma0.at(i)[1];
+               d[2] = gamma11[2]-gamma0.at(i)[2];
+               
+               ret[abs(gen)-1] += (0.25/PI)*SolidAngleQuadrilateral(a, b, c, d);
+            }
+         }
+      }
+   }
+
+    return ret;
+}
+
 
 double lean_cohomology :: SolidAngleQuadrilateral(const std::array<double,3>& a, 
                                       const std::array<double,3>& b, 
@@ -1809,70 +1908,34 @@ const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: nte(const int32_t& n_
 
 std::vector<double> lean_cohomology :: face_barycenter(const uint32_t& f)
 {
-    std::vector<uint32_t> nodes;
    std::vector<double> bc(3,0);
    
-   for (const auto& signed_ee : _fte_list[f])
-   {
-      uint32_t ee = signed_ee.Val();
-      
-      for (const auto& signed_nn : _etn_list[ee])
-      {
-         uint32_t nn = signed_nn.Val();
-         
-         if (!std::binary_search(nodes.begin(),nodes.end(),nn))
-         {
-            nodes.push_back(nn);
-            bc[0]+= pts[nn][0];
-            bc[1]+= pts[nn][1];
-            bc[2]+= pts[nn][2];
-         }   
-      }
-      
-   }
+   auto p0 = std::get<0>(surfaces[f]);
+   auto p1 = std::get<1>(surfaces[f]);
+   auto p2 = std::get<2>(surfaces[f]);
    
-   bc[0]/=3;
-   bc[1]/=3;
-   bc[2]/=3;
+   double one_third = double(1)/double(3);
+   
+   bc[0] = one_third*(pts[p0][0]+pts[p1][0]+pts[p2][0]);
+   bc[1] = one_third*(pts[p0][1]+pts[p1][1]+pts[p2][1]);
+   bc[2] = one_third*(pts[p0][2]+pts[p1][2]+pts[p2][2]);
    
    return bc;
 }
 
 std::vector<double> lean_cohomology :: vol_barycenter(const uint32_t& v)
 {
-    std::vector<uint32_t> nodes;
    std::vector<double> bc(3,0);
    
-   for (const auto& signed_ff : _vtf_list[v])
-   {
-      uint32_t ff = signed_ff.Val();
-      
-      if (ff<surfaces.size())
-      {
-         for (const auto& signed_ee : _fte_list[ff])
-         {
-            uint32_t ee = signed_ee.Val();
-            
-            for (const auto& signed_nn : _etn_list[ee])
-            {
-               uint32_t nn = signed_nn.Val();
-               
-               if (!std::binary_search(nodes.begin(),nodes.end(),nn))
-               {
-                  nodes.push_back(nn);
-                  bc[0]+= pts[nn][0];
-                  bc[1]+= pts[nn][1];
-                  bc[2]+= pts[nn][2];
-               }   
-            }
-            
-         }
-      }
-   }
+   auto p0 = std::get<0>(volumes[v]);
+   auto p1 = std::get<1>(volumes[v]);
+   auto p2 = std::get<2>(volumes[v]);
+   auto p3 = std::get<3>(volumes[v]);
    
-   bc[0]/=4;
-   bc[1]/=4;
-   bc[2]/=4;
+   
+   bc[0] = 0.25*(pts[p0][0]+pts[p1][0]+pts[p2][0]+pts[p3][0]);
+   bc[1] = 0.25*(pts[p0][1]+pts[p1][1]+pts[p2][1]+pts[p3][1]);
+   bc[2] = 0.25*(pts[p0][2]+pts[p1][2]+pts[p2][2]+pts[p3][2]);
    
    return bc;
 }
@@ -1900,7 +1963,7 @@ std::string lean_cohomology :: print_face(const uint32_t& label, const uint32_t&
 {
    std::ostringstream fr;
    std::set<uint32_t> nodes;
-   std::vector<std::vector<double> > n;
+   std::vector<std::array<double,3> > n;
    
    for (auto ee : fte(f))
    {
@@ -2028,8 +2091,8 @@ std::string lean_cohomology :: print_edge(const uint32_t& label, const uint32_t&
    const auto& nn = _etn_list[e];
    uint32_t nn_b = abs(*nn.begin());
    uint32_t nn_e = abs(*std::prev(nn.end()));
-    std::vector<double> n1 =  pts[nn_b];
-   std::vector<double> n2 =  pts[nn_e];
+   auto n1 =  pts[nn_b];
+   auto n2 =  pts[nn_e];
    
    fr << "102.100 " << label << " " << r << " " << g << " " << b << " 0.0 ";
    if (orient)

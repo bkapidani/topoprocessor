@@ -8,6 +8,7 @@
 #include <utility> 
 #include <fstream>
 #include <vector>
+#include <deque>
 #include <cstring>
 #include <string>
 #include <cmath>
@@ -23,7 +24,7 @@
 #include <mutex>
 #include "timecounter.h"
 #include "sgnint32_t.hpp"
-#include "gaussian.h"                               //from Pawel
+#include "gaussian.h"      //from Pawel
 #include "mapped_file.h"
 #include "strtot.hpp"
 
@@ -189,52 +190,52 @@ class lean_cohomology
 {   
    public:
       lean_cohomology(std::string , std::string, const char*, const char*, bool, bool, const char*);
-      bool                            ESTT(std::vector<std::vector<double>>&);
-      size_t                            volumes_size() { return volumes.size(); }
-      size_t                            surfaces_size() { return surfaces.size(); }
-      size_t                            edges_size() { return edges.size(); }
-      size_t                            nodes_size() { return pts.size(); }
-      const std::vector<sgnint32_t<int32_t>>& vtf(const int32_t& v_id) const;
-      const std::vector<sgnint32_t<int32_t>>& fte(const int32_t& f_id) const;
-      const std::vector<sgnint32_t<int32_t>>& ftv(const int32_t& f_id) const;
-      const std::vector<sgnint32_t<int32_t>>& etf(const int32_t& e_id) const;
-      const std::vector<sgnint32_t<int32_t>>& etn(const int32_t& e_id) const;
-      const std::vector<sgnint32_t<int32_t>>& nte(const int32_t& n_id) const;
-      bool                            is_conductor(const uint32_t& );
-      std::string                      print_face(const uint32_t&, const uint32_t&, bool, double, double, double);
-      std::string                      print_face(const uint32_t& f, const int32_t& orient);
-      std::string                      print_edge(const uint32_t, double, double, double, double, double, double);
-      std::string                      print_edge(const uint32_t&, const uint32_t&, bool, double, double, double);
-      std::string                      print_dual_edge(const uint32_t& , const uint32_t&, const uint32_t&, bool, double, double, double);
-      std::vector<std::string>             print_dual_face(const uint32_t&, const uint32_t&, bool, double, double, double);
-      std::string                      print_face(const uint32_t, bool, double, double, double, double, double, double, double, double, double, double, double, double );
-      std::vector<double>                face_barycenter(const uint32_t& );
-      std::vector<double>                edge_barycenter(const uint32_t& );
-      std::vector<double>                vol_barycenter(const uint32_t& );
-      std::vector<bool>                  edge_in_conductor, conductor_bool;
-      uint32_t                         f2d,e2d,n2d;
+      bool                                      ESTT(std::vector<std::vector<double>>&);
+      size_t                                    volumes_size() { return volumes.size(); }
+      size_t                                    surfaces_size() { return surfaces.size(); }
+      size_t                                    edges_size() { return edges.size(); }
+      size_t                                    nodes_size() { return pts.size(); }
+      const std::vector<sgnint32_t<int32_t>>&   vtf(const int32_t& v_id) const;
+      const std::vector<sgnint32_t<int32_t>>&   fte(const int32_t& f_id) const;
+      const std::vector<sgnint32_t<int32_t>>&   ftv(const int32_t& f_id) const;
+      const std::vector<sgnint32_t<int32_t>>&   etf(const int32_t& e_id) const;
+      const std::vector<sgnint32_t<int32_t>>&   etn(const int32_t& e_id) const;
+      const std::vector<sgnint32_t<int32_t>>&   nte(const int32_t& n_id) const;
+      bool                                      is_conductor(const uint32_t& );
+      std::string                               print_face(const uint32_t&, const uint32_t&, bool, double, double, double);
+      std::string                               print_face(const uint32_t& f, const int32_t& orient);
+      std::string                               print_edge(const uint32_t, double, double, double, double, double, double);
+      std::string                               print_edge(const uint32_t&, const uint32_t&, bool, double, double, double);
+      std::string                               print_dual_edge(const uint32_t& , const uint32_t&, const uint32_t&, bool, double, double, double);
+      std::vector<std::string>                  print_dual_face(const uint32_t&, const uint32_t&, bool, double, double, double);
+      std::string                               print_face(const uint32_t, bool, double, double, double, double, double, double,                                                                           double, double, double, double, double, double );
+      std::vector<double>                       face_barycenter(const uint32_t& );
+      std::vector<double>                       edge_barycenter(const uint32_t& );
+      std::vector<double>                       vol_barycenter(const uint32_t& );
+      std::vector<bool>                         edge_in_conductor, conductor_bool;
+      uint32_t                                  f2d,e2d,n2d;
       
    private:
-      std::pair<h1_2d_basis,thinned_currents>    HomoCoHomo;
-      uint32_t                insulator_id, conductor_id, surface_id, n_lazy;
-      std::map<uint32_t,std::vector<uint32_t>>    physical_surfaces;
-      std::vector<std::vector<std::pair<uint16_t, int16_t>>>       vect_stt_coeffs;
-      std::vector<uint32_t>                   domains;   
-      std::vector<volume_type>                volumes;
-      std::vector<surface_type>                surfaces;
-      std::vector<edge_type>                   edges;
-      std::vector<std::vector<double> >          pts;
+      std::pair<h1_2d_basis,thinned_currents>                  HomoCoHomo;
+      uint32_t                                                 insulator_id, conductor_id, surface_id, n_lazy;
+      std::map<uint32_t,std::vector<uint32_t>>                 physical_surfaces;
+      std::vector<std::vector<std::pair<uint16_t, int16_t>>>   vect_stt_coeffs;
+      std::vector<uint32_t>                                    domains;   
+      std::vector<volume_type>                                 volumes;
+      std::vector<surface_type>                                surfaces;
+      std::vector<edge_type>                                   edges;
+      std::vector<std::array<double,3> >                       pts;
       /* node -> cluster of edge IDs around it */
-      std::vector<cluster_list>                _nte_list;
-      std::vector<cluster_list>                _etn_list;   
+      std::vector<cluster_list>                                _nte_list;
+      std::vector<cluster_list>                                _etn_list;   
       /* edge -> cluster of face IDs around it */
-      std::vector<cluster_list>                 _etf_list;
-      std::vector<cluster_list>                 _fte_list;   
+      std::vector<cluster_list>                                _etf_list;
+      std::vector<cluster_list>                                _fte_list;   
       /* triangle -> cluster of volume IDs around it */
-      std::vector<cluster_list>              _ftv_list;
-      std::vector<cluster_list>             _vtf_list;
-      bool                     be_lean_not_lazy, sullivan, debuggy;
-      generic_two_manifold*   g2m;
+      std::vector<cluster_list>                                _ftv_list;
+      std::vector<cluster_list>                                _vtf_list;
+      bool                                                     be_lean_not_lazy, sullivan, debuggy;
+      generic_two_manifold*                                    g2m;
       
       void MyThrow(const std::runtime_error& e)
       {
@@ -262,7 +263,11 @@ class lean_cohomology
       void UpdateMinCut(std::vector<int32_t>&);
       std::vector<int32_t> flow,face_coeff_in_the_chain, capacities;
       /*stuff for linking number retrieval*/
+      
+      void RetrieveLoop(std::map<uint32_t,uint32_t>&,std::map<uint32_t,uint32_t>&,
+                        const uint32_t& ee, std::vector<std::array<double,3>>&);
       double LinkingNumber(const std::vector<std::array<double,3>>&, const std::vector<std::array<double,3>>&);
+      std::vector<double> LinkingNumber(const std::vector<std::array<double,3>>&);
       double SolidAngleQuadrilateral(const std::array<double,3>& a, 
                       const std::array<double,3>& b, 
                       const std::array<double,3>& c,
