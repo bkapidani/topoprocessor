@@ -43,6 +43,11 @@ lean_cohomology :: lean_cohomology(std::string mesher,
       }
    }
    
+   std::cout << "Domain labels: " << std::endl;
+   for (uint32_t it=1; it<conductor_bool.size(); ++it)
+      std::cout << "{ " << it << " : " << (conductor_bool[it] ? "conductor" : "insulator") << " } ";
+   std::cout << std::endl;
+   
    std::vector<uint32_t> intersurface, physical_nodes, physical_edges;
    f2d=e2d=n2d=0;
    t_lean.tic();
@@ -902,6 +907,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
             auto vol1= abs(*vols.begin());
             if (is_conductor(vol1))
             {
+               std::cout << "!!!" << " ";
                for (auto ee : _fte_list[k])
                   if (!physical_edges[abs(ee)])
                      edge_in_conductor[abs(ee)] = true;

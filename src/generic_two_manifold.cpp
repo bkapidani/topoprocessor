@@ -640,12 +640,15 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
       
       t_tc.tic();
       auto head = target;
-      if (debuggy)
-      {
+      //~ if (debuggy)
+      //~ {
+         write_thinned_current.lock();
          os.open("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
          os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
          os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
-      }
+         os.close();
+         write_thinned_current.unlock();
+      //~ }
       
       while (parent[head] != source)
       {   
@@ -668,11 +671,15 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
       
          head = parent[head];      
          
-         if (debuggy)
-         {
+         //~ if (debuggy)
+         //~ {
+            write_thinned_current.lock();
+            os.open("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
             os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
             os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
-         }         
+            os.close();
+            write_thinned_current.unlock();
+         //~ }         
       }
       
       for (auto vv : vol_mesh->ftv(par_e[head]))

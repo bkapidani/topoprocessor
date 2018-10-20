@@ -291,6 +291,7 @@ class generic_two_manifold
    private:
       lean_cohomology*             vol_mesh;
       bool                         debuggy=false;
+      std::mutex                   write_thinned_current;
       h1_2d_basis                  h1b;
       thinned_currents             tc;
       std::vector<bool>            p_colour, d_colour;
