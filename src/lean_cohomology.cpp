@@ -43,7 +43,7 @@ lean_cohomology :: lean_cohomology(std::string mesher,
       }
    }
    
-   std::cout << "Domain labels: " << std::endl;
+   std::cout << "    Domain labels: " << std::endl;
    for (uint32_t it=1; it<conductor_bool.size(); ++it)
       std::cout << "{ " << it << " : " << (conductor_bool[it] ? "conductor" : "insulator") << " } ";
    std::cout << std::endl;
@@ -59,13 +59,9 @@ lean_cohomology :: lean_cohomology(std::string mesher,
    t_read.toc();
    std::cout << "    Loading complex took: " << t_read << " s" << std::endl;
 
-   t_dk.tic();
-   generic_two_manifold cond_ins_interface(this);
-   t_dk.toc();
-   std::cout << "    Extracting conductor boundary took: " << t_dk << " s" << std::endl;   
-
-   
    t_hdk.tic();
+   generic_two_manifold cond_ins_interface(this);
+   
    HomoCoHomo = cond_ins_interface.H_to_CoH(intersurface,physical_edges, physical_nodes);
    n_lazy = cond_ins_interface.number_of_gens();
    this->g2m = &cond_ins_interface;
@@ -1192,8 +1188,8 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
    os << num_of_tets << std::endl;
    
    /************************ Sort ************************/
-   std::cout << "    Sorting data...";
-   std::cout.flush();
+   //~ std::cout << "    Sorting data...";
+   //~ std::cout.flush();
    
    tc.tic();
    
@@ -1236,8 +1232,8 @@ bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uin
    os << 0 << std::endl;
    os.close();
    
+   std::cout << "    HACK: Converting from GMSH to NETGEN, output file will be read again..." << std::endl;
    return read_mesh(sng.str(),intersurface,physical_edges,physical_nodes);
-
 }
 
 void lean_cohomology :: MinCost(const std::vector<int32_t>& start_s, uint32_t indigen)
