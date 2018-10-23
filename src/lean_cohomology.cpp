@@ -85,9 +85,13 @@ lean_cohomology :: lean_cohomology(std::string mesher,
       gmatrix<double> gm(gaussmat);
 
       //gm=gm.transpose();
+      std::cout << gm << std::endl;
       gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
       std::cout << "    Kernel dimension: " << gm.number_nonzero_rows() << std::endl;
       std::cout << "    Determinant: " << gm.determinant()         << std::endl;
+      
+      //~ std::cout << change_of_basis << std::endl;
+      //~ std::cout << gm << std::endl;
       
       
       uint32_t n_ind_gens=0;
@@ -97,7 +101,7 @@ lean_cohomology :: lean_cohomology(std::string mesher,
          std::vector<double> new_gen_comb(n_lazy,0);
          for (uint32_t j=0; j<n_lazy;++j)
          {
-            if (std::fabs(change_of_basis.Mat(j,k)) > 1e-12)
+            if (std::fabs(change_of_basis.Mat(j,k)) > 1e-6)
             {
                new_gen_comb[j] = change_of_basis.Mat(j,k);
             }
@@ -130,17 +134,14 @@ lean_cohomology :: lean_cohomology(std::string mesher,
    
    if (!sullivan)
    {
-      h1_pre_minimization.open("./h1_pre_minimization.txt");
+      h1_pre_minimization.open("h1.txt");
       h1_pre_minimization  << gen_comb.size() << std::endl;
    }
    else
    {
-      h1_post_minimization.open("./h1_post_minimization.txt");
+      h1_post_minimization.open("h1.txt");
       h1_post_minimization << 1 << std::endl;
    }
-   // ofstream cuts_post_minimization;
-   // cuts_post_minimization.open("./cuts_post_minimization.txt");
-   // cuts_post_minimization.close();
    
    std::vector<int32_t> start_s(edges_size(),0);
    for (uint32_t indigen=0; indigen<gen_comb.size(); ++indigen)
@@ -153,10 +154,17 @@ lean_cohomology :: lean_cohomology(std::string mesher,
          for (auto bb : vect_stt_coeffs[ee])
          {
             auto gg = bb.first;
-            // std::cout << gg << "-----" << bb.second << std::endl;
+            //~ std::cout << gg << " ";
+            
             if (gen_comb[indigen][abs(gg)-1] != 0)
-               final_coeff += double(bb.second)*gen_comb[indigen][abs(gg)-1];
+            {
+               //~ if (gen_comb[indigen][abs(gg)-1] != 1)
+                  //~ std::cout << gen_comb[indigen][abs(gg)-1] << "!" << std::endl;
+               
+               final_coeff += double(bb.second)*double(gen_comb[indigen][abs(gg)-1]);
+            }
          }
+         //~ std::cout << std::endl;
          if (std::fabs(final_coeff) > 1e-12)
          {
             start_s[ee] += std::round(final_coeff);
@@ -182,13 +190,13 @@ lean_cohomology :: lean_cohomology(std::string mesher,
         //~ else
         //~ {
             //~ std::remove("cuts_post_minimization.txt");
-            //~ std::remove("h1_post_minimization.txt");
+            //~ std::remove("h1.txt");
         //~ }
       if (!sullivan)
       {
          h1_pre_minimization << coefficients.size() << std::endl;
          for (auto cfs : coefficients)
-            h1_pre_minimization << std::get<0>(cfs) << "\t" << std::get<1>(cfs) << "\t" << std::get<2>(cfs) << std::endl;
+            h1_pre_minimization << std::get<0>(cfs)+1 << "\t" << std::get<1>(cfs)+1 << "\t" << std::get<2>(cfs) << std::endl;
       }
    }
    t_gauss.toc();
@@ -200,18 +208,18 @@ lean_cohomology :: lean_cohomology(std::string mesher,
     if (sullivan)
     {
         MinCost(start_s,1);
-        std::remove("h1_pre_minimization.txt");
+        //~ std::remove("h1.txt");
     }
     else
     {
        std::remove("cuts_post_minimization.txt");
-       std::remove("h1_post_minimization.txt");
+       //~ std::remove("h1.txt");
     }
     
     if (!debuggy)
     {
        std::remove("cuts_post_minimization.txt");
-       std::remove("h1_post_minimization.txt");
+       //~ std::remove("h1.txt");
        std::remove("cuts_pre_minimization.txt");
     }
     
@@ -319,7 +327,8 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
       
       if (discrepanza>0)
       {
-         std::cout << "    One cycle over all edges is insufficient: " << discrepanza << " edges still open" << std::endl;
+         std::cout << "    One cycle over all edges is insufficient: " 
+                   << discrepanza << " edges still open" << std::endl;
          
          uint32_t it=0;
          while (it<wired.size() && wired[it]) it++;
@@ -360,7 +369,29 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
          }
       }
    }
+   
+   for (uint32_t l=0;l<surfaces_size();++l)
+   {
+      std::vector<int16_t> coeff(n_lazy+1,0);
+      std::vector<int16_t> sum(n_lazy+1,0);
+      for (auto tc : HomoCoHomo.second[l])
+      {
+         coeff[abs(tc)]+=signbit(tc) ? -1 : 1;
+         if (abs(coeff[abs(tc)])>1)
+            std::cout << coeff[abs(tc)] << std::endl;
+      }
       
+      for (auto ee : _fte_list[l])
+         for (auto cfs : vect_stt_coeffs[abs(ee)])
+            sum[cfs.first] += cfs.second*ee.Sgn();
+        
+      for (uint32_t i_l=1; i_l<=n_lazy; ++i_l)
+         if (coeff[i_l] != sum[i_l])
+            std::cout << coeff[i_l] << " != " << sum[i_l] << std::endl;
+         //~ else
+            //~ std::cout << "Fine!" << std::endl;
+   }
+   
    this->vect_stt_coeffs = std::move(vect_stt_coeffs);
 
    return true;
@@ -389,26 +420,35 @@ pair<uint32_t,sgnint32_t<int32_t> > lean_cohomology :: check_boundary(uint32_t j
    return std::make_pair(open,ff);
 }
 
-void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, std::vector<pair<uint32_t,sgnint32_t<int32_t>>>& cotree_stack, std::vector<bool>& in_stack, std::vector<std::vector<std::pair<uint16_t, int16_t>>>& vect_stt_coeffs, std::vector<std::vector<double>>& gmat)
+void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, 
+                                     std::vector<pair<uint32_t,sgnint32_t<int32_t>>>& cotree_stack, 
+                                     std::vector<bool>& in_stack, 
+                                     std::vector<std::vector<std::pair<uint16_t, int16_t>>>& vect_stt_coeffs, 
+                                     std::vector<std::vector<double>>& gmat)
 {
    sgnint32_t<int32_t>  curr_e=cotree_stack[j].second;
-   uint32_t           curr_f=cotree_stack[j].first;
+   uint32_t             curr_f=cotree_stack[j].first;
+   uint8_t nw=0;
 
    
    std::vector<int16_t> sum(n_lazy,0);
    std::vector<int16_t> coeff(n_lazy,0);
    
    for (auto gen : HomoCoHomo.second[curr_f])
-      coeff[abs(gen)-1] += signbit(gen) ? -1 : 1;
+      coeff[abs(gen)-1] += (signbit(gen) ? -1 : 1);
    
    for (auto signed_adj_e : _fte_list[curr_f])
    {
       uint32_t adj_e = abs(signed_adj_e);
       int16_t edge_coeff= signed_adj_e<0 ? -1 : +1;
       
-      for (auto f_gen : vect_stt_coeffs[adj_e])
-         sum[f_gen.first-1]+=f_gen.second*edge_coeff;
-         
+      if (adj_e != abs(curr_e))
+      {
+         nw++;
+         for (auto f_gen : vect_stt_coeffs[adj_e])
+            sum[f_gen.first-1]+=f_gen.second*edge_coeff;
+      }
+      
       for (auto signed_adj_f : _etf_list[adj_e] )
       {
          uint32_t adj_f=abs(signed_adj_f);
@@ -423,6 +463,9 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, std
          }
       }
    }
+   
+   if (nw>2)
+      std::cout << "big trouble" << std::endl;
       
    for (uint16_t gen=0; gen < n_lazy; ++gen)
    {
@@ -594,6 +637,7 @@ void lean_cohomology :: unique(std::vector<label_edge_type>& arr, std::vector<ui
 bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint32_t>& intersurface, std::vector<uint32_t>& physical_edges, std::vector<uint32_t>& physical_nodes)
 {   
    timecounter tc, tctot, tprof;
+   bool conductor_on_bnd = false;
    
    /* Open file */
    if (_filename.size() == 0)
@@ -895,6 +939,11 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
                for (auto ee : _fte_list[k])
                   if (!physical_edges[abs(ee)])
                      edge_in_conductor[abs(ee)] = true;
+                     
+            if (!is_conductor(vol1) && !is_conductor(vol2))
+               for (auto ee : _fte_list[k])
+                     edge_in_conductor[abs(ee)] = false;
+               
             
             break;
          }
@@ -903,11 +952,23 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
             auto vol1= abs(*vols.begin());
             if (is_conductor(vol1))
             {
-               std::cout << "!!!" << " ";
+               conductor_on_bnd = true;
+               
+               //~ std::cout << vol1 << " " << domains[vol1] << " " << is_conductor(vol1) << std::endl;
+               
+               //~ write_thinned_current.lock();
+               //~ std::ofstream os("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
+               //~ os << print_face(9,k,true,255,0,0);
+               //~ os.close();
+               //~ write_thinned_current.unlock();
+               
                for (auto ee : _fte_list[k])
                   if (!physical_edges[abs(ee)])
                      edge_in_conductor[abs(ee)] = true;
             }
+            else
+               for (auto ee : _fte_list[k])
+                  edge_in_conductor[abs(ee)] = false;
             break;
          }
          case 0:
@@ -965,6 +1026,9 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    
    std::cout << "    done - " << tc << " seconds" << std::endl;
    
+   if (conductor_on_bnd)
+      std::cout << "Seems like conductors intersect the boundary of the mesh: is this what you wanted?" << std::endl;
+      
    /************************ Read boundary surfaces ************************/
    linecount = 0;
    // auto num_of_tets=lines;
@@ -1314,7 +1378,7 @@ void lean_cohomology :: MinCost(const std::vector<int32_t>& start_s, uint32_t in
    if (debuggy)
       cuts_post_minimization.open("./cuts_post_minimization.txt", std::ofstream::out | std::ofstream::app);   
    
-   h1_post_minimization.open("./h1_post_minimization.txt", std::ofstream::out | std::ofstream::app);
+   h1_post_minimization.open("./h1.txt", std::ofstream::out | std::ofstream::app);
    
    std::vector<int32_t> coeff_cf_array;
    std::vector<std::array<uint32_t,2>> coeff_id_array;
@@ -1343,8 +1407,8 @@ void lean_cohomology :: MinCost(const std::vector<int32_t>& start_s, uint32_t in
 
    h1_post_minimization << n_coeff << std::endl;
    for (uint32_t ii=0; ii<n_coeff; ++ii)
-      h1_post_minimization << coeff_id_array[ii][0] << " "
-                           << coeff_id_array[ii][1] << " "
+      h1_post_minimization << coeff_id_array[ii][0]+1 << " "
+                           << coeff_id_array[ii][1]+1 << " "
                            << coeff_cf_array[ii]    << std::endl;
    
    if (debuggy)
