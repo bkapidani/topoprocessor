@@ -85,13 +85,13 @@ lean_cohomology :: lean_cohomology(std::string mesher,
       gmatrix<double> gm(gaussmat);
 
       //gm=gm.transpose();
-      std::cout << gm << std::endl;
+      //~ std::cout << gm << std::endl;
       gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
       std::cout << "    Kernel dimension: " << gm.number_nonzero_rows() << std::endl;
       std::cout << "    Determinant: " << gm.determinant()         << std::endl;
       
-      //~ std::cout << change_of_basis << std::endl;
-      //~ std::cout << gm << std::endl;
+      std::cout << change_of_basis << std::endl;
+      std::cout << gm << std::endl;
       
       
       uint32_t n_ind_gens=0;
@@ -370,15 +370,15 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
       }
    }
    
-   for (uint32_t l=0;l<surfaces_size();++l)
+   /*for (uint32_t l=0;l<surfaces_size();++l)
    {
       std::vector<int16_t> coeff(n_lazy+1,0);
       std::vector<int16_t> sum(n_lazy+1,0);
       for (auto tc : HomoCoHomo.second[l])
       {
          coeff[abs(tc)]+=signbit(tc) ? -1 : 1;
-         if (abs(coeff[abs(tc)])>1)
-            std::cout << coeff[abs(tc)] << std::endl;
+         //~ if (abs(coeff[abs(tc)])>1)
+            //~ std::cout << coeff[abs(tc)] << std::endl;
       }
       
       for (auto ee : _fte_list[l])
@@ -390,7 +390,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
             std::cout << coeff[i_l] << " != " << sum[i_l] << std::endl;
          //~ else
             //~ std::cout << "Fine!" << std::endl;
-   }
+   }*/
    
    this->vect_stt_coeffs = std::move(vect_stt_coeffs);
 
