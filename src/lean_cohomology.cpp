@@ -51,13 +51,15 @@ lean_cohomology :: lean_cohomology(std::string mesher,
    std::vector<uint32_t> intersurface, physical_nodes, physical_edges;
    f2d=e2d=n2d=0;
    t_lean.tic();
+
    t_read.tic();
    if (mesher == "netgen")
       read_mesh(meshfile,intersurface,physical_edges,physical_nodes);
-   else if (mesher == "gmsh")
-      read_gmesh(meshfile,intersurface,physical_edges,physical_nodes);
+//   else if (mesher == "gmsh")
+//      read_gmesh(meshfile,intersurface,physical_edges,physical_nodes);
    t_read.toc();
-   std::cout << "    Loading complex took: " << t_read << " s" << std::endl;
+   
+   std::cout << "    Loading complex took: " << t_read << " seconds" << std::endl;
 
    t_hdk.tic();
    generic_two_manifold cond_ins_interface(this);
@@ -66,19 +68,19 @@ lean_cohomology :: lean_cohomology(std::string mesher,
    n_lazy = cond_ins_interface.number_of_gens();
    this->g2m = &cond_ins_interface;
    t_hdk.toc();
-   std::cout << "    Computing h^1(dk) and thinned currents took: " << t_hdk << " s" << std::endl;      
+   std::cout << "    Computing h^1(dk) and thinned currents took: " << t_hdk << " seconds" << std::endl;      
    
    t_estt.tic();
    std::vector<double> vg(n_lazy,0);
-   std::vector<std::vector<double>> gaussmat(n_lazy,vg);
+   std::vector<std::vector<double> > gaussmat(n_lazy,vg);
    if (!ESTT(gaussmat))
       throw std::invalid_argument("Failed to complete ESTT routine!");
    
    t_estt.toc();
-   std::cout << "    Computing cuts took: " << t_estt << " s" << std::endl;      
+   std::cout << "    Computing cuts took: " << t_estt << " seconds" << std::endl;      
    
    // std::vector<double> gen_comb(n_lazy,0);
-   std::vector<std::vector<double>> gen_comb;
+   std::vector<std::vector<double> > gen_comb;
    if (be_lean_not_lazy)
    {
       t_gauss.tic();
@@ -111,7 +113,7 @@ lean_cohomology :: lean_cohomology(std::string mesher,
       }
 
       t_gauss.toc();
-      std::cout << "    Computing basis of null space of l.n. matrix took: " << t_gauss << " s" << std::endl;
+      std::cout << "    Computing basis of null space of l.n. matrix took: " << t_gauss << " seconds" << std::endl;
    }
    else
    {
@@ -125,7 +127,7 @@ lean_cohomology :: lean_cohomology(std::string mesher,
 
    // cuts_pre_minimization.close();
    t_lean.toc();
-   std::cout << "    Lean cohomology computation took: " << t_lean << " s" << std::endl;
+   std::cout << "    Lean cohomology computation took: " << t_lean << " seconds" << std::endl;
 
    t_gauss.tic();
    std::ofstream h1_pre_minimization, h1_post_minimization, cuts_pre_minimization;
@@ -146,7 +148,7 @@ lean_cohomology :: lean_cohomology(std::string mesher,
    std::vector<int32_t> start_s(edges_size(),0);
    for (uint32_t indigen=0; indigen<gen_comb.size(); ++indigen)
    {
-      std::vector<std::tuple<uint32_t,uint32_t,double>> coefficients;
+      std::vector<std::tuple<uint32_t,uint32_t,double> > coefficients;
       
       for (uint32_t ee=0; ee<edges_size(); ++ee)
       {
@@ -156,12 +158,12 @@ lean_cohomology :: lean_cohomology(std::string mesher,
             auto gg = bb.first;
             //~ std::cout << gg << " ";
             
-            if (gen_comb[indigen][abs(gg)-1] != 0)
+            if (gen_comb[indigen][gg-1] != 0)
             {
                //~ if (gen_comb[indigen][abs(gg)-1] != 1)
                   //~ std::cout << gen_comb[indigen][abs(gg)-1] << "!" << std::endl;
                
-               final_coeff += double(bb.second)*double(gen_comb[indigen][abs(gg)-1]);
+               final_coeff += double(bb.second)*double(gen_comb[indigen][gg-1]);
             }
          }
          //~ std::cout << std::endl;
@@ -200,7 +202,7 @@ lean_cohomology :: lean_cohomology(std::string mesher,
       }
    }
    t_gauss.toc();
-   std::cout << "    Output to file took: " << t_gauss << " s" << std::endl;   
+   std::cout << "    Output to file took: " << t_gauss << " seconds" << std::endl;   
     
     //~ timecounter t_sullivan;
     //~ t_sullivan.tic();
@@ -228,12 +230,12 @@ lean_cohomology :: lean_cohomology(std::string mesher,
       cuts_pre_minimization.close();
 }
 
-bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
+bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat)
 {
    std::vector<uint32_t>                                    colour(pts.size()), p_queue;   
    std::vector<bool>                                        wired(edges.size(),false), in_stack(surfaces.size());
    std::vector< pair <uint32_t,sgnint32_t<int32_t> > >      cotree_stack;
-   std::vector<std::vector<std::pair<uint16_t, int16_t>>>   vect_stt_coeffs(edges.size());
+   std::vector<std::vector<std::pair<uint16_t, int16_t> > >   vect_stt_coeffs(edges.size());
    
    std::map<uint32_t,uint32_t>                              parent, distance, par_edge;
 
@@ -323,12 +325,12 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
          j++;
       }
       
-      auto discrepanza= wired.size()-nnz;
+      auto discrepancy= wired.size()-nnz;
       
-      if (discrepanza>0)
+      if (discrepancy>0)
       {
          std::cout << "    One cycle over all edges is insufficient: " 
-                   << discrepanza << " edges still open" << std::endl;
+                   << discrepancy << " edges still open" << std::endl;
          
          uint32_t it=0;
          while (it<wired.size() && wired[it]) it++;
@@ -337,7 +339,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
          {
             std::cout << "    Setting random cotree edge value by l.n. computations" << std::endl;
             
-            std::vector<std::array<double,3>> loop;
+            std::vector<std::array<double,3> > loop;
             RetrieveLoop(parent,distance,it,loop);
             std::vector<double> new_coeffs = LinkingNumber(loop);
             
@@ -359,7 +361,8 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double>>& gmat)
                }
             }
             
-            wired[it]==true; nnz++;
+            wired[it] = true;
+            nnz++;
             cotree_stack.push_back(std::make_pair(uint32_t(0),sgnint32_t<int32_t>({it,1})));
          }
          else
@@ -421,10 +424,10 @@ pair<uint32_t,sgnint32_t<int32_t> > lean_cohomology :: check_boundary(uint32_t j
 }
 
 void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w, 
-                                     std::vector<pair<uint32_t,sgnint32_t<int32_t>>>& cotree_stack, 
+                                     std::vector<pair<uint32_t,sgnint32_t<int32_t> > >& cotree_stack, 
                                      std::vector<bool>& in_stack, 
-                                     std::vector<std::vector<std::pair<uint16_t, int16_t>>>& vect_stt_coeffs, 
-                                     std::vector<std::vector<double>>& gmat)
+                                     std::vector<std::vector<std::pair<uint16_t, int16_t> > >& vect_stt_coeffs, 
+                                     std::vector<std::vector<double> >& gmat)
 {
    sgnint32_t<int32_t>  curr_e=cotree_stack[j].second;
    uint32_t             curr_f=cotree_stack[j].first;
@@ -491,9 +494,9 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w,
 
 void lean_cohomology :: RetrieveLoop(std::map<uint32_t,uint32_t>& p_parent,
                                      std::map<uint32_t,uint32_t>& p_distance,
-                                     const uint32_t& ee, std::vector<std::array<double,3>>& gamma0)
+                                     const uint32_t& ee, std::vector<std::array<double,3> >& gamma0)
 {
-   std::deque<std::array<double,3>> pts_deque;
+   std::deque<std::array<double,3> > pts_deque;
    auto ff = _etn_list[ee];
 
    uint32_t u = abs(*(ff.begin()));
@@ -551,6 +554,7 @@ void lean_cohomology :: unique(std::vector<label_surface_type>& arr, std::vector
    struct {
       bool operator()(const label_surface_type& t1, const label_surface_type& t2)
       {
+         // this must be changed
          return (t1.first < t2.first);
       }
    } surfcomp;
@@ -634,7 +638,8 @@ void lean_cohomology :: unique(std::vector<label_edge_type>& arr, std::vector<ui
    
 }
 
-bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint32_t>& intersurface, std::vector<uint32_t>& physical_edges, std::vector<uint32_t>& physical_nodes)
+bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint32_t>& intersurface, 
+                                  std::vector<uint32_t>& physical_edges, std::vector<uint32_t>& physical_nodes)
 {   
    timecounter tc, tctot, tprof;
    bool conductor_on_bnd = false;
@@ -694,48 +699,50 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    linecount = 0;
    
    lines = strtot<uint32_t>(endptr, &endptr);
-   std::vector< tm_tuple > temp_tet;
-   temp_tet.reserve(lines);
-   std::vector<label_surface_type> temp_tri0;
+   std::vector< tm_tuple > temp_hex;
+   temp_hex.reserve(lines);
+   std::vector<label_surface_type> temp_quad0;
    
    tc.tic();
    while (linecount < lines)
    {
       if ( (linecount%100000) == 0 )
       {
-         std::cout << "    Reading tetrahedra: " << linecount;
+         std::cout << "    Reading hexahedra: " << linecount;
          std::cout << "/" << lines << "\r";
          std::cout.flush();
       }
       
-      auto t = parser::read_tetrahedron_line<uint32_t>(endptr, &endptr);
+      auto t = parser::read_hex_line<uint32_t>(endptr, &endptr);
       
-      temp_tri0.push_back(std::make_pair(surface_type(0,0,0),0));
-      temp_tri0.push_back(std::make_pair(surface_type(0,0,0),0));
-      temp_tri0.push_back(std::make_pair(surface_type(0,0,0),0));
-      temp_tri0.push_back(std::make_pair(surface_type(0,0,0),0));
+      temp_quad0.push_back(std::make_pair(surface_type(0,0,0,0),0));
+      temp_quad0.push_back(std::make_pair(surface_type(0,0,0,0),0));
+      temp_quad0.push_back(std::make_pair(surface_type(0,0,0,0),0));
+      temp_quad0.push_back(std::make_pair(surface_type(0,0,0,0),0));
       
-      std::vector<uint32_t> vectet(4);
-      vectet[0] = std::get<1>(t);
-      vectet[1] = std::get<2>(t);
-      vectet[2] = std::get<3>(t);
-      vectet[3] = std::get<4>(t);
-      std::sort(vectet.begin(),vectet.end());
-      
-      uint32_t       p0(vectet[0]);
-      uint32_t       p1(vectet[1]);
-      uint32_t       p2(vectet[2]);
-      uint32_t       p3(vectet[3]);
+      std::vector<uint32_t> vechex(8);
+      vechex[0] = std::get<1>(t);
+      vechex[1] = std::get<2>(t);
+      vechex[2] = std::get<3>(t);
+      vechex[3] = std::get<4>(t);
+      vechex[4] = std::get<5>(t);
+      vechex[5] = std::get<6>(t);
+      vechex[6] = std::get<7>(t);
+      vechex[7] = std::get<8>(t);
+
+      //std::sort(vectet.begin(),vectet.end());
+
       uint32_t       d(std::get<0>(t));
       
-      auto tuple = std::make_tuple(volume_type(p0, p1, p2, p3), d);
-      temp_tet.push_back( tuple );
+      auto tuple = std::make_tuple(volume_type(vechex[0], vechex[1], vechex[2], vechex[3],
+                                               vechex[4], vechex[5], vechex[6], vechex[7]), d);
+      temp_hex.push_back( tuple );
       
       linecount++;
    }
    tc.toc();
    
-   std::cout << "    Reading tetrahedra: " << linecount;
+   std::cout << "    Reading hexahedra: " << linecount;
    std::cout << "/" << lines  << " - " << tc << " seconds" << std::endl;
    
    /************************ Sort ************************/
@@ -753,7 +760,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       }
    } mycomp;
 
-   std::sort(temp_tet.begin(), temp_tet.end(), mycomp);
+   std::sort(temp_hex.begin(), temp_hex.end(), mycomp);
    
    // _vtf_list.resize(lines);
    uint32_t tot=0;
@@ -764,7 +771,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    // volumes.reserve(lines);
    // domains.reserve(lines);
    
-   for (auto tet : temp_tet)
+   for (auto tet : temp_hex)
    {
       auto t = std::get<0>(tet);
       volumes.push_back(t);
@@ -773,31 +780,37 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       uint32_t       p1(std::get<1>(t));
       uint32_t       p2(std::get<2>(t));
       uint32_t       p3(std::get<3>(t));
+      uint32_t       p4(std::get<4>(t));
+      uint32_t       p5(std::get<5>(t));
+      uint32_t       p6(std::get<6>(t));
+      uint32_t       p7(std::get<7>(t));
 
-      temp_tri0[tot]           = std::make_pair(surface_type(p0, p1, p2),tot);
-      temp_tri0[tot+lines]     = std::make_pair(surface_type(p0, p1, p3),tot+lines);
-      temp_tri0[tot+2*lines]   = std::make_pair(surface_type(p0, p2, p3),tot+2*lines);
-      temp_tri0[tot+3*lines]   = std::make_pair(surface_type(p1, p2, p3),tot+3*lines);
+      temp_quad0[tot]           = std::make_pair(surface_type(p0, p1, p2, p3),tot);
+      temp_quad0[tot+lines]     = std::make_pair(surface_type(p4, p5, p6, p7),tot+lines);
+      temp_quad0[tot+2*lines]   = std::make_pair(surface_type(p0, p2, p4, p6),tot+2*lines);
+      temp_quad0[tot+3*lines]   = std::make_pair(surface_type(p1, p3, p5, p7),tot+3*lines);
+      temp_quad0[tot+4*lines]   = std::make_pair(surface_type(p0, p4, p1, p5),tot+4*lines);
+      temp_quad0[tot+5*lines]   = std::make_pair(surface_type(p2, p6, p3, p7),tot+5*lines);
       tot++;
    
       std::vector<double> v1 { pts[p1][0]-pts[p0][0], pts[p1][1]-pts[p0][1],pts[p1][2]-pts[p0][2] };
       std::vector<double> v2 { pts[p2][0]-pts[p0][0], pts[p2][1]-pts[p0][1],pts[p2][2]-pts[p0][2] };
-      std::vector<double> v3 { pts[p3][0]-pts[p0][0], pts[p3][1]-pts[p0][1],pts[p3][2]-pts[p0][2] };      
+      std::vector<double> v3 { pts[p4][0]-pts[p0][0], pts[p4][1]-pts[p0][1],pts[p4][2]-pts[p0][2] };
 
       int32_t sgn  = this->stddot(v1, stdcross(v2, v3))/double(6)>0? 1 : -1;
       vol_signs.push_back(sgn);
       domains.push_back(std::get<1>(tet));
    }
-   std::vector<tm_tuple>().swap(temp_tet);
-   std::vector<uint32_t> labels(4*lines);
-   surfaces.reserve(4*lines);
+   std::vector<tm_tuple>().swap(temp_hex);
+   std::vector<uint32_t> labels(6*lines);
+   surfaces.reserve(6*lines);
    
    //~ tprof.toc();
    //~ std::cout << "1: " << tprof << std::endl;
    //~ tprof.tic();
    
-   unique(temp_tri0, labels); //this also fills the surfaces vector
-   std::vector<label_surface_type>().swap(temp_tri0);
+   unique(temp_quad0, labels); //this also fills the surfaces vector
+   std::vector<label_surface_type>().swap(temp_quad0);
    
    //~ tprof.toc();
    //~ std::cout << "2: " << tprof << std::endl;
@@ -815,19 +828,25 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       _ftv_list[labels[k]].push_back(v1); 
       _ftv_list[labels[k+lines]].push_back(v2); 
       _ftv_list[labels[k+2*lines]].push_back(v1);
-      _ftv_list[labels[k+3*lines]].push_back(v2);      
+      _ftv_list[labels[k+3*lines]].push_back(v2); 
+      _ftv_list[labels[k+4*lines]].push_back(v1);
+      _ftv_list[labels[k+5*lines]].push_back(v2);     
       
       sgnint32_t<int32_t> f1(labels[k],-vol_signs[k]);
       sgnint32_t<int32_t> f2(labels[k+lines],vol_signs[k]);
       sgnint32_t<int32_t> f3(labels[k+2*lines],-vol_signs[k]);
       sgnint32_t<int32_t> f4(labels[k+3*lines],vol_signs[k]);
+      sgnint32_t<int32_t> f5(labels[k+4*lines],-vol_signs[k]);
+      sgnint32_t<int32_t> f6(labels[k+5*lines],vol_signs[k]);
       
-      std::vector<sgnint32_t<int32_t>> dummy(4);
+      std::vector<sgnint32_t<int32_t> > dummy(6);
       _vtf_list.push_back(dummy);
       _vtf_list[k][0] = f1; 
       _vtf_list[k][1] = f2; 
       _vtf_list[k][2] = f3;
       _vtf_list[k][3] = f4;
+      _vtf_list[k][4] = f5;
+      _vtf_list[k][5] = f6;
    }
    
    std::vector<uint32_t>().swap(labels);
@@ -835,7 +854,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    intersurface.resize(lines,0);
    // _fte_list.resize(lines);
    tot = 0;
-   std::vector<label_edge_type> temp_edge0(3*lines);
+   std::vector<label_edge_type> temp_edge0(4*lines);
    
    //~ tprof.toc();
    //~ std::cout << "3: " << tprof << std::endl;
@@ -846,10 +865,12 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       uint32_t       p0(std::get<0>(t));
       uint32_t       p1(std::get<1>(t));
       uint32_t       p2(std::get<2>(t));
+      uint32_t       p3(std::get<3>(t));
 
       temp_edge0[tot]          =  std::make_pair(edge_type(p0, p1),tot);
       temp_edge0[tot+lines]    =  std::make_pair(edge_type(p0, p2),tot+lines);
-      temp_edge0[tot+2*lines]  =  std::make_pair(edge_type(p1, p2),tot+2*lines);
+      temp_edge0[tot+2*lines]  =  std::make_pair(edge_type(p1, p3),tot+2*lines);
+      temp_edge0[tot+3*lines]  =  std::make_pair(edge_type(p2, p3),tot+3*lines);
       tot++;
    }
    
@@ -878,23 +899,27 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       sgnint32_t<int32_t> f1(k, 1);
       sgnint32_t<int32_t> f2(k,-1);
       sgnint32_t<int32_t> f3(k, 1);
+      sgnint32_t<int32_t> f4(k,-1);
       
       _etf_list[e_labels[k]].push_back(f1);
       _etf_list[e_labels[k+lines]].push_back(f2); 
       _etf_list[e_labels[k+2*lines]].push_back(f3);
+      _etf_list[e_labels[k+3*lines]].push_back(f4);
 
       // std::cout << labels[k] << " " << labels[k+lines] << " " << labels[k+2*lines] << std::endl;
       
       sgnint32_t<int32_t> e1(e_labels[k],1);
       sgnint32_t<int32_t> e2(e_labels[k+lines],-1);
       sgnint32_t<int32_t> e3(e_labels[k+2*lines],1);
+      sgnint32_t<int32_t> e4(e_labels[k+3*lines],-1);
       
-      std::vector<sgnint32_t<int32_t>> dummy(3);      
+      std::vector<sgnint32_t<int32_t> > dummy(4);      
       _fte_list.push_back(dummy);
       
       _fte_list[k][0] = e1;
       _fte_list[k][1] = e2;
       _fte_list[k][2] = e3;
+      _fte_list[k][3] = e4;
       
       auto vols = _ftv_list[k];
       
@@ -905,8 +930,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
             auto vol1= abs(*vols.begin());
             auto vol2= abs(*(std::prev(vols.end())));
             
-            if ((!is_conductor(vol1) &&  is_conductor(vol2)) || 
-                ( is_conductor(vol1) && !is_conductor(vol2)))
+            if (is_conductor(vol1) !=  is_conductor(vol2))
             {
                intersurface[k]++;
                
@@ -943,7 +967,6 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
             if (!is_conductor(vol1) && !is_conductor(vol2))
                for (auto ee : _fte_list[k])
                      edge_in_conductor[abs(ee)] = false;
-               
             
             break;
          }
@@ -953,14 +976,6 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
             if (is_conductor(vol1))
             {
                conductor_on_bnd = true;
-               
-               //~ std::cout << vol1 << " " << domains[vol1] << " " << is_conductor(vol1) << std::endl;
-               
-               //~ write_thinned_current.lock();
-               //~ std::ofstream os("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
-               //~ os << print_face(9,k,true,255,0,0);
-               //~ os.close();
-               //~ write_thinned_current.unlock();
                
                for (auto ee : _fte_list[k])
                   if (!physical_edges[abs(ee)])
@@ -973,7 +988,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
          }
          case 0:
          {
-            throw std::invalid_argument("The whole domain must be trivial!");
+            throw std::invalid_argument("The whole domain must be a differentiable manifold!");
             break;
          }
       }   
@@ -1000,7 +1015,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       sgnint32_t<int32_t> n1(p0,-1);
       sgnint32_t<int32_t> n2(p1, 1);
       
-      std::vector<sgnint32_t<int32_t>> dummy(2);      
+      std::vector<sgnint32_t<int32_t> > dummy(2);      
       _etn_list.push_back(dummy);
       _etn_list[k][0] = n1;
       _etn_list[k][1] = n2;
@@ -1027,7 +1042,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    std::cout << "    done - " << tc << " seconds" << std::endl;
    
    if (conductor_on_bnd)
-      std::cout << "Seems like conductors intersect the boundary of the mesh: is this what you wanted?" << std::endl;
+      std::cout << "Seems like conductors intersect the boundary of the mesh: is this wanted?" << std::endl;
       
    /************************ Read boundary surfaces ************************/
    linecount = 0;
@@ -1097,207 +1112,6 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       // assert(nn.size() == 2);   
    
    return true;
-}
-
-bool lean_cohomology :: read_gmesh(const std::string& _filename, std::vector<uint32_t>& intersurface, std::vector<uint32_t>& physical_edges, std::vector<uint32_t>& physical_nodes)
-{   
-   timecounter tc, tctot;
-   
-   /* Open file */
-   if (_filename.size() == 0)
-   {
-      std::cout << "    Invalid mesh file name" << std::endl;
-      return false;
-   }
-   
-   uint32_t   lines, linecount;
-   
-   mapped_file mf(_filename);
-   
-   std::cout << "     * * * Reading GMSH format mesh * * * ";
-   std::cout << std::endl;
-   
-   std::stringstream sng;
-   uint32_t string_ind=0;
-   while (_filename[string_ind] != '.')
-      sng << _filename[string_ind++];
-   
-   sng << ".mesh";
-   std::ofstream os(sng.str().c_str());
-   tctot.tic();
-   /************************ Read useless stuff ************************/
-
-   for ( size_t i=0; i<4; i++)
-      auto t = mf.get_line();
-
-   /************************ Read points ************************/
-   linecount = 0;
-   
-   const char *data = mf.mem();
-   char *endptr;
-   
-   lines = strtot<uint32_t>(data, &endptr);
-   os << lines << std::endl;
-   auto dummy = mf.get_line();
-   // pts.reserve(lines);
-   
-   tc.tic();
-   while (linecount < lines)
-   {
-      if ( (linecount%100000) == 0 )
-      {
-         std::cout << "    Reading points: " << linecount;
-         std::cout << "/" << lines << "\r";
-         std::cout.flush();
-      }
-
-      auto t = parser::read_gmsh_point_line<double>(endptr, &endptr);
-      
-      os << std::get<0>(t) << " " << std::get<1>(t) << " " << std::get<2>(t) << std::endl;
-      
-      std::array<double,3> point = { std::get<0>(t),std::get<1>(t),std::get<2>(t) };      
-      pts.push_back(point);
-      
-      /* Do something with that point */
-      dummy = mf.get_line();
-      linecount++;
-   }
-   tc.toc();
-   
-   std::cout << "    Reading points: " << linecount;
-   std::cout << "/" << lines << " - " << tc << " seconds" << std::endl;
-   /************************ Read useless stuff ************************/
-   
-   for ( size_t i=0; i<2; i++)
-   {
-      auto t = mf.get_line();
-      // std::cout << t << std::endl;
-   }
-   /************************ Read elements ************************/
-   linecount = 0;
-   const char *new_data = mf.mem();
-   lines = strtot<uint32_t>(new_data, &endptr);
-   // os << lines << std::endl;
-
-   std::vector< tm_tuple > temp_tet;
-   std::vector< surface_type > temp_surf_tri;
-   std::vector< uint32_t > temp_surf_lab;
-   // std::vector< em_tuple > temp_bnd_edge; 
-   temp_tet.reserve(lines);
-   temp_surf_lab.reserve(lines);
-   temp_surf_tri.reserve(lines);
-   uint32_t num_of_tets=0;
-   tc.tic();
-   while (linecount < lines)
-   {
-      if ( (linecount%100000) == 0 )
-      {
-         std::cout << "    Reading elements: " << linecount;
-         std::cout << "/" << lines << "\r";
-         std::cout.flush();
-      }
-
-      dummy = mf.get_line();
-      const char *new_data = mf.mem();
-      auto t = parser::read_element_line<uint32_t>(new_data, &endptr);
-      auto element_label = std::get<0>(t);
-      
-      if (element_label == 4)
-      {
-         // auto t = parser::read_tetrahedron_line<uint32_t>(endptr, &endptr);
-         
-         //auto t = parser::read_array<uint32_t, 5>(mf.get_line());
-         num_of_tets++;
-         std::vector<uint32_t> vectet(4);
-         vectet[0] = std::get<2>(t);
-         vectet[1] = std::get<3>(t);
-         vectet[2] = std::get<4>(t);
-         vectet[3] = std::get<5>(t);
-         std::sort(vectet.begin(),vectet.end());
-         
-         uint32_t       p0(vectet[0]);
-         uint32_t       p1(vectet[1]);
-         uint32_t       p2(vectet[2]);
-         uint32_t       p3(vectet[3]);
-         uint32_t       d(std::get<1>(t));
-         
-         //~ if (d != insulator_id)
-         //~ {
-            //~ d = conductor_id;
-         //~ }
-         // os << d << " " << p0+1 << " " << p1+1 << " " << p2+1 << " " << p3+1 << std::endl;
-         
-         auto tuple = std::make_tuple(volume_type(p0, p1, p2, p3), d);
-         temp_tet.push_back( tuple );
-      }
-      else if (element_label == 2)
-      {
-         // std::cout << "    I'm here with a triangle!" << std::endl;
-         uint32_t       p0( std::get<2>(t) );
-         uint32_t       p1( std::get<3>(t) );
-         uint32_t       p2( std::get<4>(t) );
-         uint32_t       bid( std::get<1>(t) );
-         
-         surface_type   tri( p0, p1, p2 );
-         temp_surf_tri.push_back(tri);
-         temp_surf_lab.push_back(bid);
-      }
-      
-      linecount++;
-   }
-   tc.toc();
-   
-   std::cout << "    Reading elements: " << linecount;
-   std::cout << "/" << lines  << " - " << tc << " seconds" << std::endl;
-   os << num_of_tets << std::endl;
-   
-   /************************ Sort ************************/
-   //~ std::cout << "    Sorting data...";
-   //~ std::cout.flush();
-   
-   tc.tic();
-   
-   /* sort tetrahedra, make unique and move them in geometry */
-      
-   struct {
-      bool operator()(const tm_tuple& t1, const tm_tuple& t2)
-      {
-         return (std::get<0>(t1) < std::get<0>(t2));
-      }
-   } mycomp;
-
-   std::sort(temp_tet.begin(), temp_tet.end(), mycomp);
-   
-   // _vtf_list.resize(lines);
-   uint32_t tot=0;   
-
-   
-   std::vector<label_surface_type> temp_tri0;
-   temp_tri0.resize(4*lines);
-   std::vector<int32_t> vol_signs;
-   
-   // vol_signs.reserve(lines);
-   // volumes.reserve(lines);
-   // domains.reserve(lines);
-   // os << temp_tet.size() << std::endl;
-   for (auto tet : temp_tet)
-   {
-      auto t = std::get<0>(tet);
-      volumes.push_back(t);
-      
-      uint32_t       p0(std::get<0>(t));
-      uint32_t       p1(std::get<1>(t));
-      uint32_t       p2(std::get<2>(t));
-      uint32_t       p3(std::get<3>(t));
-      
-      os << std::get<1>(tet) << " " << p0+1 << " " << p1+1 << " " << p2+1 << " " << p3+1 << std::endl;
-   }
-   
-   os << 0 << std::endl;
-   os.close();
-   
-   std::cout << "    HACK: Converting from GMSH to NETGEN, output file will be read again..." << std::endl;
-   return read_mesh(sng.str(),intersurface,physical_edges,physical_nodes);
 }
 
 void lean_cohomology :: MinCost(const std::vector<int32_t>& start_s, uint32_t indigen)
@@ -1370,8 +1184,8 @@ void lean_cohomology :: MinCost(const std::vector<int32_t>& start_s, uint32_t in
    }
       
    tc.toc();
-   //~ std::cout << "    Minimizing support of generator n. " << indigen+1 << " took " << tc << " s" << std::endl;
-   std::cout << "    Minimizing support of generators took " << tc << " s" << std::endl;
+   //~ std::cout << "    Minimizing support of generator n. " << indigen+1 << " took " << tc << " seconds" << std::endl;
+   std::cout << "    Minimizing support of generators took " << tc << " seconds" << std::endl;
 
    std::ofstream cuts_post_minimization, h1_post_minimization;
    
@@ -1381,7 +1195,7 @@ void lean_cohomology :: MinCost(const std::vector<int32_t>& start_s, uint32_t in
    h1_post_minimization.open("./h1.txt", std::ofstream::out | std::ofstream::app);
    
    std::vector<int32_t> coeff_cf_array;
-   std::vector<std::array<uint32_t,2>> coeff_id_array;
+   std::vector<std::array<uint32_t,2> > coeff_id_array;
    uint32_t n_coeff=0;
 
    for ( uint32_t it=0; it<edges_size(); ++it)
@@ -1540,7 +1354,7 @@ void lean_cohomology :: UpdateMinCut(std::vector<int32_t>& new_min_cut)
    return;
 }
 
-double lean_cohomology :: LinkingNumber(const std::vector<std::array<double,3>>& gamma0, const std::vector<std::array<double,3>>& gamma1)
+double lean_cohomology :: LinkingNumber(const std::vector<std::array<double,3> >& gamma0, const std::vector<std::array<double,3> >& gamma1)
 {
    
    double n = 0;
@@ -1570,7 +1384,7 @@ double lean_cohomology :: LinkingNumber(const std::vector<std::array<double,3>>&
     return n/(4*PI);
 }
 
-std::vector<double> lean_cohomology :: LinkingNumber(const std::vector<std::array<double,3>>& gamma0)
+std::vector<double> lean_cohomology :: LinkingNumber(const std::vector<std::array<double,3> >& gamma0)
 {
    std::vector<double> ret(n_lazy,0);
    
@@ -1663,7 +1477,7 @@ double lean_cohomology :: SolidAngleTriangle(const std::array<double,3>& a, cons
    return 2*at;
 }
 
-const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: vtf(const int32_t& v_id) const
+const std::vector<sgnint32_t<int32_t> >& lean_cohomology :: vtf(const int32_t& v_id) const
 {
    if ( _vtf_list.size() == 0 )
       throw std::invalid_argument("you have to populate the list first");
@@ -1676,7 +1490,7 @@ bool lean_cohomology :: is_conductor(const uint32_t& v)
    return conductor_bool[domains[v]];
 }
 
-const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: fte(const int32_t& f_id) const
+const std::vector<sgnint32_t<int32_t> >& lean_cohomology :: fte(const int32_t& f_id) const
 {
    if ( _fte_list.size() == 0 )
       throw std::invalid_argument("you have to populate the list first");
@@ -1684,7 +1498,7 @@ const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: fte(const int32_t& f_
       return _fte_list[uint32_t(abs(f_id))];
 }
 
-const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: ftv(const int32_t& f_id) const
+const std::vector<sgnint32_t<int32_t> >& lean_cohomology :: ftv(const int32_t& f_id) const
 {
    if ( _ftv_list.size() == 0 )
       throw std::invalid_argument("you have to populate the list first");
@@ -1692,7 +1506,7 @@ const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: ftv(const int32_t& f_
       return _ftv_list[uint32_t(abs(f_id))];
 }
 
-const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: etf(const int32_t& e_id) const
+const std::vector<sgnint32_t<int32_t> >& lean_cohomology :: etf(const int32_t& e_id) const
 {
    if ( _etf_list.size() == 0 )
       throw std::invalid_argument("you have to populate the list first");
@@ -1700,7 +1514,7 @@ const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: etf(const int32_t& e_
       return _etf_list[uint32_t(abs(e_id))];
 }
 
-const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: etn(const int32_t& e_id) const
+const std::vector<sgnint32_t<int32_t> >& lean_cohomology :: etn(const int32_t& e_id) const
 {
    if ( _etn_list.size() == 0 )
       throw std::invalid_argument("you have to populate the list first");
@@ -1708,7 +1522,7 @@ const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: etn(const int32_t& e_
       return _etn_list[uint32_t(abs(e_id))];
 }
 
-const std::vector<sgnint32_t<int32_t>>& lean_cohomology :: nte(const int32_t& n_id) const
+const std::vector<sgnint32_t<int32_t> >& lean_cohomology :: nte(const int32_t& n_id) const
 {
    if ( _nte_list.size() == 0 )
       throw std::invalid_argument("you have to populate the list first");

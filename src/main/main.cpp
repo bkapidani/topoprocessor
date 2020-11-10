@@ -7,12 +7,14 @@ int main (int argc, char** argv)
     const char *splash =
 "    -------------------------------------------------------------------\n"
 "    |                          *** TOPOPRO ***                        |\n"
-"    |    Cohomology Basis Computation for Electromagnetic Modeling    |\n"
-"    |    Bernard Kapidani (C) 2017 - kapidani.bernard@spes.uniud.it   |\n"
+"    |   Cohomology Groups' Computation for Electromagnetic Modeling   |\n"
+"    |    Bernard Kapidani (C) 2016 - 2020 bernard.kapidani@epfl.ch    |\n"
 "    |                      DPIA, University of Udine                  |\n"
+"    |                  ASC, Technische Universitaet Wien              |\n"
+"    |            MNS, Ecole Polytechnique Federale Lausanne           |\n"
 "    -------------------------------------------------------------------\n";
 
-    std::cout << splash << std::endl;
+   std::cout << splash << std::endl;
    timecounter t_total;
    t_total.tic();
    if (argc <5 )
@@ -35,7 +37,7 @@ int main (int argc, char** argv)
    
    t_total.toc();
    
-   std::cout << "    The whole mess took: " << t_total << " s" << std::endl;
+   std::cout << "    Completed in: " << t_total << " seconds" << std::endl;
    
    return 0;
 }

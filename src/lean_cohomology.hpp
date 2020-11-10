@@ -8,6 +8,7 @@
 #include <utility> 
 #include <fstream>
 #include <vector>
+#include <array>
 #include <deque>
 #include <cstring>
 #include <string>
@@ -80,29 +81,58 @@ read_tetrahedron_line(const char *str, char **endptr)
 }
 
 template<typename T>
-std::tuple<T, T, T, T, T, T>
+std::tuple<T, T, T, T, T, T, T, T, T>
+read_hex_line(const char *str, char **endptr)
+{
+    T t1, t2, t3, t4, t5, t6, t7, t8, t9;
+    
+    t1 = strtot<T>(str, endptr);
+    t2 = strtot<T>(*endptr, endptr);
+    t3 = strtot<T>(*endptr, endptr);
+    t4 = strtot<T>(*endptr, endptr);
+    t5 = strtot<T>(*endptr, endptr);
+    t6 = strtot<T>(*endptr, endptr);
+    t7 = strtot<T>(*endptr, endptr);
+    t8 = strtot<T>(*endptr, endptr);
+    t9 = strtot<T>(*endptr, endptr);
+    
+    return std::make_tuple(t1, t2-1, t3-1, t4-1, t5-1,
+                           t6-1, t7-1, t8-1, t9-1);
+}
+
+template<typename T>
+std::tuple<T, T, T, T, T, T, T, T, T, T>
 read_element_line(const char *str, char **endptr)
 {
-    T t0, t1, t2, t3, t4, t5;
-   
+   T t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
+   t6 = t7 = t8 = t9 = T(1);
    // std::ofstream os;
    // os.open("./debug/parser_tets.dat", std::ios::out | std::ios::app );
     
-   t0 = strtot<T>(str, endptr);
-    t1 = strtot<T>(*endptr, endptr);
+   t0 = strtot<T>(str, endptr); // useless element index
+   t1 = strtot<T>(*endptr, endptr); // type of element
    
-   if (t1 == 4) //tetrehedron
+   if (t1 == 4 || t1 == 3) //tetrehedron
    {
-      t0 = strtot<T>(*endptr, endptr);
-      t0 = strtot<T>(*endptr, endptr);
+      // t0 = strtot<T>(*endptr, endptr);
+      // t0 = strtot<T>(*endptr, endptr);
       
-      t0 = t1;
-      t1 = strtot<T>(*endptr, endptr);
+      // t0 = t1;
+      // t1 = strtot<T>(*endptr, endptr);
+      
+      T n_of_tags = strtot<T>(*endptr, endptr);
+      for (size_t k = 0; k < n_of_tags; k++)
+      {
+         T t_token = strtot<T>(*endptr, endptr);
+         if (k==0)
+         {
+            t1 = t_token;
+         }
+      }
       t2 = strtot<T>(*endptr, endptr);
       t3 = strtot<T>(*endptr, endptr);
       t4 = strtot<T>(*endptr, endptr);
       t5 = strtot<T>(*endptr, endptr);
-      
       
       // os << t0 << " " << t1 << " " << t2 << " " << t3 << " " << t4 << " " << t5 << std::endl;  
    }
@@ -116,7 +146,7 @@ read_element_line(const char *str, char **endptr)
       t2 = strtot<T>(*endptr, endptr);
       t3 = strtot<T>(*endptr, endptr);
       t4 = strtot<T>(*endptr, endptr);
-      t5 = 1;
+      t5 = T(1);
    }
    else if (t1 == 1) //physical line
    {
@@ -133,17 +163,18 @@ read_element_line(const char *str, char **endptr)
       
       t2 = strtot<T>(*endptr, endptr);
       t3 = strtot<T>(*endptr, endptr);
-      t4 = 1;
-      t5 = 1;
+      t4 = T(1);
+      t5 = T(1);
    }   
    else
    {
-      t0 = t1 = 0;
-      t2 = t3 = t4 = t5 = 1;
+      t0 = t1 = T(0);
+      t2 = t3 = t4 = t5 = T(1);
    }
-    
+
    // os.close();
-    return std::make_tuple(t0, t1, t2-1, t3-1, t4-1, t5-1);
+    return std::make_tuple(t0, t1, t2-1, t3-1, t4-1, t5-1,
+                           t6-1, t7-1, t8-1, t9-1);
 }
 
 template<typename T>
@@ -160,6 +191,20 @@ read_triangle_line(const char *str, char **endptr)
     return std::make_tuple(t1, t2-1, t3-1, t4-1);
 }
 
+template<typename T>
+std::tuple<T, T, T, T>
+read_quad_line(const char *str, char **endptr)
+{
+    T t1, t2, t3, t4, t5;
+    
+    t1 = strtot<T>(str, endptr);
+    t2 = strtot<T>(*endptr, endptr);
+    t3 = strtot<T>(*endptr, endptr);
+    t4 = strtot<T>(*endptr, endptr);
+    t5 = strtot<T>(*endptr, endptr);
+    
+    return std::make_tuple(t1, t2-1, t3-1, t4-1, t5-1);
+}
 
 template<typename T>
 void
@@ -172,15 +217,16 @@ sort_uniq(std::vector<T>& v)
     
 } //namespace priv
 
-using cluster_list           = std::vector<sgnint32_t<int32_t>>; 
-using h1_2d_basis             = std::vector<std::vector<int32_t>>;
-using thinned_currents       = std::vector<std::vector<int32_t>>;
-using volume_type          = std::tuple<uint32_t,uint32_t,uint32_t,uint32_t>;
-using surface_type          = std::tuple<uint32_t,uint32_t,uint32_t>;
-using label_surface_type    = std::pair<surface_type,uint32_t>;
-using edge_type          = std::tuple<uint32_t,uint32_t>;
-using label_edge_type       = std::pair<edge_type,uint32_t>;
-using label_node_type       = std::pair<uint32_t,uint32_t>;
+using cluster_list         = std::vector<sgnint32_t<int32_t> >; 
+using h1_2d_basis          = std::vector<std::vector<int32_t> >;
+using thinned_currents     = std::vector<std::vector<int32_t> >;
+using volume_type          = std::tuple<uint32_t,uint32_t,uint32_t,uint32_t,
+                                        uint32_t,uint32_t,uint32_t,uint32_t>;
+using surface_type         = std::tuple<uint32_t,uint32_t,uint32_t,uint32_t>;
+using label_surface_type   = std::pair<surface_type,uint32_t>;
+using edge_type            = std::tuple<uint32_t,uint32_t>;
+using label_edge_type      = std::pair<edge_type,uint32_t>;
+using label_node_type      = std::pair<uint32_t,uint32_t>;
 using tm_tuple             = std::tuple< volume_type, uint32_t >;
 using sm_tuple             = std::tuple< surface_type, uint32_t >;
 
@@ -190,17 +236,17 @@ class lean_cohomology
 {   
    public:
       lean_cohomology(std::string , std::string, const char*, const char*, bool, bool, const char*);
-      bool                                      ESTT(std::vector<std::vector<double>>&);
+      bool                                      ESTT(std::vector<std::vector<double> >&);
       size_t                                    volumes_size() { return volumes.size(); }
       size_t                                    surfaces_size() { return surfaces.size(); }
       size_t                                    edges_size() { return edges.size(); }
       size_t                                    nodes_size() { return pts.size(); }
-      const std::vector<sgnint32_t<int32_t>>&   vtf(const int32_t& v_id) const;
-      const std::vector<sgnint32_t<int32_t>>&   fte(const int32_t& f_id) const;
-      const std::vector<sgnint32_t<int32_t>>&   ftv(const int32_t& f_id) const;
-      const std::vector<sgnint32_t<int32_t>>&   etf(const int32_t& e_id) const;
-      const std::vector<sgnint32_t<int32_t>>&   etn(const int32_t& e_id) const;
-      const std::vector<sgnint32_t<int32_t>>&   nte(const int32_t& n_id) const;
+      const std::vector<sgnint32_t<int32_t> >&   vtf(const int32_t& v_id) const;
+      const std::vector<sgnint32_t<int32_t> >&   fte(const int32_t& f_id) const;
+      const std::vector<sgnint32_t<int32_t> >&   ftv(const int32_t& f_id) const;
+      const std::vector<sgnint32_t<int32_t> >&   etf(const int32_t& e_id) const;
+      const std::vector<sgnint32_t<int32_t> >&   etn(const int32_t& e_id) const;
+      const std::vector<sgnint32_t<int32_t> >&   nte(const int32_t& n_id) const;
       bool                                      is_conductor(const uint32_t& );
       std::string                               print_face(const uint32_t&, const uint32_t&, bool, double, double, double);
       std::string                               print_face(const uint32_t& f, const int32_t& orient);
@@ -218,8 +264,8 @@ class lean_cohomology
    private:
       std::pair<h1_2d_basis,thinned_currents>                  HomoCoHomo;
       uint32_t                                                 insulator_id, conductor_id, surface_id, n_lazy;
-      std::map<uint32_t,std::vector<uint32_t>>                 physical_surfaces;
-      std::vector<std::vector<std::pair<uint16_t, int16_t>>>   vect_stt_coeffs;
+      std::map<uint32_t,std::vector<uint32_t> >                 physical_surfaces;
+      std::vector<std::vector<std::pair<uint16_t, int16_t> > >   vect_stt_coeffs;
       std::vector<uint32_t>                                    domains;   
       std::vector<volume_type>                                 volumes;
       std::vector<surface_type>                                surfaces;
@@ -244,18 +290,18 @@ class lean_cohomology
       }
 
       bool read_mesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
-      bool read_gmesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
+      //bool read_gmesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
       void unique(std::vector<label_edge_type>&, std::vector<uint32_t>&);
       void unique(std::vector<label_surface_type>&, std::vector<uint32_t>&);   
-      pair<uint32_t,sgnint32_t<int32_t>> check_boundary(uint32_t , const std::vector<bool>& );
+      pair<uint32_t,sgnint32_t<int32_t> > check_boundary(uint32_t , const std::vector<bool>& );
       std::vector<double> stdcross(const std::vector<double>&, const std::vector<double>&);
       double stddot(const std::vector<double>&, const std::vector<double>&);
       void set_boundary(uint32_t, 
               const std::vector<bool>&,
-              std::vector<pair<uint32_t,sgnint32_t<int32_t>>>&,
+              std::vector<pair<uint32_t,sgnint32_t<int32_t> > >&,
               std::vector<bool>&, 
               std::vector<std::vector<std::pair<uint16_t, 
-              int16_t>>>&,std::vector<std::vector<double>>& );
+              int16_t> > >&,std::vector<std::vector<double> >& );
       
       /*Sullivan algorithm functions*/
       void MinCost(const std::vector<int32_t>&, uint32_t);
@@ -265,9 +311,9 @@ class lean_cohomology
       /*stuff for linking number retrieval*/
       
       void RetrieveLoop(std::map<uint32_t,uint32_t>&,std::map<uint32_t,uint32_t>&,
-                        const uint32_t& ee, std::vector<std::array<double,3>>&);
-      double LinkingNumber(const std::vector<std::array<double,3>>&, const std::vector<std::array<double,3>>&);
-      std::vector<double> LinkingNumber(const std::vector<std::array<double,3>>&);
+                        const uint32_t& ee, std::vector<std::array<double,3> >&);
+      double LinkingNumber(const std::vector<std::array<double,3> >&, const std::vector<std::array<double,3> >&);
+      std::vector<double> LinkingNumber(const std::vector<std::array<double,3> >&);
       double SolidAngleQuadrilateral(const std::array<double,3>& a, 
                       const std::array<double,3>& b, 
                       const std::array<double,3>& c,
@@ -280,10 +326,10 @@ class generic_two_manifold
    friend class lean_cohomology;
    public:
       generic_two_manifold(lean_cohomology*);
-      uint16_t number_of_gens()       { return this->Ngen; }
-      std::uint32_t Nodes()          { return this->n; }
-      std::uint32_t Edges()          { return this->e; }
-      std::uint32_t Faces()          { return this->f; }
+      uint16_t number_of_gens()     { return this->Ngen; }
+      std::uint32_t Nodes()         { return this->n; }
+      std::uint32_t Edges()         { return this->e; }
+      std::uint32_t Faces()         { return this->f; }
       std::map<uint32_t, std::vector<int16_t> >    rel_abs_cohomology(const uint32_t& );
       std::pair<h1_2d_basis,thinned_currents>      H_to_CoH(const std::vector<uint32_t>&, const std::vector<uint32_t>&, const std::vector<uint32_t>& );
       //std::vector<int>                      RetrieveCoH(const std::vector<int>& );
