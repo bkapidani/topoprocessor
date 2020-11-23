@@ -170,7 +170,8 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
       // std::ofstream os;
       // os.open("./output/h1_lazy.txt");
          
-      std::cout << "    # of lazy generators : " << remaining_edges.size() << std::endl;
+      std::cout << "    Number of lazy generators : "
+                << remaining_edges.size() << std::endl;
 
       // this->h1b=std::move(h1b);
       // this->tc=std::move(tc);

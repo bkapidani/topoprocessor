@@ -19,8 +19,13 @@ int main (int argc, char** argv)
    t_total.tic();
    if (argc <5 )
    {
-      std::cout << "    Correct use is: <mesher (netgen or gmsh)> <mesh filename> <conductors filename> <insulators filename> <1 | 0 (lean or lazy, default is lean)> <1 | 0 (i.e. minimize cut or not, default is do not minimize)>"
-              << std::endl;
+      std::cout << "    Correct use is: <mesh filename>"
+                << " <mesher (netgen or gmsh)>" 
+                << " <conductors filename>"
+                << " <insulators filename>"
+                << " <1 | 0 (lean or lazy, default is lean)>"
+                << " <1 | 0 (i.e. minimize cut or not, default is do not minimize)>"
+                << std::endl;
       // std::cout << "            or: mesh_filename surface_id"             << std::endl; 
       return EXIT_FAILURE;
    }
@@ -37,7 +42,7 @@ int main (int argc, char** argv)
    
    t_total.toc();
    
-   std::cout << "    Completed in: " << t_total << " seconds" << std::endl;
+   std::cout << "    Completed in: " << t_total << " seconds" << std::endl << std::endl;
    
    return 0;
 }

@@ -192,7 +192,7 @@ read_triangle_line(const char *str, char **endptr)
 }
 
 template<typename T>
-std::tuple<T, T, T, T>
+std::tuple<T, T, T, T, T>
 read_quad_line(const char *str, char **endptr)
 {
     T t1, t2, t3, t4, t5;
@@ -294,8 +294,8 @@ class lean_cohomology
       void unique(std::vector<label_edge_type>&, std::vector<uint32_t>&);
       void unique(std::vector<label_surface_type>&, std::vector<uint32_t>&);   
       pair<uint32_t,sgnint32_t<int32_t> > check_boundary(uint32_t , const std::vector<bool>& );
-      std::vector<double> stdcross(const std::vector<double>&, const std::vector<double>&);
-      double stddot(const std::vector<double>&, const std::vector<double>&);
+      std::array<double,3> stdcross(const std::array<double,3>&, const std::array<double,3>&);
+      double stddot(const std::array<double,3>&, const std::array<double,3>&);
       void set_boundary(uint32_t, 
               const std::vector<bool>&,
               std::vector<pair<uint32_t,sgnint32_t<int32_t> > >&,

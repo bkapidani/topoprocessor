@@ -1,8 +1,9 @@
 //file lean_cohomology.cpp
 #include "lean_cohomology.hpp"
 
-lean_cohomology :: lean_cohomology(std::string mesher, 
+lean_cohomology :: lean_cohomology(
                                    std::string meshfile, 
+                                   std::string mesher, 
                            const char* conductor_id, 
                            const char* insulator_id, 
                            bool be_lean_not_lazy,
@@ -43,10 +44,13 @@ lean_cohomology :: lean_cohomology(std::string mesher,
       }
    }
    
-   std::cout << "    Domain labels: " << std::endl;
-   for (uint32_t it=1; it<conductor_bool.size(); ++it)
-      std::cout << "{ " << it << " : " << (conductor_bool[it] ? "conductor" : "insulator") << " } ";
-   std::cout << std::endl;
+   if (debuggy)
+   {
+      std::cout << "    Domain labels: " << std::endl;
+      for (uint32_t it=1; it<conductor_bool.size(); ++it)
+         std::cout << "{ " << it << " : " << (conductor_bool[it] ? "conductor" : "insulator") << " } ";
+      std::cout << std::endl;
+   }
    
    std::vector<uint32_t> intersurface, physical_nodes, physical_edges;
    f2d=e2d=n2d=0;
@@ -89,11 +93,9 @@ lean_cohomology :: lean_cohomology(std::string mesher,
       //gm=gm.transpose();
       //~ std::cout << gm << std::endl;
       gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
-      std::cout << "    Kernel dimension: " << gm.number_nonzero_rows() << std::endl;
-      std::cout << "    Determinant: " << gm.determinant()         << std::endl;
       
-      std::cout << change_of_basis << std::endl;
-      std::cout << gm << std::endl;
+      // std::cout << change_of_basis << std::endl;
+      // std::cout << gm << std::endl;
       
       
       uint32_t n_ind_gens=0;
@@ -113,7 +115,10 @@ lean_cohomology :: lean_cohomology(std::string mesher,
       }
 
       t_gauss.toc();
-      std::cout << "    Computing basis of null space of l.n. matrix took: " << t_gauss << " seconds" << std::endl;
+      std::cout << "    Computing null space of l.n. matrix took: " << t_gauss << " seconds" << std::endl;
+      
+      std::cout << "    (Kernel dimension: " << gm.number_nonzero_rows() << "  ";
+      std::cout << "Determinant: " << gm.determinant() << ")" << std::endl;
    }
    else
    {
@@ -270,6 +275,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat)
             distance[abs(curr_n)] = distance[qtop]+1;
             par_edge[abs(curr_n)]=abs(curr_e);
             wired[abs(curr_e)]=true;
+            
             nnz++;
          }
          else;
@@ -467,8 +473,8 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w,
       }
    }
    
-   if (nw>2)
-      std::cout << "big trouble" << std::endl;
+   //if (nw>2)
+   //   std::cout << "big trouble" << std::endl;
       
    for (uint16_t gen=0; gen < n_lazy; ++gen)
    {
@@ -655,7 +661,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    
    mapped_file mf(_filename);
    
-   std::cout << "     * * * Reading NETGEN format mesh * * * ";
+   std::cout << "     * * * Reading formatted mesh file * * * ";
    std::cout << std::endl;
    
    tctot.tic();
@@ -767,7 +773,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
 
    std::vector<int32_t> vol_signs;
    
-   // vol_signs.reserve(lines);
+   vol_signs.reserve(lines);
    // volumes.reserve(lines);
    // domains.reserve(lines);
    
@@ -792,15 +798,17 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       temp_quad0[tot+4*lines]   = std::make_pair(surface_type(p0, p4, p1, p5),tot+4*lines);
       temp_quad0[tot+5*lines]   = std::make_pair(surface_type(p2, p6, p3, p7),tot+5*lines);
       tot++;
-   
-      std::vector<double> v1 { pts[p1][0]-pts[p0][0], pts[p1][1]-pts[p0][1],pts[p1][2]-pts[p0][2] };
-      std::vector<double> v2 { pts[p2][0]-pts[p0][0], pts[p2][1]-pts[p0][1],pts[p2][2]-pts[p0][2] };
-      std::vector<double> v3 { pts[p4][0]-pts[p0][0], pts[p4][1]-pts[p0][1],pts[p4][2]-pts[p0][2] };
+
+      std::array<double,3> vtest({pts[p1][0]-pts[p0][0], pts[p1][1]-pts[p0][1],pts[p1][2]-pts[p0][2]});
+      std::array<double,3> v1 ({ pts[p1][0]-pts[p0][0], pts[p1][1]-pts[p0][1],pts[p1][2]-pts[p0][2] });
+      std::array<double,3> v2 ({ pts[p2][0]-pts[p0][0], pts[p2][1]-pts[p0][1],pts[p2][2]-pts[p0][2] });
+      std::array<double,3> v3 ({ pts[p4][0]-pts[p0][0], pts[p4][1]-pts[p0][1],pts[p4][2]-pts[p0][2] });
 
       int32_t sgn  = this->stddot(v1, stdcross(v2, v3))/double(6)>0? 1 : -1;
       vol_signs.push_back(sgn);
       domains.push_back(std::get<1>(tet));
    }
+
    std::vector<tm_tuple>().swap(temp_hex);
    std::vector<uint32_t> labels(6*lines);
    surfaces.reserve(6*lines);
@@ -988,7 +996,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
          }
          case 0:
          {
-            throw std::invalid_argument("The whole domain must be a differentiable manifold!");
+            throw std::invalid_argument("    ERROR: The whole domain must be a differentiable manifold!");
             break;
          }
       }   
@@ -1042,7 +1050,8 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    std::cout << "    done - " << tc << " seconds" << std::endl;
    
    if (conductor_on_bnd)
-      std::cout << "Seems like conductors intersect the boundary of the mesh: is this wanted?" << std::endl;
+      std::cout << "    WARNING: conductors intersect the boundary of the mesh."
+                << std::endl << "    (Ignore if this is wanted)" << std::endl;
       
    /************************ Read boundary surfaces ************************/
    linecount = 0;
@@ -1060,20 +1069,20 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       
       if ( (linecount%50000) == 0 )
       {
-         std::cout << "    Reading triangle: " << linecount;
+         std::cout << "    Reading facets: " << linecount;
          std::cout << "/" << lines << "\r";
          std::cout.flush();
       }
       
-      auto t = parser::read_triangle_line<uint32_t>(endptr, &endptr);
+      auto t = parser::read_quad_line<uint32_t>(endptr, &endptr);
 
-      
-      uint32_t       p0( std::get<1>(t) );
-      uint32_t       p1( std::get<2>(t) );
-      uint32_t       p2( std::get<3>(t) );
+      uint32_t       p0(  std::get<1>(t) );
+      uint32_t       p1(  std::get<2>(t) );
+      uint32_t       p2(  std::get<3>(t) );
+      uint32_t       p3(  std::get<4>(t) );
       uint32_t       bid( std::get<0>(t) );
       
-      surface_type   tri( p0, p1, p2 );
+      surface_type   tri( p0, p1, p2, p3 );
       
       if (!physical_surfaces[bid].size())
          physical_surfaces[bid].resize(surfaces.size(),0);
@@ -1085,29 +1094,30 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    }
    tc.toc();
    
-   std::cout << "    Reading triangle: " << linecount;
+   std::cout << "    Reading facets: " << linecount;
    std::cout << "/" << lines  << " - " << tc << " seconds"  << std::endl;
 
    tctot.toc();
+
    // std::cout << cyan << "Total time spent in reading mesh: ";
    // std::cout << tctot << " seconds" << nocolor << std::endl;
    
    // for (const auto& nn : _vtf_list)
-      // assert(nn.size() == 4);
+      // assert(nn.size() == 6);
    
    // for (const auto& nn : _ftv_list)
       // assert(nn.size() == 2 || nn.size() == 1);
    
    // for (const auto& nn : _fte_list)
-      // assert(nn.size() == 3);
+      // assert(nn.size() == 4);
    
    // for (const auto& nn : _etf_list)
    // {
-      // assert(nn.size() >= 2);
+      // assert(nn.size() >= 2 && nn.size()<=4);
    // }
    
    // for (const auto& nn : _nte_list)
-      // assert(nn.size() >= 3);
+      // assert(nn.size() >= 3 && nn.size() <= 6);
    // for (const auto& nn : _etn_list)
       // assert(nn.size() == 2);   
    
@@ -1202,7 +1212,6 @@ void lean_cohomology :: MinCost(const std::vector<int32_t>& start_s, uint32_t in
    {
       if (face_coeff_in_the_chain[it] != 0)
       {
-         
          if (!edge_in_conductor[it])
          {
             if (debuggy)
@@ -1446,17 +1455,19 @@ double lean_cohomology :: SolidAngleQuadrilateral(const std::array<double,3>& a,
 
 double lean_cohomology :: SolidAngleTriangle(const std::array<double,3>& a, const std::array<double,3>& b, const std::array<double,3>& c)
 {
-   double determ= a[0]*(b[1]*c[2] - b[2]*c[1])+a[1]*(b[2]*c[0]- b[0]*c[2])+a[2]*(b[0]*c[1] - b[1]*c[0]);
+   double determ= a[0]*(b[1]*c[2] - 
+                  b[2]*c[1])+a[1]*(b[2]*c[0] - 
+                  b[0]*c[2])+a[2]*(b[0]*c[1] - 
+                  b[1]*c[0]);
 
    double al = sqrt(pow(a[0],2)+pow(a[1],2)+pow(a[2],2));
    double bl = sqrt(pow(b[0],2)+pow(b[1],2)+pow(b[2],2));
    double cl = sqrt(pow(c[0],2)+pow(c[1],2)+pow(c[2],2));
 
-   double div = al * bl * cl + cl*(a[0]*b[0]+a[1]*b[1]+a[2]*b[2]) + bl*(c[0]*a[0]+c[1]*a[1]+c[2]*a[2]) + al*(c[0]*b[0]+c[1]*b[1]+c[2]*b[2]);
-
-   // % if in(0, div)
-   // %     error('atan2 can not computed.')
-   // % end
+   double div = al * bl * cl +
+                cl*(a[0]*b[0]+a[1]*b[1]+a[2]*b[2]) + 
+                bl*(c[0]*a[0]+c[1]*a[1]+c[2]*a[2]) + 
+                al*(c[0]*b[0]+c[1]*b[1]+c[2]*b[2]);
 
    double at; 
    if (div > 0)
@@ -1653,7 +1664,7 @@ std::vector<std::string> lean_cohomology :: print_dual_face(const uint32_t& labe
       z+= new_or*segno*pts[abs(n)][2];
    }
 
-   std::vector<double> v1 { x, y, z };
+   std::array<double,3> v1 { x, y, z };
    
    for (auto f : _etf_list[e])
    {
@@ -1664,8 +1675,8 @@ std::vector<std::string> lean_cohomology :: print_dual_face(const uint32_t& labe
          orient = new_or*f.Sgn()>0;
          std::vector<double> vb =  vol_barycenter(abs(v));
 
-         std::vector<double> v2 { eb[0]-vb[0], eb[1]-vb[1],eb[2]-vb[2] };
-         std::vector<double> v3 { fb[0]-vb[0], fb[1]-vb[1], fb[2]-vb[2] };
+         std::array<double,3> v2 { eb[0]-vb[0], eb[1]-vb[1],eb[2]-vb[2] };
+         std::array<double,3> v3 { fb[0]-vb[0], fb[1]-vb[1], fb[2]-vb[2] };
          
          if (this->stddot(v1,stdcross(v2,v3))>0)
             orient= true;
@@ -1750,9 +1761,9 @@ std::string lean_cohomology :: print_face(const uint32_t label, bool orient, dou
    return fr.str();
 }
 
-std::vector<double> lean_cohomology :: stdcross(const std::vector<double>& v1, const std::vector<double>& v2)
+std::array<double,3> lean_cohomology :: stdcross(const std::array<double,3>& v1, const std::array<double,3>& v2)
 {
-    std::vector<double> ret(3);
+    std::array<double,3> ret;
     
     ret[0] = v1[1]*v2[2] - v1[2]*v2[1];
     ret[1] = v1[2]*v2[0] - v1[0]*v2[2];
@@ -1761,7 +1772,7 @@ std::vector<double> lean_cohomology :: stdcross(const std::vector<double>& v1, c
     return ret;
 }
 
-double lean_cohomology :: stddot(const std::vector<double>& v1, const std::vector<double>& v2)
+double lean_cohomology :: stddot(const std::array<double,3>& v1, const std::array<double,3>& v2)
 {
     double acc=0;
     
