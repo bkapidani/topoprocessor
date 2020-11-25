@@ -31,9 +31,6 @@
 
 const long double PI = 3.141592653589793238L;
 
-
-const std::runtime_error                      cond_bnd_error(std::string("ERROR: Conductor on domain boundary!"));
-
 namespace parser {
 
 template<typename T>
@@ -43,9 +40,9 @@ read_gmsh_point_line(const char *str, char **endptr)
     T t0, t1, t2, t3;
     
    t0 = strtot<T>(str, endptr); 
-    t1 = strtot<T>(*endptr, endptr);
-    t2 = strtot<T>(*endptr, endptr);
-    t3 = strtot<T>(*endptr, endptr);
+   t1 = strtot<T>(*endptr, endptr);
+   t2 = strtot<T>(*endptr, endptr);
+   t3 = strtot<T>(*endptr, endptr);
     
     //return std::make_tuple(t1/1000.0, t2/1000.0, t3/1000.0);
     return std::make_tuple(t1, t2, t3);
@@ -111,24 +108,21 @@ read_element_line(const char *str, char **endptr)
     
    t0 = strtot<T>(str, endptr); // useless element index
    t1 = strtot<T>(*endptr, endptr); // type of element
-   
-   if (t1 == 4 || t1 == 3) //tetrehedron
+      
+   t0 = t1;
+      
+   T n_of_tags = strtot<T>(*endptr, endptr);
+   for (size_t k = 0; k < n_of_tags; ++k)
    {
-      // t0 = strtot<T>(*endptr, endptr);
-      // t0 = strtot<T>(*endptr, endptr);
-      
-      // t0 = t1;
-      // t1 = strtot<T>(*endptr, endptr);
-      
-      T n_of_tags = strtot<T>(*endptr, endptr);
-      for (size_t k = 0; k < n_of_tags; k++)
+      T t_token = strtot<T>(*endptr, endptr);
+      if (k==0)
       {
-         T t_token = strtot<T>(*endptr, endptr);
-         if (k==0)
-         {
-            t1 = t_token;
-         }
+         t1 = t_token;
       }
+   }
+   
+   if (t0 == 4 || t0 == 3) //tetrehedron or quadrilateral
+   {
       t2 = strtot<T>(*endptr, endptr);
       t3 = strtot<T>(*endptr, endptr);
       t4 = strtot<T>(*endptr, endptr);
@@ -136,45 +130,40 @@ read_element_line(const char *str, char **endptr)
       
       // os << t0 << " " << t1 << " " << t2 << " " << t3 << " " << t4 << " " << t5 << std::endl;  
    }
-   else if (t1 == 2) //triangle
+   else if (t0 == 5) //hexahedron
    {
-      t0 = strtot<T>(*endptr, endptr);
-      t0 = strtot<T>(*endptr, endptr);
-      
-      t0 = t1;
-      t1 = strtot<T>(*endptr, endptr);
+      t2 = strtot<T>(*endptr, endptr);
+      t3 = strtot<T>(*endptr, endptr);
+      t4 = strtot<T>(*endptr, endptr);
+      t5 = strtot<T>(*endptr, endptr);
+      t6 = strtot<T>(*endptr, endptr);
+      t7 = strtot<T>(*endptr, endptr);
+      t8 = strtot<T>(*endptr, endptr);
+      t9 = strtot<T>(*endptr, endptr);
+       
+   }
+   else if (t0 == 2) //triangle
+   {
       t2 = strtot<T>(*endptr, endptr);
       t3 = strtot<T>(*endptr, endptr);
       t4 = strtot<T>(*endptr, endptr);
       t5 = T(1);
    }
-   else if (t1 == 1) //physical line
+   else if (t0 == 1) //physical line
    {
-      t0 = t1;
-      T n_of_tags = strtot<T>(*endptr, endptr);
-      for (size_t k = 0; k < n_of_tags; k++)
-      {
-         T t_token = strtot<T>(*endptr, endptr);
-         if (k==0)
-         {
-            t1 = t_token;
-         }
-      }
-      
       t2 = strtot<T>(*endptr, endptr);
       t3 = strtot<T>(*endptr, endptr);
-      t4 = T(1);
-      t5 = T(1);
+      t4 = t5 = T(1);
    }   
    else
    {
-      t0 = t1 = T(0);
+      t0 = t1 = T(1);
       t2 = t3 = t4 = t5 = T(1);
    }
 
    // os.close();
     return std::make_tuple(t0, t1, t2-1, t3-1, t4-1, t5-1,
-                           t6-1, t7-1, t8-1, t9-1);
+                                   t6-1, t7-1, t8-1, t9-1);
 }
 
 template<typename T>
@@ -290,7 +279,7 @@ class lean_cohomology
       }
 
       bool read_mesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
-      //bool read_gmesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
+      bool read_gmesh(const std::string&, std::vector<uint32_t>&, std::vector<uint32_t>&, std::vector<uint32_t>&);
       void unique(std::vector<label_edge_type>&, std::vector<uint32_t>&);
       void unique(std::vector<label_surface_type>&, std::vector<uint32_t>&);   
       pair<uint32_t,sgnint32_t<int32_t> > check_boundary(uint32_t , const std::vector<bool>& );
