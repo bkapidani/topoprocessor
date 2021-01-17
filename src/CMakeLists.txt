@@ -30,4 +30,5 @@ include_directories(./)
 
 add_executable(topoprocessor ./main/main.cpp ${SOURCE})
 target_link_libraries(topoprocessor ${LINK_LIBS})
-install (TARGETS topoprocessor DESTINATION ${CMAKE_INSTALL_PREFIX}/install)
+install (TARGETS topoprocessor)
+#install (TARGETS topoprocessor DESTINATION ${CMAKE_INSTALL_PREFIX})

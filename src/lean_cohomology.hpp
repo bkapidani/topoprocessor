@@ -211,9 +211,11 @@ using h1_2d_basis          = std::vector<std::vector<int32_t> >;
 using thinned_currents     = std::vector<std::vector<int32_t> >;
 using volume_type          = std::tuple<uint32_t,uint32_t,uint32_t,uint32_t,
                                         uint32_t,uint32_t,uint32_t,uint32_t>;
-using surface_type         = std::tuple<uint32_t,uint32_t,uint32_t,uint32_t>;
+//using surface_type         = std::tuple<uint32_t,uint32_t,uint32_t,uint32_t>;
+//using edge_type            = std::tuple<uint32_t,uint32_t>;
+using surface_type         = std::array<uint32_t,4>;
+using edge_type            = std::array<uint32_t,2>;
 using label_surface_type   = std::pair<surface_type,uint32_t>;
-using edge_type            = std::tuple<uint32_t,uint32_t>;
 using label_edge_type      = std::pair<edge_type,uint32_t>;
 using label_node_type      = std::pair<uint32_t,uint32_t>;
 using tm_tuple             = std::tuple< volume_type, uint32_t >;
@@ -225,7 +227,10 @@ class lean_cohomology
 {   
    public:
       lean_cohomology(std::string , std::string, const char*, const char*, bool, bool, const char*);
-      bool                                      ESTT(std::vector<std::vector<double> >&);
+      bool                                      ESTT(std::vector<std::vector<double> >&,
+                                                     std::vector<uint32_t>&,
+                                                     std::map<uint32_t,uint32_t>&,
+                                                     std::map<uint32_t,uint32_t>&);
       size_t                                    volumes_size() { return volumes.size(); }
       size_t                                    surfaces_size() { return surfaces.size(); }
       size_t                                    edges_size() { return edges.size(); }
@@ -248,7 +253,7 @@ class lean_cohomology
       std::vector<double>                       edge_barycenter(const uint32_t& );
       std::vector<double>                       vol_barycenter(const uint32_t& );
       std::vector<bool>                         edge_in_conductor, conductor_bool;
-      uint32_t                                  f2d,e2d,n2d;
+      uint32_t                                  f2d,e2d,n2d, tree_element_id;
       
    private:
       std::pair<h1_2d_basis,thinned_currents>                  HomoCoHomo;
@@ -320,7 +325,12 @@ class generic_two_manifold
       std::uint32_t Edges()         { return this->e; }
       std::uint32_t Faces()         { return this->f; }
       std::map<uint32_t, std::vector<int16_t> >    rel_abs_cohomology(const uint32_t& );
-      std::pair<h1_2d_basis,thinned_currents>      H_to_CoH(const std::vector<uint32_t>&, const std::vector<uint32_t>&, const std::vector<uint32_t>& );
+      std::pair<h1_2d_basis,thinned_currents>      H_to_CoH(const std::vector<uint32_t>&, 
+                                                            const std::vector<uint32_t>&, 
+                                                            const std::vector<uint32_t>&,
+                                                            std::vector<uint32_t>&,
+                                                            std::map<uint32_t,uint32_t>&,
+                                                            std::map<uint32_t,uint32_t>&);
       //std::vector<int>                      RetrieveCoH(const std::vector<int>& );
       
    private:
@@ -340,4 +350,3 @@ class generic_two_manifold
 };
 
 #endif
-

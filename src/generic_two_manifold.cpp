@@ -9,24 +9,27 @@ generic_two_manifold :: generic_two_manifold(lean_cohomology *lc)
    this->n = vol_mesh->n2d;
 }
 
-std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const std::vector<uint32_t>& physical_surface, const std::vector<uint32_t>& physical_edges, const std::vector<uint32_t>& physical_nodes)
+std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: 
+H_to_CoH( const std::vector<uint32_t>& physical_surface, 
+          const std::vector<uint32_t>& physical_edges, 
+          const std::vector<uint32_t>& physical_nodes,
+          std::vector<uint32_t>& p_queue,
+          std::map<uint32_t,uint32_t>& p_parent,
+          std::map<uint32_t,uint32_t>& p_distance)
 {
-   // h1_2d_basis h1b;
-   // thinned_currents tc;
    std::pair<h1_2d_basis,thinned_currents> p;
    std::vector<uint32_t> remaining_edges;
    std::vector<bool> cotree_edges(vol_mesh->edges_size(),true);
    uint32_t k=0;
-   std::vector<uint32_t> p_queue, d_queue;
+   //std::vector<uint32_t> p_queue;
+   std::vector<uint32_t> d_queue;
    
-   std::vector<bool>              p_colour(this->vol_mesh->nodes_size(),false), d_colour(this->vol_mesh->surfaces_size(),false);
-   std::map<uint32_t,uint32_t>    p_parent, p_paredge, p_distance, d_parent, d_paredge, d_distance;
-   // std::map<uint32_t,uint32_t>    t_parent, t_paredge;
-   // std::vector<bool>                       p_colour(this->vol_mesh->nodes_size(),false), d_colour(this->vol_mesh->surfaces_size(),false);
-   // std::vector<uint32_t>                   p_parent(this->vol_mesh->nodes_size()), p_paredge(this->vol_mesh->nodes_size());
-   // std::vector<uint32_t>                   p_distance(this->vol_mesh->nodes_size(),std::numeric_limits<int>::max());
-   // std::vector<uint32_t>                  t_parent(this->vol_mesh->volumes_size()), t_paredge(this->vol_mesh->volumes_size());
-
+   std::vector<bool>              p_colour(this->vol_mesh->nodes_size(),false);
+   std::vector<bool>              d_colour(this->vol_mesh->surfaces_size(),false);
+   // std::map<uint32_t,uint32_t>    p_parent, p_paredge, p_distance;
+   std::map<uint32_t,uint32_t>    p_paredge;
+   std::map<uint32_t,uint32_t>    d_parent, d_paredge, d_distance;
+   
    uint32_t j=0;
    uint32_t root_dual=0;
    timecounter t_h1, t_tc;   
@@ -38,17 +41,24 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
    
    k=0;
    t_h1.tic();
+   uint32_t last_root = 0;
+   
+   std::ofstream treeos("tree.txt");//, std::ofstream::out | std::ofstream::app);
+   std::ofstream gmshos("tree_debug.txt");//, std::ofstream::out | std::ofstream::app);
+
+
+   //std::cout << "n. of boundary nodes = " << this->n << std::endl;
+   //std::cout << "n. of boundary faces = " << this->f << std::endl;
    while (p_queue.size()<this->n)
    {
-      // std::cout << p_queue.size() << "------" << this->n << "-----" << vol_mesh->nodes_size() << std::endl;
-      uint32_t root=0;
+      uint32_t root=last_root;
       while (p_colour[root] || !physical_nodes[root])
       {
-         // std::cout << root << "----" << std::endl;
          root++;
       }
-      // if (root < 100)
-         // std::cout << "    ----" << root << "----" << std::endl;
+      last_root = root;
+
+      //std::cout << "root = " << root << std::endl;
       p_colour[root]=true;
       p_distance[root]=0;
       p_queue.push_back(root);
@@ -57,13 +67,15 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
       while (k < p_queue.size())
       {   
          uint32_t qtop = p_queue[k];
-         // std::cout << "    ----" << qtop << "----" << std::endl;
+         uint32_t counter = 0;
          for (const auto& signed_ee : vol_mesh->nte(qtop))
          {
             uint32_t ee = abs(signed_ee);
             
             if (physical_edges[ee]>0)
-            {
+            { 
+               counter++;
+
                for (const auto& signed_nn : vol_mesh->etn(ee))
                {
                   uint32_t nn = abs(signed_nn);
@@ -74,11 +86,15 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
                      if (p_colour[nn] == false )
                      {
                         p_colour[nn]=true;
-                        // p_distance[nn]=p_distance[qtop]+p_length[ee];
                         p_distance[nn]=p_distance[qtop]+1;
                         p_parent[nn]=qtop;
                         p_paredge[nn]=ee;
                         cotree_edges[ee]=false;
+                        treeos << abs(vol_mesh->etn(ee)[0])+1 << " "
+                               << abs(vol_mesh->etn(ee)[1])+1 << std::endl;
+                        gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99 << " "
+                               << abs(vol_mesh->etn(ee)[0])+1 << " "
+                               << abs(vol_mesh->etn(ee)[1])+1 << std::endl;
                         p_queue.push_back(nn);
                      }
                   }
@@ -86,11 +102,18 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
             }
          }
          
+         // if (counter > 4)
+         //    std::cout << " A boundary node has " << counter
+         //              << " edges in its coboundary!" << std::endl;
+
          k++;
       }
       // std::cout << "    ----" << root << "----" << std::endl;
    }
 
+   treeos.close();
+   gmshos.close();
+   //std::cout << "primal queue size = " << p_queue.size() << std::endl;
    k=0;
    
     while (d_queue.size()<this->f)
@@ -152,18 +175,14 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
          k++;
       }
    }
-   
-   // for (size_t i=0; i<cotree_edges.size(); i++)
-      // if (cotree_edges[i] && physical_edges[i]>0)
-         // remaining_edges.push_back(i);
 
-
+   //std::cout << "dual queue size = " << d_queue.size() << std::endl;
    t_h1.toc();
-   std::cout << "    Tree primal, tree dual took: " << t_h1 << " s" << std::endl;
+   //std::cout << "    Tree primal, tree dual took: " << t_h1 << " s" << std::endl;
    // Homology generators
    int16_t n_gen = 0;
 
-   std::vector<std::thread> h1_multithreading;
+   //std::vector<std::thread> h1_multithreading;
 
    if (remaining_edges.size()>0)
    {   
@@ -188,13 +207,10 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
       
       for (int32_t i=1; i <= remaining_edges.size(); i++)
       {
-         // t_h1.tic();
          auto ee = remaining_edges[i-1];
          
          RetrieveGenAndTC(i,ee);
-         // h1_multithreading.push_back(std::thread(&generic_two_manifold::RetrieveGenAndTC,this,i,ee));
       }
-      // os.close();
       
    }
    
@@ -211,6 +227,7 @@ std::pair<h1_2d_basis,thinned_currents> generic_two_manifold :: H_to_CoH(const s
       //~ os.close();
    //~ }
    
+   //std::cout << p_queue.size() << std::endl;
    this->Ngen=remaining_edges.size();
    this->remaining_edges=std::move(remaining_edges);
    return std::make_pair(h1b,tc);
@@ -585,8 +602,6 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
       {
          qtop = queue[k];
          
-         // timecounter t_test;
-         // t_test.tic();
          for (auto ee : vol_mesh->vtf(qtop))
          {
             if (!physical_surface[abs(ee)])
