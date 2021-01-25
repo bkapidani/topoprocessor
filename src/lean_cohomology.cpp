@@ -180,7 +180,7 @@ lean_cohomology :: lean_cohomology(
          for (auto bb : vect_stt_coeffs[ee])
          {
             auto gg = bb.first;
-            //~ std::cout << gg << " ";
+            //std::cout << gg << " ";
             
             if (gen_comb[indigen][gg-1] != 0)
             {
@@ -194,8 +194,9 @@ lean_cohomology :: lean_cohomology(
          if (std::fabs(final_coeff) > 1e-12)
          {
             start_s[ee] += std::round(final_coeff);
-            if (!edge_in_conductor[ee])
-            {
+            //if (!edge_in_conductor[ee])
+            //if (edge_in_conductor[ee])
+            //{
                if (!sullivan)
                   coefficients.push_back(std::make_tuple(abs(*_etn_list[ee].begin()),abs(*_etn_list[ee].rbegin()),final_coeff));
                if (debuggy)
@@ -204,7 +205,7 @@ lean_cohomology :: lean_cohomology(
                   for (auto df : dual_face_vector)
                      cuts_pre_minimization << df;
                }
-            }
+            //}
          }
          //~ else
             //~ start_s[ee] = 0;
@@ -520,9 +521,6 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w,
          }
       }
    }
-   
-   //if (nw>2)
-   //   std::cout << "big trouble" << std::endl;
       
    for (uint16_t gen=0; gen < n_lazy; ++gen)
    {

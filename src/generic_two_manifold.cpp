@@ -17,7 +17,6 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
           std::map<uint32_t,uint32_t>& p_parent,
           std::map<uint32_t,uint32_t>& p_distance)
 {
-   std::pair<h1_2d_basis,thinned_currents> p;
    std::vector<uint32_t> remaining_edges;
    std::vector<bool> cotree_edges(vol_mesh->edges_size(),true);
    uint32_t k=0;
@@ -203,7 +202,7 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
       this->d_paredge=std::move(d_paredge);
       this->d_distance=std::move(d_distance);
       this->physical_edges=std::move(physical_edges);
-      this->physical_surface=std::move(physical_surface);      
+      this->physical_surface=std::move(physical_surface);
       
       for (int32_t i=1; i <= remaining_edges.size(); i++)
       {
@@ -252,6 +251,10 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
    p1_pushback_mutex.lock();
    h1b[added_edge].push_back(n_gen);
    p1_pushback_mutex.unlock();
+   std::ofstream gmshos("tree_debug.txt", std::ofstream::out | std::ofstream::app);
+   gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99+n_gen << " "
+            << abs(vol_mesh->etn(added_edge)[0])+1 << " "
+            << abs(vol_mesh->etn(added_edge)[1])+1 << std::endl;
    if (debuggy)
    {
       os.open("homology_gens.txt", std::ofstream::out | std::ofstream::app);
@@ -350,6 +353,9 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
          s_edge = added_edge;
          t_edge = *HomologyEdges.begin();
          HomologyEdges.insert(HomologyEdges.begin(),added_edge);
+         gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99+n_gen << " "
+                  << abs(vol_mesh->etn(added_edge)[0])+1 << " "
+                  << abs(vol_mesh->etn(added_edge)[1])+1 << std::endl;
          if (debuggy)
             os << vol_mesh->print_edge(n_gen,added_edge,coeff>0,0,255,255);
       }
@@ -362,6 +368,10 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
          s_edge = HomologyEdges.back();
          t_edge = added_edge;            
          HomologyEdges.push_back(added_edge);
+         
+         gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99+n_gen << " "
+                  << abs(vol_mesh->etn(added_edge)[0])+1 << " "
+                  << abs(vol_mesh->etn(added_edge)[1])+1 << std::endl;
          if (debuggy)
             os << vol_mesh->print_edge(n_gen,added_edge,coeff<0,0,255,255);
       }
@@ -386,6 +396,7 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
       added_edge_v=added_edge;
       or_edge_v=or_edge;
    }
+   gmshos.close();
    if (debuggy)
       os.close();
 }
