@@ -79,7 +79,7 @@ lean_cohomology :: lean_cohomology(
    n_lazy = cond_ins_interface.number_of_gens();
    this->g2m = &cond_ins_interface;
    t_hdk.toc();
-   std::cout << "    Computing h^1(dk) and thinned currents took: " << t_hdk << " seconds" << std::endl;      
+   std::cout << "    Computing h^1(dK) and thinned currents took: " << t_hdk << " seconds" << std::endl;      
    
    t_estt.tic();
    std::vector<double> vg(n_lazy,0);
@@ -493,8 +493,11 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w,
    std::vector<int16_t> coeff(n_lazy,0);
    
    for (auto gen : HomoCoHomo.second[curr_f])
+   {
+      //std::cout << " thinned current support has been touched!" << std::endl;
       coeff[abs(gen)-1] += (signbit(gen) ? -1 : 1);
-   
+   }
+
    for (auto signed_adj_e : _fte_list[curr_f])
    {
       uint32_t adj_e = abs(signed_adj_e);
@@ -528,6 +531,7 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w,
 
       if (edge_coeff != 0)
       {
+         //std::cout << "support of lazy cut is non-empty!" << std::endl;
          vect_stt_coeffs[abs(curr_e)].push_back(std::make_pair(gen+1,edge_coeff));
          
          if (be_lean_not_lazy)
