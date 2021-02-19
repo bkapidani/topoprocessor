@@ -82,8 +82,8 @@ lean_cohomology :: lean_cohomology(
    std::cout << "    Computing h^1(dK) and thinned currents took: " << t_hdk << " seconds" << std::endl;      
    
    t_estt.tic();
-   std::vector<double> vg(n_lazy,0);
-   std::vector<std::vector<double> > gaussmat(n_lazy,vg);
+   std::vector<int> vg(n_lazy,0);
+   std::vector<std::vector<int> > gaussmat(n_lazy,vg);
    if (!ESTT(gaussmat,queue,parent,distance))
       throw std::invalid_argument("Failed to complete ESTT routine!");
    
@@ -95,10 +95,32 @@ lean_cohomology :: lean_cohomology(
    if (be_lean_not_lazy)
    {
       t_gauss.tic();
-      gmatrix<double> gm(gaussmat);
+      
+      // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      // LEGACY VERSION IN WHICH WE ACTUALLY COMPUTE ALL LINKING NUMBERS
+      std::vector<std::array<double,3> > loop;
+      for (uint32_t col = 0; col < n_lazy; ++col)
+      {
+         auto ee = cond_ins_interface.locking_edges[col];
+         RetrieveLoop(parent,distance,ee,loop);
+         std::vector<double> new_coeffs = LinkingNumber(loop);
+               
+         for (uint16_t gen=0; gen < n_lazy; ++gen)
+           gaussmat[uint32_t(gen)][col] = std::round(new_coeffs[uint32_t(gen)]);
+      }
+      // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      gmatrix<int> gm(gaussmat);
+
+      std::cout << gm << std::endl;
+
 
       //gm=gm.transpose();
-      gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
+      // gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
+      gmatrix<int> change_of_basis = gm.gaussElimination();
+      
+      std::cout << change_of_basis << std::endl;
+      std::cout << gm << std::endl;
       
       if (debuggy)
       {
@@ -118,7 +140,7 @@ lean_cohomology :: lean_cohomology(
             {
                new_gen_comb[j] = change_of_basis.Mat(j,k);
 
-               auto curr_e = cond_ins_interface.remaining_edges[j];
+               auto curr_e = cond_ins_interface.locking_edges[j];
                treeos << abs(this->etn(curr_e)[0])+1 << " "
                       << abs(this->etn(curr_e)[1])+1 << std::endl;
                gmshos << ++tree_element_id << " " << 1 << " " << 1 << " " << 99 << " "
@@ -255,7 +277,7 @@ lean_cohomology :: lean_cohomology(
       cuts_pre_minimization.close();
 }
 
-bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
+bool lean_cohomology :: ESTT(std::vector<std::vector<int> >& gaussmat,
                              std::vector<uint32_t>& queue,
                              std::map<uint32_t,uint32_t>& parent,
                              std::map<uint32_t,uint32_t>& distance)
@@ -374,7 +396,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
          {
             wired[curr_e]=true;
             nnz++;
-            set_boundary(j, wired, cotree_stack, in_stack, vect_stt_coeffs, gmat);
+            set_boundary(j, wired, cotree_stack, in_stack, vect_stt_coeffs, gaussmat);
          }
             
          j++;
@@ -410,7 +432,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
                      for (auto val : HomoCoHomo.first[it])
                      {
                         double chain_val = signbit(val) ? -1 : 1;
-                        gmat[uint32_t(gen)][uint32_t(abs(val)-1)]+=chain_val*edge_coeff;
+                        gaussmat[uint32_t(gen)][uint32_t(abs(val)-1)]+=chain_val*edge_coeff;
                      }
                   }
                }
@@ -482,7 +504,7 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w,
                                      std::vector<pair<uint32_t,sgnint32_t<int32_t> > >& cotree_stack, 
                                      std::vector<bool>& in_stack, 
                                      std::vector<std::vector<std::pair<uint16_t, int16_t> > >& vect_stt_coeffs, 
-                                     std::vector<std::vector<double> >& gmat)
+                                     std::vector<std::vector<int> >& gaussmat)
 {
    sgnint32_t<int32_t>  curr_e=cotree_stack[j].second;
    uint32_t             curr_f=cotree_stack[j].first;
@@ -539,7 +561,7 @@ void lean_cohomology :: set_boundary(uint32_t j, const std::vector<bool>& w,
             for (auto val : HomoCoHomo.first[abs(curr_e)])
             {
                double chain_val = signbit(val) ? -1 : 1;
-               gmat[uint32_t(gen)][uint32_t(abs(val)-1)]+=chain_val*edge_coeff;
+               gaussmat[uint32_t(gen)][uint32_t(abs(val)-1)]+=chain_val*edge_coeff;
             }
          }
       }
@@ -1602,7 +1624,8 @@ void lean_cohomology :: UpdateMinCut(std::vector<int32_t>& new_min_cut)
    return;
 }
 
-double lean_cohomology :: LinkingNumber(const std::vector<std::array<double,3> >& gamma0, const std::vector<std::array<double,3> >& gamma1)
+double lean_cohomology :: LinkingNumber(  const std::vector<std::array<double,3> >& gamma0, 
+                                          const std::vector<std::array<double,3> >& gamma1)
 {
    
    double n = 0;
@@ -1683,16 +1706,17 @@ std::vector<double> lean_cohomology :: LinkingNumber(const std::vector<std::arra
     return ret;
 }
 
-
 double lean_cohomology :: SolidAngleQuadrilateral(const std::array<double,3>& a, 
-                                      const std::array<double,3>& b, 
-                                      const std::array<double,3>& c,
-                                      const std::array<double,3>& d)
+                                                  const std::array<double,3>& b, 
+                                                  const std::array<double,3>& c,
+                                                  const std::array<double,3>& d)
 {
    return SolidAngleTriangle(a, b, c) + SolidAngleTriangle(c, d, a);
 }
 
-double lean_cohomology :: SolidAngleTriangle(const std::array<double,3>& a, const std::array<double,3>& b, const std::array<double,3>& c)
+double lean_cohomology :: SolidAngleTriangle(const std::array<double,3>& a, 
+                                             const std::array<double,3>& b,
+                                             const std::array<double,3>& c)
 {
    double determ= a[0]*(b[1]*c[2] - 
                   b[2]*c[1])+a[1]*(b[2]*c[0] - 

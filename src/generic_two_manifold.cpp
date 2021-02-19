@@ -17,7 +17,7 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
           std::map<uint32_t,uint32_t>& p_parent,
           std::map<uint32_t,uint32_t>& p_distance)
 {
-   std::vector<uint32_t> remaining_edges;
+   std::vector<uint32_t> locking_edges;
    std::vector<bool> cotree_edges(vol_mesh->edges_size(),true);
    uint32_t k=0;
    //std::vector<uint32_t> p_queue;
@@ -35,9 +35,7 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
 
    h1b.resize(vol_mesh->edges_size());
    tc.resize(vol_mesh->surfaces_size());
-   // p_queue.reserve(this->n);
-   // d_queue.reserve(this->f);
-   
+
    k=0;
    t_h1.tic();
    uint32_t last_root = 0;
@@ -162,7 +160,7 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
                      else
                      {
                         cotree_edges[ee]=false;
-                        remaining_edges.push_back(ee);
+                        locking_edges.push_back(ee);
                      }
                   }
                   
@@ -183,13 +181,13 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
 
    //std::vector<std::thread> h1_multithreading;
 
-   if (remaining_edges.size()>0)
+   if (locking_edges.size()>0)
    {   
       // std::ofstream os;
       // os.open("./output/h1_lazy.txt");
          
       std::cout << "    Number of lazy generators : "
-                << remaining_edges.size() << std::endl;
+                << locking_edges.size() << std::endl;
 
       // this->h1b=std::move(h1b);
       // this->tc=std::move(tc);
@@ -204,9 +202,9 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
       this->physical_edges=std::move(physical_edges);
       this->physical_surface=std::move(physical_surface);
       
-      for (int32_t i=1; i <= remaining_edges.size(); i++)
+      for (int32_t i=1; i <= locking_edges.size(); i++)
       {
-         auto ee = remaining_edges[i-1];
+         auto ee = locking_edges[i-1];
          
          RetrieveGenAndTC(i,ee);
       }
@@ -227,8 +225,8 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
    //~ }
    
    //std::cout << p_queue.size() << std::endl;
-   this->Ngen=remaining_edges.size();
-   this->remaining_edges=std::move(remaining_edges);
+   this->Ngen=locking_edges.size();
+   this->locking_edges=std::move(locking_edges);
    return std::make_pair(h1b,tc);
 }
 
@@ -412,7 +410,7 @@ std::vector<int> generic_two_manifold :: RetrieveCoH(const std::vector<int>& gen
          std::ofstream os("cohomology_gens.txt", std::ofstream::out | std::ofstream::app);
          int32_t gcvalue = gen_comb[n_gen]; //this is the value i have to multiply for
          
-         auto ee = remaining_edges[n_gen];
+         auto ee = locking_edges[n_gen];
          auto ff = vol_mesh->etf(ee);
          
          uint8_t nfound = 0;

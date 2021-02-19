@@ -227,7 +227,7 @@ class lean_cohomology
 {   
    public:
       lean_cohomology(std::string , std::string, const char*, const char*, bool, bool, const char*);
-      bool                                      ESTT(std::vector<std::vector<double> >&,
+      bool                                      ESTT(std::vector<std::vector<int> >&,
                                                      std::vector<uint32_t>&,
                                                      std::map<uint32_t,uint32_t>&,
                                                      std::map<uint32_t,uint32_t>&);
@@ -295,7 +295,7 @@ class lean_cohomology
               std::vector<pair<uint32_t,sgnint32_t<int32_t> > >&,
               std::vector<bool>&, 
               std::vector<std::vector<std::pair<uint16_t, 
-              int16_t> > >&,std::vector<std::vector<double> >& );
+              int16_t> > >&,std::vector<std::vector<int> >& );
       
       /*Sullivan algorithm functions*/
       void MinCost(const std::vector<int32_t>&, uint32_t);
@@ -342,7 +342,7 @@ class generic_two_manifold
       std::vector<bool>            p_colour, d_colour;
       std::map<uint32_t,uint32_t>  p_parent, p_paredge, p_distance, d_parent, d_paredge, d_distance;
       std::mutex                   p1_pushback_mutex, p2_pushback_mutex;
-      std::vector<uint32_t>        physical_surface, physical_edges, remaining_edges;
+      std::vector<uint32_t>        physical_surface, physical_edges, locking_edges;
       uint32_t                     f,e,n;
       uint16_t                     Ngen;
       void                         TwoSidedAlg(const int16_t&, const uint32_t&, const uint32_t&);
