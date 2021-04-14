@@ -24,7 +24,7 @@ int main (int argc, char** argv)
                 << " <mesher (netgen or gmsh, default gmsh)>" 
                 << " <conductor labels filename> (default label: 1)"
                 << " <insulator labels filename> (default label: 2)"
-                << " <1 | 0 (lean or lazy, default is lean)>"
+                << " <1 | 0 (lean or lazy, default is lazy)>"
                 << " <1 | 0 (i.e. minimize cut or not, default is do not minimize)>"
                 << std::endl;
       // std::cout << "            or: mesh_filename surface_id"             << std::endl; 
@@ -39,13 +39,13 @@ int main (int argc, char** argv)
    else if (argc > 5)
       lean_cohomology run_topopro(argv[1],argv[2],argv[3],argv[4],atoi(argv[5])>0,false,"no");
    else if (argc > 4)
-      lean_cohomology run_topopro(argv[1],argv[2],argv[3],argv[4],true,false,"no");
+      lean_cohomology run_topopro(argv[1],argv[2],argv[3],argv[4],false,false,"no");
    else if (argc > 3)
    {
       std::ofstream i("i.txt");
       i << "2" << std::endl;
       i.close();
-      lean_cohomology run_topopro(argv[1],argv[2],argv[3],"i.txt",true,false,"no");
+      lean_cohomology run_topopro(argv[1],argv[2],argv[3],"i.txt",false,false,"no");
       std::remove("i.txt");
    }
    else if (argc > 2)
@@ -56,7 +56,7 @@ int main (int argc, char** argv)
       c << "1" << std::endl;
       i.close();
       c.close();
-      lean_cohomology run_topopro(argv[1],argv[2],"c.txt","i.txt",true,false,"no");
+      lean_cohomology run_topopro(argv[1],argv[2],"c.txt","i.txt",false,false,"no");
       std::remove("i.txt");
       std::remove("c.txt");
    }
@@ -68,7 +68,7 @@ int main (int argc, char** argv)
       c << "1" << std::endl;
       i.close();
       c.close();
-      lean_cohomology run_topopro(argv[1],"gmsh","c.txt","i.txt",true,false,"no");
+      lean_cohomology run_topopro(argv[1],"gmsh","c.txt","i.txt",false,false,"no");
       std::remove("i.txt");
       std::remove("c.txt");
    }
