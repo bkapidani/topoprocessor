@@ -785,6 +785,8 @@ bool lean_cohomology :: read_gmesh(const std::string&     _filename,
       linecount++;
    }
    
+   physical_nodes.resize(lines,0);
+   
    //std::cout << "    Reading points: " << linecount;
    //std::cout << "/" << lines << " - " << tc << " seconds" << std::endl;
    /************************ Read useless stuff ************************/
@@ -839,26 +841,26 @@ bool lean_cohomology :: read_gmesh(const std::string&     _filename,
       }
       else if (element_label == 3)
       {
-         // std::cout << "    I'm here with a quad!" << std::endl;
-         uint32_t       p0(  std::get<2>(t) );
-         uint32_t       p1(  std::get<3>(t) );
-         uint32_t       p2(  std::get<4>(t) );
-         uint32_t       p3(  std::get<5>(t) );
-         uint32_t       bid( std::get<1>(t) );
+         // // std::cout << "    I'm here with a quad!" << std::endl;
+         // uint32_t       p0(  std::get<2>(t) );
+         // uint32_t       p1(  std::get<3>(t) );
+         // uint32_t       p2(  std::get<4>(t) );
+         // uint32_t       p3(  std::get<5>(t) );
+         // uint32_t       bid( std::get<1>(t) );
          
-         surface_type   tri{ p0, p1, p2, p3 };
-         temp_surf_tri.push_back(tri);
-         temp_surf_lab.push_back(bid);
+         // surface_type   tri{ p0, p1, p2, p3 };
+         // temp_surf_tri.push_back(tri);
+         // temp_surf_lab.push_back(bid);
+      }
+      else if (element_label == 15)
+      {
+         
       }
       
       linecount++;
    }
    
    os << num_of_hex << std::endl;
-   
-   
-   std::vector<label_surface_type> temp_tri0;
-   temp_tri0.resize(4*lines);
 
    for (auto tet : temp_hex)
    {
@@ -1256,7 +1258,6 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    std::vector<uint32_t>().swap(e_labels);
    _nte_list.resize(pts.size());
    // _etn_list.reserve(edges.size());
-   physical_nodes.resize(pts.size(),0);
    
    for (uint32_t k = 0; k < edges.size(); k++)
    {

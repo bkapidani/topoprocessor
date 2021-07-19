@@ -256,7 +256,7 @@ class lean_cohomology
       
    private:
       std::pair<h1_2d_basis,thinned_currents>                  HomoCoHomo;
-      uint32_t                                                 insulator_id, conductor_id, surface_id, n_lazy;
+      uint32_t                                                 surface_id, n_lazy;
       std::map<uint32_t,std::vector<uint32_t> >                 physical_surfaces;
       std::vector<std::vector<std::pair<uint16_t, int16_t> > >   vect_stt_coeffs;
       std::vector<uint32_t>                                    domains;   
