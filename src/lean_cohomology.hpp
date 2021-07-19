@@ -102,7 +102,7 @@ std::tuple<T, T, T, T, T, T, T, T, T, T>
 read_element_line(const char *str, char **endptr)
 {
    T t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
-   t6 = t7 = t8 = t9 = T(1);
+   t2 = t3 = t4 = t5 = t6 = t7 = t8 = t9 = T(1);
    // std::ofstream os;
    // os.open("./debug/parser_tets.dat", std::ios::out | std::ios::app );
     
@@ -147,19 +147,18 @@ read_element_line(const char *str, char **endptr)
       t2 = strtot<T>(*endptr, endptr);
       t3 = strtot<T>(*endptr, endptr);
       t4 = strtot<T>(*endptr, endptr);
-      t5 = T(1);
    }
    else if (t0 == 1) //physical line
    {
       t2 = strtot<T>(*endptr, endptr);
       t3 = strtot<T>(*endptr, endptr);
-      t4 = t5 = T(1);
    }   
-   else
+   else if (t0 == 15) //vertex
    {
-      t0 = t1 = T(1);
-      t2 = t3 = t4 = t5 = T(1);
+      t2 = strtot<T>(*endptr, endptr);
    }
+   else
+      throw std::runtime_error(std::string("Unknown type of element in GMSH file!"));
 
    // os.close();
     return std::make_tuple(t0, t1, t2-1, t3-1, t4-1, t5-1,
