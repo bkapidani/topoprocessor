@@ -855,6 +855,9 @@ bool lean_cohomology :: read_gmesh(const std::string&     _filename,
       else if (element_label == 15)
       {
          
+         uint32_t       p0(  std::get<2>(t) );
+         physical_nodes[p0] = std::get<1>(t);
+         n2d++;
       }
       
       linecount++;
@@ -1285,8 +1288,10 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
          for (auto nn : _etn_list[k])
          {
             if (!physical_nodes[abs(nn)])
+            {
+               physical_nodes[abs(nn)]++;
                n2d++;
-            physical_nodes[abs(nn)]++;
+            }
          }
       }
    }

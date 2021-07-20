@@ -23,8 +23,8 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
    //std::vector<uint32_t> p_queue;
    std::vector<uint32_t> d_queue;
    
-   std::vector<bool>              p_colour(this->vol_mesh->nodes_size(),false);
-   std::vector<bool>              d_colour(this->vol_mesh->surfaces_size(),false);
+   std::vector<bool>              p_colour(vol_mesh->nodes_size(),false);
+   std::vector<bool>              d_colour(vol_mesh->surfaces_size(),false);
    // std::map<uint32_t,uint32_t>    p_parent, p_paredge, p_distance;
    std::map<uint32_t,uint32_t>    p_paredge;
    std::map<uint32_t,uint32_t>    d_parent, d_paredge, d_distance;
@@ -46,15 +46,28 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
    std::ofstream gmshos("tree_debug.txt");//, std::ofstream::out | std::ofstream::app);
 
 
+   auto max_priority = physical_nodes[0];
+
+   for (auto it = physical_nodes.begin();it != physical_nodes.end(); ++it)
+      if (*it > max_priority)
+         max_priority = *it;
+   
+
+
    //std::cout << "n. of boundary nodes = " << this->n << std::endl;
    //std::cout << "n. of boundary faces = " << this->f << std::endl;
    while (p_queue.size()<this->n)
    {
-      uint32_t root=last_root;
-      while (p_colour[root] || !physical_nodes[root])
-      {
+      uint32_t root = (max_priority > 1 ? 0 : last_root);
+      while (root <vol_mesh->nodes_size() &&  (p_colour[root] || (physical_nodes[root]<max_priority)) )
          root++;
+      if (root == vol_mesh->nodes_size())
+      {
+         max_priority--;
+         last_root = 0;
+         continue;
       }
+
       last_root = root;
 
       //std::cout << "root = " << root << std::endl;
@@ -62,18 +75,20 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
       p_distance[root]=0;
       p_queue.push_back(root);
       uint32_t qtop;
+
+      std::vector<uint32_t> p_dummy_queue;
       
       while (k < p_queue.size())
       {   
          uint32_t qtop = p_queue[k];
-         uint32_t counter = 0;
+         // uint32_t counter = 0;
          for (const auto& signed_ee : vol_mesh->nte(qtop))
          {
             uint32_t ee = abs(signed_ee);
             
             if (physical_edges[ee]>0)
             { 
-               counter++;
+               // counter++;
 
                for (const auto& signed_nn : vol_mesh->etn(ee))
                {
@@ -94,7 +109,11 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
                         gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99 << " "
                                << abs(vol_mesh->etn(ee)[0])+1 << " "
                                << abs(vol_mesh->etn(ee)[1])+1 << std::endl;
-                        p_queue.push_back(nn);
+
+                        if (physical_nodes[nn] >= physical_nodes[qtop])
+                           p_queue.push_back(nn);
+                        else
+                           p_dummy_queue.push_back(nn);
                      }
                   }
                }
@@ -106,7 +125,11 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
          //              << " edges in its coboundary!" << std::endl;
 
          k++;
+
+         if (k == p_queue.size() && p_dummy_queue.size()>0)
+            p_queue.insert( p_queue.end(), p_dummy_queue.begin(), p_dummy_queue.end() );
       }
+
       // std::cout << "    ----" << root << "----" << std::endl;
    }
 
