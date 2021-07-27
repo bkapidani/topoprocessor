@@ -155,6 +155,7 @@ read_element_line(const char *str, char **endptr)
    }   
    else if (t0 == 15) //vertex
    {
+      //std::cout << __FILE__ << ":" << __LINE__ << std::endl;
       t2 = strtot<T>(*endptr, endptr);
    }
    else
