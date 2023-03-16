@@ -47,7 +47,7 @@ where the optional arguments are used to choose the lazy version of the algorith
 
 Topoprocessor returns a text file, called h1.txt which looks as follows: The first line is the number of ($H^1$) cohomology generators found. Then, for each generator you will have a line indicating the size N_i of the support of the generator (the number of nonzero coefficients) and then you will have exactly N_i lines with 3 integers, the first two are the mesh node indices which are the end-points of a given edge (the labels match the indices in the mesh file you provided as an input) and the third number is the coefficient (a signed integer) associated the edge for the given generator.
 
-### New: Structured grids ###
+### New: structured grids ###
 
 The algorithms now work also for structured grids, the support is still experimental, and has been used recently in high-order splines methods, with MATLAB scripts to provide the results as inputs for the the GeoPDEs library (https://github.com/rafavzqz/geopdes).
 To access the version for structured grids, which can be used to combine the algorithms with spline bases in GeoPDEs, one needs to check-out to the separate branch. The plan is in the future whole choice to be parametrised on the main branch. Since this version is still experimental consider contacting the developer before use.
