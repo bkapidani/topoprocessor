@@ -61,22 +61,21 @@ If you are a GeoPDEs user and you are familiar with $H^curl$--conforming spline 
 
 If you find Topoprocessor useful and you use it in your research please cite the relevant papers. It will motivate the developers, who are researchers themselves, to improve the algorithms and maintain the code as bug-free as possible. For the lazy and lean version of the main code cite:
 
-[1] P. Dłotko and R. Specogna, ‘Lazy Cohomology Generators: A Breakthrough in (Co)homology Computations for CEM’, IEEE Transactions on Magnetics, vol. 50, no. 2, pp. 577–580, Feb. 2014, doi: 10.1109/TMAG.2013.2281076.
+    [1] P. Dłotko and R. Specogna, ‘Lazy Cohomology Generators: A Breakthrough in (Co)homology Computations for CEM’, IEEE Transactions on Magnetics, vol. 50, no. 2, pp. 577–580, Feb. 2014, doi: 10.1109/TMAG.2013.2281076.
 
-[2] P. Dłotko, B. Kapidani, and R. Specogna, ‘Topoprocessor: An Efficient Computational Topology Toolbox for h-Oriented Eddy Current Formulations’, IEEE Transactions on Magnetics, vol. 53, no. 6, pp. 1–4, Jun. 2017, doi: 10.1109/TMAG.2017.2661480.
+    [2] P. Dłotko, B. Kapidani, and R. Specogna, ‘Topoprocessor: An Efficient Computational Topology Toolbox for h-Oriented Eddy Current Formulations’, IEEE Transactions on Magnetics, vol. 53, no. 6, pp. 1–4, Jun. 2017, doi: 10.1109/TMAG.2017.2661480.
 
-[3] P. Dłotko, B. Kapidani, and R. Specogna, ‘Lean Cohomology Computation for Electromagnetic Modeling’, IEEE Transactions on Magnetics, vol. 54, no. 3, pp. 1–4, Mar. 2018, doi: 10.1109/TMAG.2017.2749618.
+    [3] P. Dłotko, B. Kapidani, and R. Specogna, ‘Lean Cohomology Computation for Electromagnetic Modeling’, IEEE Transactions on Magnetics, vol. 54, no. 3, pp. 1–4, Mar. 2018, doi: 10.1109/TMAG.2017.2749618.
 
-If you use the support minimizing procedure to reduce the fill-in of the final system please additionally cite:
+References [1], [2], [3] are the bedrock of the theory and algorithms in the library and are valid citations for any general use of Topoprocessor. If you find the additional support minimizing procedure (which is considerably slower than the rest of the algorithm) useful to reduce the fill-in of your final system and worth the effort, please additionally cite:
 
-[4] P. Dłotko, B. Kapidani, and R. Specogna, ‘Fast Computation of Cuts With Reduced Support by Solving Maximum Circulation Problems’, IEEE Transactions on Magnetics, vol. 51, no. 3, pp. 1–4, Mar. 2015, doi: 10.1109/TMAG.2014.2359976.
+    [4] P. Dłotko, B. Kapidani, and R. Specogna, ‘Fast Computation of Cuts With Reduced Support by Solving Maximum Circulation Problems’, IEEE Transactions on Magnetics, vol. 51, no. 3, pp. 1–4, Mar. 2015, doi: 10.1109/TMAG.2014.2359976.
 
-If you use the structured version, please cite:
+If you use the aforementioned hexahedral meshes version, please also cite:
 
-[5] B. Kapidani, M. Merkel, S. Schöps, and R. Vázquez, ‘Tree–cotree decomposition of isogeometric mortared spaces in H(curl) on multi-patch domains’, Computer Methods in Applied Mechanics and Engineering, vol. 395, p. 114949, May 2022, doi: 10.1016/j.cma.2022.114949.
+    [5] B. Kapidani, M. Merkel, S. Schöps, and R. Vázquez, ‘Tree–cotree decomposition of isogeometric mortared spaces in H(curl) on multi-patch domains’, Computer Methods in Applied Mechanics and Engineering, vol. 395, p. 114949, May 2022, doi: 10.1016/j.cma.2022.114949.
 
-
-### All this looks useful, but scares me, who do I talk to? ###
+### All this looks useful to my work but scares me, who do I talk to? ###
 
 If you need further infos, or you want to report bugs, the main developer/mantainer of the Topoprocessor tool can be reached at:
 
