@@ -47,14 +47,14 @@ where the optional arguments are used to choose the lazy version of the algorith
 
 Topoprocessor returns a text file, called h1.txt which looks as follows: The first line is the number of ($H^1$) cohomology generators found. Then, for each generator you will have a line indicating the size N_i of the support of the generator (the number of nonzero coefficients) and then you will have exactly N_i lines with 3 integers, the first two are the mesh node indices which are the end-points of a given edge (the labels match the indices in the mesh file you provided as an input) and the third number is the coefficient (a signed integer) associated the edge for the given generator.
 
-### New: hexahedral meshes ###
+### New (caveat): hexahedral meshes ###
 
 The algorithms now work also for meshes made of hexahedra, although not for hybrid meshes (handling of triangular prisms is missing). Beware: the support is still experimental and has been only tailored ad-hoc for use in a recently published paper on high-order splines methods (see [5] below). Consider contacting the developer before use for your solver of choice!
 To access the version for structured and unstructured hexahedral grids, with MATLAB scripts to provide inputs to topoprocessor and outputs back to the the GeoPDEs library (https://github.com/rafavzqz/geopdes), one needs to check-out to the separate branch:
 
     git checkout hexameshes
     
-If you are a GeoPDEs user and you are familiar with $H^curl$--conforming spline spaces, you may find the MATLAB/OCTAVE (".m" format) scripts available here to be very useful. The plan is in the future whole choice to be parametrised on the main branch (see open issues).
+And recompile the code with the instructions above. If you are a GeoPDEs user and you are familiar with $H^{curl}$--conforming spline spaces, you may find the MATLAB/OCTAVE (".m" format) scripts available herein to be very useful. The plan is in the future for the whole choice between tetrahedral and hexahedral meshes to be parametrised at run-time on the main branch (see open issues).
 
 
 ### How do I cite the proper sources? ###
