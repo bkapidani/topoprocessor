@@ -12,12 +12,12 @@
     
 This is a brief vademecum for Topoprocessor, a C++ based library which computes the cohomology generators of combinatorial 3-manifolds with boundary. The present version of the tool was born out of a collaborative effort between Pawel Dłotko, Bernard Kapidani (main maintainer and developer of this repository), and Ruben Specogna. 
 
-### What is this repository for? ###
+### What is this repository for?
 
 If you are numerically solving electromagnetic eddy currents problems with a scalar magnetic potential formulation, or flow problems with a stream-function formulation, the problem of computing the cohomology generators of some domain of interest embedded in $R^3$ arises. The present tool supports the domain of interest to be discretized through a mesh (simplices or hexahedra) and is compatible with outputs provided by open source meshers NETGEN (visit www.ngsolve.org) in the neutral mesh format and GMSH (visit www.gmsh.info) in legacy 2.2 msh format. 
 The whole computational domain is usually a topologically trivial one, $E = A \cup B$ where $A$ is the nontrivial subset for which the cohomology group needs to be generated. In accordance with the main application of the toolbox (discrete formulations for eddy current problems in electromagnetism) domain $A$ is called the insulator and domain $B$ is called the conductor.
 
-### How do I install Topoprocessor? ###
+### How do I install Topoprocessor?
 
 To install the tool open a terminal in a folder owned by the current user run the following:
 
@@ -41,7 +41,7 @@ instead of the last instruction above.
 The tool is in principle cross-platform, although developed on UNIX based architectures and originally adapted to compile it on Microsoft Windows through the POSIX compatibility layer Cygwin.
 Recently, the introduction of WSL on Windows architectures should have made the compilation of the library seamless on Microsoft Windows too, but this has not been officially tested by the developers. Feel free to contact them if you have done so yourself and want to share your successful build-chain.
 
-### How do I run the executable? ###
+### How do I run the executable?
 
 Topoprocessor takes a variable number of command line inputs, the minimal input consists in specifying the mesher, the mesh filename and the files containing material labels for the conductor and insulator domains. These last two files are very easy to produce and are infact just text files containing an integer on the first line, indicating the number of labels, followed by all the labels that have to be regarded as conductors or insulators, respectively. An example of calling Topoprocessor is then as follows:
 
@@ -53,11 +53,11 @@ where we note that the mesh format compatible for gmsh meshes is the 2.2 version
 
 where the optional arguments are used to choose the lazy version of the algorithm (which doubles the number of generators, see references below), and to choose if to run a post-processing step which minimizes the support of the generators, based on the solution of the discrete Plateau problem (see again references below).
 
-### What do I get as an output? ###
+### What do I get as an output?
 
 Topoprocessor returns a text file, called h1.txt which looks as follows: The first line is the number of ($H^1$) cohomology generators found. Then, for each generator you will have a line indicating the size N_i of the support of the generator (the number of nonzero coefficients) and then you will have exactly N_i lines with 3 integers, the first two are the mesh node indices which are the end-points of a given edge (the labels match the indices in the mesh file you provided as an input) and the third number is the coefficient (a signed integer) associated the edge for the given generator.
 
-### New (caveat): hexahedral meshes ###
+### New (caveat): hexahedral meshes
 
 The algorithms now work also for meshes made of hexahedra, although not for hybrid meshes (handling of triangular prisms is missing). Beware: the support is still experimental and has been only tailored ad-hoc for use in a recently published paper on high-order splines methods (see [5] below). Consider contacting the developer before use for your solver of choice!
 To access the version for structured and unstructured hexahedral grids, with MATLAB scripts to provide inputs to topoprocessor and outputs back to the the GeoPDEs library (https://github.com/rafavzqz/geopdes), one needs to check-out to the separate branch:
@@ -67,7 +67,7 @@ To access the version for structured and unstructured hexahedral grids, with MAT
 And recompile the code with the instructions above. If you are a GeoPDEs user and you are familiar with $H^{curl}$--conforming spline spaces, you may find the MATLAB/OCTAVE (".m" format) scripts available herein to be very useful. The plan is in the future for the whole choice between tetrahedral and hexahedral meshes to be parametrised at run-time on the main branch (see open issues).
 
 
-### How do I cite the proper sources? ###
+### How do I cite the proper sources?
 
 If you find Topoprocessor useful and you use it in your research please cite the relevant papers. It will motivate the developers, who are researchers themselves, to improve the algorithms and maintain the code as bug-free as possible. For the lazy and lean version of the main code cite:
 
@@ -85,7 +85,7 @@ If you use the aforementioned hexahedral meshes version, please also cite:
 
     [5] B. Kapidani, M. Merkel, S. Schöps, and R. Vázquez, ‘Tree–cotree decomposition of isogeometric mortared spaces in H(curl) on multi-patch domains’, Computer Methods in Applied Mechanics and Engineering, vol. 395, p. 114949, May 2022, doi: 10.1016/j.cma.2022.114949.
 
-### All this looks useful to my work but scares me, who do I talk to? ###
+### All this looks useful to my work but scares me, who do I talk to?
 
 If you need further infos, or you want to report bugs, the main developer/mantainer of the Topoprocessor tool can be reached at:
 
