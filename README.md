@@ -47,10 +47,15 @@ where the optional arguments are used to choose the lazy version of the algorith
 
 Topoprocessor returns a text file, called h1.txt which looks as follows: The first line is the number of ($H^1$) cohomology generators found. Then, for each generator you will have a line indicating the size N_i of the support of the generator (the number of nonzero coefficients) and then you will have exactly N_i lines with 3 integers, the first two are the mesh node indices which are the end-points of a given edge (the labels match the indices in the mesh file you provided as an input) and the third number is the coefficient (a signed integer) associated the edge for the given generator.
 
-### New: structured grids ###
+### New: hexahedral meshes ###
 
-The algorithms now work also for structured grids, the support is still experimental, and has been used recently in high-order splines methods, with MATLAB scripts to provide the results as inputs for the the GeoPDEs library (https://github.com/rafavzqz/geopdes).
-To access the version for structured grids, which can be used to combine the algorithms with spline bases in GeoPDEs, one needs to check-out to the separate branch. The plan is in the future whole choice to be parametrised on the main branch. Since this version is still experimental consider contacting the developer before use.
+The algorithms now work also for meshes made of hexahedra, although not for hybrid meshes (handling of triangular prisms is missing). Beware: the support is still experimental and has been only tailored ad-hoc for use in a recently published paper on high-order splines methods (see [5] below). Consider contacting the developer before use for your meshes 
+To access the version for structured and unstructured hexahedral grids, with MATLAB scripts to provide inputs to topoprocessor and outputs back to the the GeoPDEs library (https://github.com/rafavzqz/geopdes), one needs to check-out to the separate branch:
+
+    git checkout hexameshes
+    
+If you are a GeoPDEs user and you are familiar with $H^curl$--conforming spline spaces, you may find the MATLAB/OCTAVE (".m" format) scripts available here to be very useful. The plan is in the future whole choice to be parametrised on the main branch (see open issues).
+
 
 ### How do I cite the proper sources? ###
 
