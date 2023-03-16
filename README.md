@@ -4,7 +4,8 @@ This is a brief readme for Topoprocessor, a C++ code which computes the cohomolo
 
 ### What is this repository for? ###
 
-If you are numerically solving electromagnetic eddy currents problems with a scalar magnetic potential formulation, or flow problems with a stream-function formulation, the problem of computing the cohomology generators of some domain of interest embedded in $R^3$ arises. The present tool supports the domain of interest to be discretized through a mesh (simplices or hexahedra) and is compatible with outputs provided by open source meshers NETGEN (visit www.ngsolve.org) and GMSH (visit www.gmsh.info). The whole computational domain is usually a topologically trivial one, $E = A \cup B$ where $A$ is the nontrivial subset for which the cohomology group needs to be generated. In accordance with the main application of the toolbox (discrete formulations for eddy current problems in electromagnetism) domain $A$ is called the insulator and domain $B$ is called the conductor.
+If you are numerically solving electromagnetic eddy currents problems with a scalar magnetic potential formulation, or flow problems with a stream-function formulation, the problem of computing the cohomology generators of some domain of interest embedded in $R^3$ arises. The present tool supports the domain of interest to be discretized through a mesh (simplices or hexahedra) and is compatible with outputs provided by open source meshers NETGEN (visit www.ngsolve.org) in the neutral mesh format and GMSH (visit www.gmsh.info) in legacy 2.2 msh format. 
+The whole computational domain is usually a topologically trivial one, $E = A \cup B$ where $A$ is the nontrivial subset for which the cohomology group needs to be generated. In accordance with the main application of the toolbox (discrete formulations for eddy current problems in electromagnetism) domain $A$ is called the insulator and domain $B$ is called the conductor.
 
 ### How do I install Topoprocessor ###
 
@@ -41,6 +42,9 @@ where we note that the mesh format compatible for gmsh meshes is the 2.2 version
     topoprocessor  <mesher ("netgen" or "gmsh")>  <mesh filename>  <conductors filename> <insulators filename> <1 | 0 (lean or lazy, default is lean)> <1 | 0 (i.e. minimize cut or not, default is do not minimize)>
 
 where the optional arguments are used to choose the lazy version of the algorithm (which doubles the number of generators, see references below), and to choose if to run a post-processing step which minimizes the support of the generators, based on the solution of the discrete Plateau problem (see again references below).
+
+### What do I get as an output? ###
+
 Topoprocessor returns a text file, called h1.txt which looks as follows: The first line is the number of ($H^1$) cohomology generators found. Then, for each generator you will have a line indicating the size N_i of the support of the generator (the number of nonzero coefficients) and then you will have exactly N_i lines with 3 integers, the first two are the mesh node indices which are the end-points of a given edge (the labels match the indices in the mesh file you provided as an input) and the third number is the coefficient (a signed integer) associated the edge for the given generator.
 
 ### New: Structured grids ###
@@ -67,7 +71,7 @@ If you use the structured version, please cite:
 [5] B. Kapidani, M. Merkel, S. Schöps, and R. Vázquez, ‘Tree–cotree decomposition of isogeometric mortared spaces in H(curl) on multi-patch domains’, Computer Methods in Applied Mechanics and Engineering, vol. 395, p. 114949, May 2022, doi: 10.1016/j.cma.2022.114949.
 
 
-### Who do I talk to? ###
+### All this looks useful, but scares me, who do I talk to? ###
 
 If you need further infos, or you want to report bugs, the main developer/mantainer of the Topoprocessor tool can be reached at:
 
