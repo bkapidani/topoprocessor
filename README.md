@@ -66,6 +66,7 @@ If you use the structured version, please cite:
 
 
 ### Who do I talk to? ###
+
 If you need further infos, or you want to report bugs, the main developer/mantainer of the Topoprocessor tool can be reached at:
 
 bernard(dot)kapidani(at)gmail(dot)com
