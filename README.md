@@ -43,7 +43,7 @@ Topoprocessor returns a text file, called h1.txt which looks as follows: The fir
 
 ### How do I cite the proper sources? ###
 
-If you find Topoprocessor useful and you use it in your research please cite the relevant papers. It will motivate the developers, who are researchers themselves to improve the algorithms and maintain the code as bug-free as possible. For the lazy and lean version of the main code cite:
+If you find Topoprocessor useful and you use it in your research please cite the relevant papers. It will motivate the developers, who are researchers themselves, to improve the algorithms and maintain the code as bug-free as possible. For the lazy and lean version of the main code cite:
 
 [1] P. Dłotko and R. Specogna, ‘Lazy Cohomology Generators: A Breakthrough in (Co)homology Computations for CEM’, IEEE Transactions on Magnetics, vol. 50, no. 2, pp. 577–580, Feb. 2014, doi: 10.1109/TMAG.2013.2281076.
 
