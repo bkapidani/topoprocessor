@@ -1,6 +1,6 @@
 # DOCUMENTATION #
 
-This is a brief vademecum for Topoprocessor, a C++ code which computes the cohomology generators of combinatorial 3-manifolds with boundaries. The present version of the tool was born out of a collaborative effort between Pawel Dłotko, Bernard Kapidani (main maintainer of this repository), and Ruben Specogna. 
+This is a brief vademecum for Topoprocessor, a C++ code which computes the cohomology generators of combinatorial 3-manifolds with boundaries. The present version of the tool was born out of a collaborative effort between Pawel Dłotko, Bernard Kapidani (main maintainer and developer of this repository), and Ruben Specogna. 
 
 ### What is this repository for? ###
 
