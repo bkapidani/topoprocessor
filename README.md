@@ -1,6 +1,6 @@
-### Documentation ###
+### Documentation
 
-- [Documentation](###documentation###)
+- [Table of contents:](#)
     + [What is this repository for?](#what-is-this-repository-for-)
     + [How do I install Topoprocessor?](#how-do-i-install-topoprocessor-)
     + [How do I run the executable?](#how-do-i-run-the-executable-)
