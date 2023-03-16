@@ -49,7 +49,7 @@ Topoprocessor returns a text file, called h1.txt which looks as follows: The fir
 
 ### New: hexahedral meshes ###
 
-The algorithms now work also for meshes made of hexahedra, although not for hybrid meshes (handling of triangular prisms is missing). Beware: the support is still experimental and has been only tailored ad-hoc for use in a recently published paper on high-order splines methods (see [5] below). Consider contacting the developer before use for your meshes 
+The algorithms now work also for meshes made of hexahedra, although not for hybrid meshes (handling of triangular prisms is missing). Beware: the support is still experimental and has been only tailored ad-hoc for use in a recently published paper on high-order splines methods (see [5] below). Consider contacting the developer before use for your solver of choice!
 To access the version for structured and unstructured hexahedral grids, with MATLAB scripts to provide inputs to topoprocessor and outputs back to the the GeoPDEs library (https://github.com/rafavzqz/geopdes), one needs to check-out to the separate branch:
 
     git checkout hexameshes
