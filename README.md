@@ -1,3 +1,5 @@
+### Documentation ###
+
 - [Documentation](###documentation###)
     + [What is this repository for?](#what-is-this-repository-for-)
     + [How do I install Topoprocessor?](#how-do-i-install-topoprocessor-)
@@ -7,9 +9,7 @@
     + [How do I cite the proper sources?](#how-do-i-cite-the-proper-sources-)
     + [All this looks useful to my work but scares me, who do I talk to?](#all-this-looks-useful-to-my-work-but-scares-me--who-do-i-talk-to-)
 
-<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
     
-
 This is a brief vademecum for Topoprocessor, a C++ based library which computes the cohomology generators of combinatorial 3-manifolds with boundary. The present version of the tool was born out of a collaborative effort between Pawel Dłotko, Bernard Kapidani (main maintainer and developer of this repository), and Ruben Specogna. 
 
 ### What is this repository for? ###
