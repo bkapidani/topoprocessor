@@ -8,7 +8,6 @@ If you are numerically solving electromagnetic eddy currents problems with a sca
 
 ### How do I install Topoprocessor ###
 
-The tool is in principle cross-platform, although to compile it on Microsoft Windows the POSIX compatibility layer Cygwin must be used. 
 To install the tool open a terminal in a folder owned by the current user run the following:
 
     TOPODIR=./topoprocessor
@@ -27,6 +26,9 @@ If you have admin privileges and want to install Topoprocessor for all users, ju
     sudo make install
 
 instead of the last instruction above.
+
+The tool is in principle cross-platform, although developed on UNIX based architectures and originally adapted to compile it on Microsoft Windows through the POSIX compatibility layer Cygwin.
+Recently, the introduction of WSL on Windows architectures should have made the compilation of the library seamless on Microsoft Windows too, but this has not been officially tested by the developers. Feel free to contact them if you have done so yourself and want to share your successful build-chain.
 
 ### How do I run the executable? ###
 
