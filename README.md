@@ -6,7 +6,7 @@ This is a brief readme for Topoprocessor, a C++ code which computes the cohomolo
 
 If you are numerically solving electromagnetic eddy currents problems with a scalar magnetic potential formulation, or flow problems with a stream-function formulation, the problem of computing the cohomology generators of some domain of interest embedded in $R^3$ arises. The present tool supports the domain of interest to be discretized through a mesh (simplices or hexahedra) and is compatible with outputs provided by open source meshers NETGEN (visit www.ngsolve.org) and GMSH (visit www.gmsh.info). The whole computational domain is usually a topologically trivial one, $E = A \cup B$ where $A$ is the nontrivial subset for which the cohomology group needs to be generated. In accordance with the main application of the toolbox (discrete formulations for eddy current problems in electromagnetism) domain $A$ is called the insulator and domain $B$ is called the conductor.
 
-### How do I install and run the executable? ###
+### How do I install Topoprocessor ###
 
 The tool is in principle cross-platform, although to compile it on Microsoft Windows the POSIX compatibility layer Cygwin must be used. 
 To install the tool open a terminal in a folder owned by the current user run the following:
@@ -28,7 +28,7 @@ If you have admin privileges and want to install Topoprocessor for all users, ju
 
 instead of the last instruction above.
 
-### How do I run the executable?
+### How do I run the executable? ###
 
 Topoprocessor takes a variable number of command line inputs, the minimal input consists in specifying the mesher, the mesh filename and the files containing material labels for the conductor and insulator domains. These last two files are very easy to produce and are infact just text files containing an integer on the first line, indicating the number of labels, followed by all the labels that have to be regarded as conductors or insulators, respectively. An example of calling Topoprocessor is then as follows:
 
@@ -40,6 +40,11 @@ where we note that the mesh format compatible for gmsh meshes is the 2.2 version
 
 where the optional arguments are used to choose the lazy version of the algorithm (which doubles the number of generators, see references below), and to choose if to run a post-processing step which minimizes the support of the generators, based on the solution of the discrete Plateau problem (see again references below).
 Topoprocessor returns a text file, called h1.txt which looks as follows: The first line is the number of ($H^1$) cohomology generators found. Then, for each generator you will have a line indicating the size N_i of the support of the generator (the number of nonzero coefficients) and then you will have exactly N_i lines with 3 integers, the first two are the mesh node indices which are the end-points of a given edge (the labels match the indices in the mesh file you provided as an input) and the third number is the coefficient (a signed integer) associated the edge for the given generator.
+
+### New: Structured grids ###
+
+The algorithms now work also for structured grids, the support is still experimental, and has been used recently in high-order splines methods, with MATLAB scripts to provide the results as inputs for the the GeoPDEs library (https://github.com/rafavzqz/geopdes).
+To access the version for structured grids, which can be used to combine the algorithms with spline bases in GeoPDEs, one needs to check-out to the separate branch. The plan is in the future whole choice to be parametrised on the main branch. Since this version is still experimental consider contacting the developer before use.
 
 ### How do I cite the proper sources? ###
 
@@ -54,6 +59,11 @@ If you find Topoprocessor useful and you use it in your research please cite the
 If you use the support minimizing procedure to reduce the fill-in of the final system please additionally cite:
 
 [4] P. Dłotko, B. Kapidani, and R. Specogna, ‘Fast Computation of Cuts With Reduced Support by Solving Maximum Circulation Problems’, IEEE Transactions on Magnetics, vol. 51, no. 3, pp. 1–4, Mar. 2015, doi: 10.1109/TMAG.2014.2359976.
+
+If you use the structured version, please cite:
+
+[5] B. Kapidani, M. Merkel, S. Schöps, and R. Vázquez, ‘Tree–cotree decomposition of isogeometric mortared spaces in H(curl) on multi-patch domains’, Computer Methods in Applied Mechanics and Engineering, vol. 395, p. 114949, May 2022, doi: 10.1016/j.cma.2022.114949.
+
 
 ### Who do I talk to? ###
 If you need further infos, or you want to report bugs, the main developer/mantainer of the Topoprocessor tool can be reached at:
