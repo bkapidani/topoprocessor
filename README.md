@@ -14,7 +14,7 @@ This is a brief vademecum for Topoprocessor, a C++ based library which computes 
 
 ### What is this repository for?
 
-If you are numerically solving electromagnetic eddy currents problems with a scalar magnetic potential formulation, or flow problems with a stream-function formulation, the problem of computing the cohomology generators of some domain of interest embedded in $R^3$ arises. The present tool supports the domain of interest to be discretized through a mesh (simplices or hexahedra) and is compatible with outputs provided by open source meshers NETGEN (visit www.ngsolve.org) in the neutral mesh format and GMSH (visit www.gmsh.info) in legacy 2.2 msh format. 
+If you are numerically solving electromagnetic eddy currents problems with a scalar magnetic potential formulation, or flow problems with a stream-function formulation, the problem of computing the cohomology generators of the first homology group $H_1 (\Omega)$ for a bounded domain $\Omega \subset R^3$ arises. The present tool computes the co-chain coefficients for the basis of said group when the domain of interest is discretized through a mesh (simplices or hexahedra) and is compatible with inputs provided by open source meshers NETGEN (visit www.ngsolve.org) in the neutral mesh format and GMSH (visit www.gmsh.info) in legacy 2.2 msh format. 
 The whole computational domain is usually a topologically trivial one, $E = A \cup B$ where $A$ is the nontrivial subset for which the cohomology group needs to be generated. In accordance with the main application of the toolbox (discrete formulations for eddy current problems in electromagnetism) domain $A$ is called the insulator and domain $B$ is called the conductor.
 
 ### How do I install Topoprocessor?
