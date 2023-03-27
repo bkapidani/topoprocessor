@@ -223,7 +223,9 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
    {   
       // std::ofstream os;
       // os.open("./output/h1_lazy.txt");
-         
+      std::ofstream os;
+      os.open("thinned_currents.txt", std::ofstream::out);
+      os.close();   
       std::cout << "    Number of lazy generators : "
                 << remaining_edges.size() << std::endl;
 

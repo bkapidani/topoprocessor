@@ -155,17 +155,17 @@ lean_cohomology :: lean_cohomology(
 
    t_gauss.tic();
    std::ofstream h1_pre_minimization, h1_post_minimization, cuts_pre_minimization;
-   if (debuggy)
-      cuts_pre_minimization.open("./cuts_pre_minimization.txt", std::ofstream::out | std::ofstream::app);
+   // if (debuggy)
+      cuts_pre_minimization.open("./cuts_pre_minimization.txt", std::ofstream::out);
    
    if (!sullivan)
    {
-      h1_pre_minimization.open("h1.txt");
+      h1_pre_minimization.open("h1.txt", std::ofstream::out);
       h1_pre_minimization  << gen_comb.size() << std::endl;
    }
    else
    {
-      h1_post_minimization.open("h1.txt");
+      h1_post_minimization.open("h1.txt", std::ofstream::out);
       h1_post_minimization << 1 << std::endl;
    }
    
@@ -199,12 +199,12 @@ lean_cohomology :: lean_cohomology(
             //{
                if (!sullivan)
                   coefficients.push_back(std::make_tuple(abs(*_etn_list[ee].begin()),abs(*_etn_list[ee].rbegin()),final_coeff));
-               if (debuggy)
-               {
+               // if (debuggy)
+               // {
                   auto dual_face_vector = print_dual_face(indigen%9+1,ee,final_coeff>0,255,255,0);
                   for (auto df : dual_face_vector)
                      cuts_pre_minimization << df;
-               }
+               // }
             //}
          }
          //~ else
@@ -247,11 +247,11 @@ lean_cohomology :: lean_cohomology(
     {
        std::remove("cuts_post_minimization.txt");
        //~ std::remove("h1.txt");
-       std::remove("cuts_pre_minimization.txt");
+      //  std::remove("cuts_pre_minimization.txt");
     }
     
     h1_pre_minimization.close();
-    if (debuggy)
+   //  if (debuggy)
       cuts_pre_minimization.close();
 }
 
@@ -275,10 +275,12 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
 
    srand (time(NULL));
    
+   queue.clear();
+   queue.push_back(0);
    for (uint32_t kk = 0; kk < queue.size(); ++kk)
    {
       colour[queue[kk]]++;
-      //std::cout << queue[kk] << std::endl;
+      std::cout << queue[kk] << std::endl;
    }
    k = nnz = 0;
 
@@ -384,8 +386,8 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
       
       if (discrepancy>0)
       {
-         //std::cout << "    One cycle over all edges is insufficient: " 
-         //          << discrepancy << " edges still open" << std::endl;
+         std::cout << "    One cycle over all edges is insufficient: " 
+                  << discrepancy << " edges still open" << std::endl;
          
          uint32_t it=0;
          while (it<wired.size() && wired[it]) it++;
@@ -1054,7 +1056,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       std::array<double,3> v2 ({ pts[p3][0]-pts[p0][0], pts[p3][1]-pts[p0][1],pts[p3][2]-pts[p0][2] });
       std::array<double,3> v3 ({ pts[p4][0]-pts[p0][0], pts[p4][1]-pts[p0][1],pts[p4][2]-pts[p0][2] });
       
-      int32_t sgn  = this->stddot(v1, stdcross(v2, v3))/double(6)>0? 1 : -1;
+      int32_t sgn  = this->stddot(v3, stdcross(v1, v2))>0? 1 : -1;
       vol_signs.push_back(sgn);
       domains.push_back(std::get<1>(tet));
    }
@@ -1131,9 +1133,9 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    edge_in_conductor.resize(edges_size());
    
    std::ofstream cuts_pre_minimization, cuts_post_minimization;
+   cuts_pre_minimization.open("./interface_facets.txt");
    if (debuggy)
    {
-      cuts_pre_minimization.open("./cuts_pre_minimization.txt");
       cuts_post_minimization.open("./cuts_post_minimization.txt");
    }
    
@@ -1175,20 +1177,20 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
             {
                intersurface[k]++;
                
-               if (debuggy)
-               {
+               // if (debuggy)
+               // {
                   //~ std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-                  if (is_conductor(vol1))
-                  {
-                     cuts_pre_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
-                     cuts_post_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
-                  }
-                  else// if (domains[vol2] == conductor_id )
-                  {
-                     cuts_pre_minimization  << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
-                     cuts_post_minimization << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
-                  }
+               if (is_conductor(vol1))
+               {
+                  cuts_pre_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+                  // cuts_post_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
                }
+               else// if (domains[vol2] == conductor_id )
+               {
+                  cuts_pre_minimization  << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
+                  // cuts_post_minimization << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
+               }
+               // }
                
                for (auto ee : _fte_list[k])
                {
@@ -1220,11 +1222,11 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
                conductor_on_bnd = true;
                intersurface[k]++;
                
-               if (debuggy)
-               {
-                  cuts_pre_minimization  << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
-                  cuts_post_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
-               }
+               cuts_pre_minimization  << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+               // if (debuggy)
+               // {
+               //    cuts_post_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+               // }
                
                for (auto ee : _fte_list[k])
                {
@@ -1788,18 +1790,31 @@ const std::vector<sgnint32_t<int32_t> >& lean_cohomology :: nte(const int32_t& n
 
 std::vector<double> lean_cohomology :: face_barycenter(const uint32_t& f)
 {
+   // std::vector<double> bc(3,0);
+   
+   // auto p0 = std::get<0>(surfaces[f]);
+   // auto p1 = std::get<1>(surfaces[f]);
+   // auto p2 = std::get<2>(surfaces[f]);
+   
+   // double one_third = double(1)/double(3);
+   
+   // bc[0] = one_third*(pts[p0][0]+pts[p1][0]+pts[p2][0]);
+   // bc[1] = one_third*(pts[p0][1]+pts[p1][1]+pts[p2][1]);
+   // bc[2] = one_third*(pts[p0][2]+pts[p1][2]+pts[p2][2]);
+
    std::vector<double> bc(3,0);
    
    auto p0 = std::get<0>(surfaces[f]);
    auto p1 = std::get<1>(surfaces[f]);
    auto p2 = std::get<2>(surfaces[f]);
+   auto p3 = std::get<3>(surfaces[f]);
    
    double one_third = double(1)/double(3);
    
-   bc[0] = one_third*(pts[p0][0]+pts[p1][0]+pts[p2][0]);
-   bc[1] = one_third*(pts[p0][1]+pts[p1][1]+pts[p2][1]);
-   bc[2] = one_third*(pts[p0][2]+pts[p1][2]+pts[p2][2]);
-   
+   bc[0] = 0.5*one_third*((pts[p0][0]+pts[p1][0]+pts[p2][0])+(pts[p0][0]+pts[p3][0]+pts[p2][0]));
+   bc[1] = 0.5*one_third*((pts[p0][1]+pts[p1][1]+pts[p2][1])+(pts[p0][1]+pts[p3][1]+pts[p2][1]));
+   bc[2] = 0.5*one_third*((pts[p0][2]+pts[p1][2]+pts[p2][2])+(pts[p0][2]+pts[p3][2]+pts[p2][2]));
+
    return bc;
 }
 
@@ -1812,11 +1827,19 @@ std::vector<double> lean_cohomology :: vol_barycenter(const uint32_t& v)
    auto p2 = std::get<2>(volumes[v]);
    auto p3 = std::get<3>(volumes[v]);
    
+   auto p4 = std::get<4>(volumes[v]);
+   auto p5 = std::get<5>(volumes[v]);
+   auto p6 = std::get<6>(volumes[v]);
+   auto p7 = std::get<7>(volumes[v]);
    
-   bc[0] = 0.25*(pts[p0][0]+pts[p1][0]+pts[p2][0]+pts[p3][0]);
-   bc[1] = 0.25*(pts[p0][1]+pts[p1][1]+pts[p2][1]+pts[p3][1]);
-   bc[2] = 0.25*(pts[p0][2]+pts[p1][2]+pts[p2][2]+pts[p3][2]);
-   
+   // bc[0] = 0.25*(pts[p0][0]+pts[p1][0]+pts[p2][0]+pts[p3][0]);
+   // bc[1] = 0.25*(pts[p0][1]+pts[p1][1]+pts[p2][1]+pts[p3][1]);
+   // bc[2] = 0.25*(pts[p0][2]+pts[p1][2]+pts[p2][2]+pts[p3][2]);
+
+   bc[0] = 0.125*(pts[p0][0]+pts[p1][0]+pts[p2][0]+pts[p3][0]+pts[p4][0]+pts[p5][0]+pts[p6][0]+pts[p7][0]);
+   bc[1] = 0.125*(pts[p0][1]+pts[p1][1]+pts[p2][1]+pts[p3][1]+pts[p4][1]+pts[p5][1]+pts[p6][1]+pts[p7][1]);
+   bc[2] = 0.125*(pts[p0][2]+pts[p1][2]+pts[p2][2]+pts[p3][2]+pts[p4][2]+pts[p5][2]+pts[p6][2]+pts[p7][2]);
+
    return bc;
 }
 
@@ -1845,33 +1868,48 @@ std::string lean_cohomology :: print_face(const uint32_t& label, const uint32_t&
    std::set<uint32_t> nodes;
    std::vector<std::array<double,3> > n;
    
-   for (auto ee : fte(f))
-   {
-      auto n1 = std::get<0>(edges[abs(ee)]);
-      auto n2 = std::get<1>(edges[abs(ee)]);
+   // for (auto ee : fte(f))
+   // {
+   //    auto n1 = std::get<0>(edges[abs(ee)]);
+   //    auto n2 = std::get<1>(edges[abs(ee)]);
       
-      nodes.insert(n1);
-      nodes.insert(n2);
-      // for (auto nn : etn(abs(ee)))
-         // nodes.insert(abs(nn));
+   //    nodes.insert(n1);
+   //    nodes.insert(n2);
+   //    // for (auto nn : etn(abs(ee)))
+   //       // nodes.insert(abs(nn));
       
-      if (nodes.size() == 3)
-         break;
-   }
+   //    if (nodes.size() == 3)
+   //       break;
+   // }
+   
+   // fr << "103.000 " << label << " " << r << " " << g << " " << b << " 0.0 ";
+   // for (auto nn : nodes)
+   //    n.push_back(pts[nn]);
+   
+   // if (!orient)
+   //    std::swap(n[1],n[2]);
+   
+   // fr << n[0][0] << " " << n[0][1] << " " << n[0][2] << " " ;
+   // fr << n[1][0] << " " << n[1][1] << " " << n[1][2] << " " ;
+   // fr << n[2][0] << " " << n[2][1] << " " << n[2][2] << " " ;
+      
+   // fr << std::endl;
    
    fr << "103.000 " << label << " " << r << " " << g << " " << b << " 0.0 ";
-   for (auto nn : nodes)
-      n.push_back(pts[nn]);
+   n.push_back(pts[std::get<0>(surfaces[f])]);
+   n.push_back(pts[std::get<1>(surfaces[f])]);
+   n.push_back(pts[std::get<2>(surfaces[f])]);
+   n.push_back(pts[std::get<3>(surfaces[f])]);
    
    if (!orient)
-      std::swap(n[1],n[2]);
+      std::swap(n[1],n[3]);
    
    fr << n[0][0] << " " << n[0][1] << " " << n[0][2] << " " ;
    fr << n[1][0] << " " << n[1][1] << " " << n[1][2] << " " ;
    fr << n[2][0] << " " << n[2][1] << " " << n[2][2] << " " ;
+   fr << n[3][0] << " " << n[3][1] << " " << n[3][2];
       
    fr << std::endl;
-   
    return fr.str();
 }
 

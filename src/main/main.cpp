@@ -8,7 +8,7 @@ int main (int argc, char** argv)
 "    -------------------------------------------------------------------\n"
 "    |                          *** TOPOPRO ***                        |\n"
 "    |   Cohomology Groups' Computation for Electromagnetic Modeling   |\n"
-"    |    Bernard Kapidani (C) 2016 - 2020 bernard.kapidani@epfl.ch    |\n"
+"    |    Bernard Kapidani (C) 2016 - 2023 bernard.kapidani@epfl.ch    |\n"
 "    |                      DPIA, University of Udine                  |\n"
 "    |                  ASC, Technische Universitaet Wien              |\n"
 "    |            MNS, Ecole Polytechnique Federale Lausanne           |\n"
