@@ -84,7 +84,9 @@ lean_cohomology :: lean_cohomology(
    t_estt.tic();
    std::vector<double> vg(n_lazy,0);
    std::vector<std::vector<double> > gaussmat(n_lazy,vg);
-   if (!ESTT(gaussmat,queue,parent,distance))
+   // if (!ESTT(gaussmat,queue,parent,distance))
+      // throw std::invalid_argument("Failed to complete ESTT routine!");
+   if (!ESTT(gaussmat))
       throw std::invalid_argument("Failed to complete ESTT routine!");
    
    t_estt.toc();
@@ -97,41 +99,41 @@ lean_cohomology :: lean_cohomology(
       t_gauss.tic();
       gmatrix<double> gm(gaussmat);
 
-      //gm=gm.transpose();
-      gmatrix<double> change_of_basis = gm.gauss_elimination_over_reals();
+      gm=gm.transpose();
+      gmatrix<double> change_of_basis = gm.gaussElimination();
       
       if (debuggy)
       {
-         std::cout << change_of_basis << std::endl;
-         std::cout << gm << std::endl;
+         std::cout << "Change of basis matrix:" << std::endl << change_of_basis << std::endl;
+         std::cout << "Final linking # matrix:" << std::endl <<  gm << std::endl;
       }
 
-      std::ofstream treeos("tree.txt", std::ofstream::out | std::ofstream::app);
-      std::ofstream gmshos("tree_debug.txt", std::ofstream::out | std::ofstream::app);
+      // std::ofstream treeos("tree.txt", std::ofstream::out | std::ofstream::app);
+      // std::ofstream gmshos("tree_debug.txt", std::ofstream::out | std::ofstream::app);
             
       for (uint32_t k=0; k<gm.number_nonzero_rows(); ++k)
       {
          std::vector<double> new_gen_comb(n_lazy,0);
          for (uint32_t j=0; j<n_lazy;++j)
          {
-            if (std::fabs(change_of_basis.Mat(j,k)) > 1e-6)
+            if (std::fabs(gm.Mat(k,j)) > 1e-6)
             {
-               new_gen_comb[j] = change_of_basis.Mat(j,k);
+               new_gen_comb[j] = gm.Mat(k,j);
 
                auto curr_e = cond_ins_interface.remaining_edges[j];
-               treeos << abs(this->etn(curr_e)[0])+1 << " "
-                      << abs(this->etn(curr_e)[1])+1 << std::endl;
-               gmshos << ++tree_element_id << " " << 1 << " " << 1 << " " << 99 << " "
-                      << abs(this->etn(curr_e)[0])+1 << " "
-                      << abs(this->etn(curr_e)[1])+1 << std::endl;
+               // treeos << abs(this->etn(curr_e)[0])+1 << " "
+               //        << abs(this->etn(curr_e)[1])+1 << std::endl;
+               // gmshos << ++tree_element_id << " " << 1 << " " << 1 << " " << 99 << " "
+               //        << abs(this->etn(curr_e)[0])+1 << " "
+               //        << abs(this->etn(curr_e)[1])+1 << std::endl;
             }
          }
          
          gen_comb.push_back(new_gen_comb);
       }
 
-      treeos.close();
-      gmshos.close();
+      // treeos.close();
+      // gmshos.close();
 
       t_gauss.toc();
       std::cout << "    Computing null space of l.n. matrix took: " << t_gauss << " seconds" << std::endl;
@@ -252,7 +254,287 @@ lean_cohomology :: lean_cohomology(
     
     h1_pre_minimization.close();
    //  if (debuggy)
-      cuts_pre_minimization.close();
+   cuts_pre_minimization.close();
+}
+
+bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat)
+{
+   std::vector<uint32_t>                                    colour(pts.size()), p_queue;   
+   std::vector<bool>                                        wired(edges.size(),false), in_stack(surfaces.size());
+   std::vector< pair <uint32_t,sgnint32_t<int32_t> > >      cotree_stack;
+   std::vector<std::vector<std::pair<uint16_t, int16_t> > >   vect_stt_coeffs(edges.size());
+   
+   std::map<uint32_t,uint32_t>                              parent, distance, par_edge;
+
+   pair<uint32_t,sgnint32_t<int32_t> > dummy;
+   int32_t adj_f, adj_v;
+   uint32_t root, k, nnz, j, qtop;
+   sgnint32_t<int32_t>  curr_n;
+
+   srand (time(NULL));
+   
+   // std::cout << __FILE__ << " : " << __LINE__ << std::endl;
+   std::ofstream treeos("tree.txt", std::ofstream::out);
+
+   k=nnz=0;
+   while (true)
+   {
+      if (is_boundary(k))
+      {
+         auto root_n = abs(etn(k)[0]);
+         p_queue.push_back(root_n);
+         colour[root_n]++;
+         distance[root_n] = 0;
+         break;
+      }
+      ++k;
+   }
+
+   // p_queue.push_back(0);
+   // colour[0]++;
+   k=0;
+   // distance[0] = 0;
+   while (k<p_queue.size())
+   {
+      qtop=p_queue[k];
+
+      for (auto curr_e : _nte_list[qtop])
+      {   
+         if (is_boundary(abs(curr_e)))
+         {
+            curr_n=*(_etn_list[abs(curr_e)].begin());
+
+            if (abs(curr_n)==qtop)
+               curr_n=*(std::prev(_etn_list[abs(curr_e)].end()));
+
+            if (colour[abs(curr_n)]==0)
+            {
+               p_queue.push_back(abs(curr_n));
+               colour[abs(curr_n)]++;
+               parent[abs(curr_n)]=qtop;
+               distance[abs(curr_n)] = distance[qtop]+1;
+               wired[abs(curr_e)]=true;
+
+               treeos << abs(this->etn(abs(curr_e))[0])+1 << " "
+                     << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
+               
+               nnz++;
+            }
+            else;
+         }
+
+      }
+        
+      colour[qtop]++;
+      k++;
+   }
+   
+   k = 0;
+   while (k<p_queue.size())
+   {
+      qtop=p_queue[k];
+
+      for (auto curr_e : _nte_list[qtop])
+      {   
+         curr_n=*(_etn_list[abs(curr_e)].begin());
+
+         if (abs(curr_n)==qtop)
+            curr_n=*(std::prev(_etn_list[abs(curr_e)].end()));
+
+         if (colour[abs(curr_n)]==0)
+         {
+            p_queue.push_back(abs(curr_n));
+            colour[abs(curr_n)]++;
+            parent[abs(curr_n)]=qtop;
+            distance[abs(curr_n)] = distance[qtop]+1;
+            par_edge[abs(curr_n)]=abs(curr_e);
+            wired[abs(curr_e)]=true;
+            treeos << abs(this->etn(abs(curr_e))[0])+1 << " "
+                   << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
+            nnz++;
+         }
+         else;
+      }
+        
+      colour[qtop]++;
+      k++;
+   }
+   
+   treeos.close();
+
+   for(j=0; j<surfaces.size(); j++)
+   {
+      // if (ftv(j).size() == 1)
+      // {
+      dummy=check_boundary(j, wired);
+      if (dummy.first==1)
+      {
+         cotree_stack.push_back(make_pair(j,dummy.second));
+         in_stack[j]=true;
+      }
+      // }
+   }
+   
+   j=0;
+
+   // while (j < cotree_stack.size())
+   // {
+   //    uint32_t curr_e = abs(cotree_stack[j].second);
+      
+   //    if (wired[curr_e]==true)
+   //    {
+   //       for (auto signed_adj_f : etf(curr_e))
+   //       {   
+   //          uint32_t adj_f = abs(signed_adj_f);
+   //          if (!in_stack[adj_f] && ftv(adj_f).size() == 1)
+   //          {
+   //             pair<uint32_t,sgnint32_t<int32_t> > dummy=check_boundary(adj_f, wired);
+   //             if (dummy.first==1)
+   //             {
+   //                cotree_stack.push_back(make_pair(adj_f,dummy.second));
+   //                in_stack[adj_f]=true;
+   //             }
+   //          }
+   //       }
+         
+   //    }
+   //    else
+   //    {
+   //       wired[curr_e]=true;
+   //       nnz++;
+   //       set_boundary(j, wired, cotree_stack, in_stack, vect_stt_coeffs, gmat);
+   //    }
+         
+   //    j++;
+   // }
+   
+   // for(auto jj=0; jj<surfaces.size(); jj++)
+   // {
+   //    dummy=check_boundary(jj, wired);
+   //    if (dummy.first==1)
+   //    {
+   //       cotree_stack.push_back(make_pair(jj,dummy.second));
+   //       in_stack[jj]=true;
+   //    }
+   // }
+
+   while (nnz < wired.size())
+   {
+      while (j < cotree_stack.size())
+      {
+         uint32_t curr_e = abs(cotree_stack[j].second);
+         
+         if (wired[curr_e]==true)
+         {
+            for (auto signed_adj_f : etf(curr_e))
+            {   
+               uint32_t adj_f = abs(signed_adj_f);
+               if (!in_stack[adj_f])
+               {
+                  pair<uint32_t,sgnint32_t<int32_t> > dummy=check_boundary(adj_f, wired);
+                  if (dummy.first==1)
+                  {
+                     cotree_stack.push_back(make_pair(adj_f,dummy.second));
+                     in_stack[adj_f]=true;
+                  }
+               }
+            }
+            
+         }
+         else
+         {
+            wired[curr_e]=true;
+            nnz++;
+            set_boundary(j, wired, cotree_stack, in_stack, vect_stt_coeffs, gmat);
+         }
+            
+         j++;
+      }
+      
+      auto discrepancy= wired.size()-nnz;
+      
+      if (discrepancy>0)
+      {
+         std::cout << "    One cycle over all edges is insufficient: " 
+                   << discrepancy << " edges still open" << std::endl;
+         
+         uint32_t it=0;
+         while (it<wired.size() && wired[it]) it++;
+         
+         if (it<wired.size())
+         {
+            std::cout << "    Setting random cotree edge value by l.n. computations" << std::endl;
+            
+            std::vector<std::array<double,3> > loop;
+            RetrieveLoop(parent,distance,it,loop);
+            std::vector<double> new_coeffs = LinkingNumber(loop);
+            
+            for (uint16_t gen=0; gen < n_lazy; ++gen)
+            {
+               auto edge_coeff = int16_t(std::round(new_coeffs[gen]));
+               if (edge_coeff != 0)
+               {
+                  vect_stt_coeffs[it].push_back(std::make_pair(gen+1,edge_coeff));
+                  
+                  if (be_lean_not_lazy)
+                  {
+                     for (auto val : HomoCoHomo.first[it])
+                     {
+                        double chain_val = signbit(val) ? -1 : 1;
+                        gmat[uint32_t(gen)][uint32_t(abs(val)-1)]+=chain_val*edge_coeff;
+                     }
+                  }
+               }
+            }
+            
+            wired[it] = true;
+            nnz++;
+            cotree_stack.push_back(std::make_pair(uint32_t(0),sgnint32_t<int32_t>({it,1})));
+         }
+         else
+         {
+            std::cout << "    BUG: No cotree edges left to be set!" << std::endl;
+            return false;
+         }
+      }
+   }
+   
+   /*for (uint32_t l=0;l<surfaces_size();++l)
+   {
+      std::vector<int16_t> coeff(n_lazy+1,0);
+      std::vector<int16_t> sum(n_lazy+1,0);
+      for (auto tc : HomoCoHomo.second[l])
+      {
+         coeff[abs(tc)]+=signbit(tc) ? -1 : 1;
+         //~ if (abs(coeff[abs(tc)])>1)
+            //~ std::cout << coeff[abs(tc)] << std::endl;
+      }
+      
+      for (auto ee : _fte_list[l])
+         for (auto cfs : vect_stt_coeffs[abs(ee)])
+            sum[cfs.first] += cfs.second*ee.Sign();
+        
+      for (uint32_t i_l=1; i_l<=n_lazy; ++i_l)
+         if (coeff[i_l] != sum[i_l])
+            std::cout << coeff[i_l] << " != " << sum[i_l] << std::endl;
+         //~ else
+            //~ std::cout << "Fine!" << std::endl;
+   }*/
+   
+   this->vect_stt_coeffs = std::move(vect_stt_coeffs);
+
+   return true;
+}
+
+bool lean_cohomology :: is_boundary (const uint32_t& ee)
+{
+   for (auto ff : etf(ee))
+   {
+      if (ftv(abs(ff)).size() < 2)
+         return true;
+   }
+
+   return false;
 }
 
 bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
@@ -294,10 +576,49 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
       }
    }
    
-   std::ofstream treeos("tree.txt", std::ofstream::out | std::ofstream::app);
-   std::ofstream gmshos("tree_debug.txt", std::ofstream::out | std::ofstream::app);
+   std::ofstream treeos("tree.txt", std::ofstream::out);
+   std::ofstream gmshos("tree_debug.txt", std::ofstream::out);
 
    //treeos << "internal tree: " << std::endl;
+   while (k<queue.size())
+   {
+      qtop=queue[k];
+
+      for (auto curr_e : _nte_list[qtop])
+      {   
+         if (is_boundary(abs(curr_e)))
+         {
+            curr_n=*(_etn_list[abs(curr_e)].begin());
+
+            if (abs(curr_n)==qtop)
+               curr_n=*(std::prev(_etn_list[abs(curr_e)].end()));
+
+            if (colour[abs(curr_n)]==0)
+            {
+               queue.push_back(abs(curr_n));
+               colour[abs(curr_n)]++;
+               parent[abs(curr_n)]=qtop;
+               distance[abs(curr_n)] = distance[qtop]+1;
+               wired[abs(curr_e)]=true;
+               
+               treeos << abs(this->etn(abs(curr_e))[0])+1 << " "
+                     << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
+               gmshos << ++tree_element_id << " " << 1 << " " << 1 << " " << 99 << " "
+                     << abs(this->etn(abs(curr_e))[0])+1 << " "
+                     << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
+               
+               nnz++;
+            }
+            else;
+         }
+
+      }
+        
+      colour[qtop]++;
+      k++;
+   }
+   
+   k = 0;
    while (k<queue.size())
    {
       qtop=queue[k];
@@ -443,7 +764,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
       
       for (auto ee : _fte_list[l])
          for (auto cfs : vect_stt_coeffs[abs(ee)])
-            sum[cfs.first] += cfs.second*ee.Sgn();
+            sum[cfs.first] += cfs.second*ee.Sign();
         
       for (uint32_t i_l=1; i_l<=n_lazy; ++i_l)
          if (coeff[i_l] != sum[i_l])
@@ -841,7 +1162,7 @@ bool lean_cohomology :: read_gmesh(const std::string&     _filename,
          auto tuple = std::make_tuple(vol, d);
          temp_hex.push_back( tuple );
       }
-      else if (element_label == 3)
+      else if (element_label == 3) // surface TODO
       {
          // // std::cout << "    I'm here with a quad!" << std::endl;
          // uint32_t       p0(  std::get<2>(t) );
@@ -854,7 +1175,7 @@ bool lean_cohomology :: read_gmesh(const std::string&     _filename,
          // temp_surf_tri.push_back(tri);
          // temp_surf_lab.push_back(bid);
       }
-      else if (element_label == 15)
+      else if (element_label == 15) // dirichlet node
       {
          
          uint32_t       p0(  std::get<2>(t) );
@@ -1056,7 +1377,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       std::array<double,3> v2 ({ pts[p3][0]-pts[p0][0], pts[p3][1]-pts[p0][1],pts[p3][2]-pts[p0][2] });
       std::array<double,3> v3 ({ pts[p4][0]-pts[p0][0], pts[p4][1]-pts[p0][1],pts[p4][2]-pts[p0][2] });
       
-      int32_t sgn  = this->stddot(v3, stdcross(v1, v2))>0? 1 : -1;
+      int32_t sgn  = this->stddot(v3, stdcross(v1, v2))>0 ? 1 : -1; // std::cout << sgn << std::endl;
       vol_signs.push_back(sgn);
       domains.push_back(std::get<1>(tet));
    }
@@ -1071,20 +1392,25 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    _ftv_list.resize(surfaces.size());
    _vtf_list.reserve(volumes.size());
    
-   for (uint32_t k=0; k<lines; ++k)
+   ///////// DEBUG DIFFERENTIAL OPERATORS
+   std::ofstream os_divergence, os_curl, os_grad;
+   std::vector<int32_t> dummy_vec1(surfaces.size(),0);
+   std::vector<std::vector<int32_t> > divmat(volumes.size(),dummy_vec1);
+   
+   for (uint32_t k=0; k<lines; ++k) // uses possible non-consistent local labelling, fixed two loops below
    {
-      // std::cout << labels[k] << " " << _ftv_list.size() << std::endl;
       sgnint32_t<int32_t> v1(k,-vol_signs[k]);
-      sgnint32_t<int32_t> v2(k,vol_signs[k]);
+      sgnint32_t<int32_t> v2(k, vol_signs[k]);
+      // std::cout << v1 << " " << v2 << std::endl;
       
       _ftv_list[labels[k]].push_back(v1); 
       _ftv_list[labels[k+  lines]].push_back(v2); 
       _ftv_list[labels[k+2*lines]].push_back(v1);
-      _ftv_list[labels[k+3*lines]].push_back(v2); 
+      _ftv_list[labels[k+3*lines]].push_back(v2);
       _ftv_list[labels[k+4*lines]].push_back(v1);
       _ftv_list[labels[k+5*lines]].push_back(v2);     
       
-      sgnint32_t<int32_t> f1(labels[k],-vol_signs[k]);
+      sgnint32_t<int32_t> f1(labels[k],        -vol_signs[k]);
       sgnint32_t<int32_t> f2(labels[k+  lines], vol_signs[k]);
       sgnint32_t<int32_t> f3(labels[k+2*lines],-vol_signs[k]);
       sgnint32_t<int32_t> f4(labels[k+3*lines], vol_signs[k]);
@@ -1107,7 +1433,8 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    // _fte_list.resize(lines);
    tot = 0;
    std::vector<label_edge_type> temp_edge0(4*lines);
-   
+   std::vector<std::array<int32_t,4> > edge_coeffs(lines);
+
    for (auto t : surfaces)
    {
       uint32_t       p0(std::get<0>(t));
@@ -1115,16 +1442,31 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       uint32_t       p2(std::get<2>(t));
       uint32_t       p3(std::get<3>(t));
 
-      temp_edge0[tot]          =  std::make_pair(edge_type{p0, p1},tot);
-      temp_edge0[tot+lines]    =  std::make_pair(edge_type{p1, p2},tot+lines);
-      temp_edge0[tot+2*lines]  =  std::make_pair(edge_type{p2, p3},tot+2*lines);
-      temp_edge0[tot+3*lines]  =  std::make_pair(edge_type{p0, p3},tot+3*lines);
+      std::array<edge_type,4> e_prov({edge_type{p0, p1},edge_type{p1, p2},
+                                      edge_type{p2, p3},edge_type{p3, p0}});
 
+      for (uint8_t ee = 0; ee<4; ++ee)
+         if (e_prov[ee][0]>e_prov[ee][1])
+            std::swap(e_prov[ee][0],e_prov[ee][1]);
+
+      std::sort(e_prov.begin(),e_prov.end());
+
+      temp_edge0[tot]          =  std::make_pair(e_prov[0],tot);
+      temp_edge0[tot+lines]    =  std::make_pair(e_prov[1],tot+lines);
+      temp_edge0[tot+2*lines]  =  std::make_pair(e_prov[2],tot+2*lines);
+      temp_edge0[tot+3*lines]  =  std::make_pair(e_prov[3],tot+3*lines);
+
+      if (e_prov[2][1] == e_prov[0][1])
+         edge_coeffs[tot] = std::array<int32_t,4>{1,-1,-1, 1};
+      else if (e_prov[3][1] == e_prov[1][1])
+         edge_coeffs[tot] = std::array<int32_t,4>{1,-1, 1, 1};
+      else
+         edge_coeffs[tot] = std::array<int32_t,4>{1,-1, 1,-1};
+      
       tot++;
    }
    
    std::vector<uint32_t> e_labels(4*lines);
-
    unique(temp_edge0, e_labels); // also fills the edges vector
 
    std::vector<label_edge_type>().swap(temp_edge0);
@@ -1135,36 +1477,83 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    std::ofstream cuts_pre_minimization, cuts_post_minimization;
    cuts_pre_minimization.open("./interface_facets.txt");
    if (debuggy)
-   {
       cuts_post_minimization.open("./cuts_post_minimization.txt");
-   }
-   
+
+
+   std::cout << "    C++ Debugging sequence, very slow, remember to remove!"  << std::endl;
+   std::cout << "    " << __FILE__ << " : " << __LINE__ << std::endl;
+   std::vector<int32_t> dummy_vec2(edges.size(),0);
+   std::vector<std::vector<int32_t> > curlmat(surfaces.size(),dummy_vec2);
+
    for (uint32_t k=0; k<lines; ++k)
    {
-      sgnint32_t<int32_t> f1(k, 1);
-      sgnint32_t<int32_t> f2(k, 1);
-      sgnint32_t<int32_t> f3(k, 1);
-      sgnint32_t<int32_t> f4(k,-1);
+      sgnint32_t<int32_t> f1(k, edge_coeffs[k][0]);
+      sgnint32_t<int32_t> f2(k, edge_coeffs[k][1]);
+      sgnint32_t<int32_t> f3(k, edge_coeffs[k][2]);
+      sgnint32_t<int32_t> f4(k, edge_coeffs[k][3]);
+
+      sgnint32_t<int32_t> e1(e_labels[k],          edge_coeffs[k][0]);
+      sgnint32_t<int32_t> e2(e_labels[k+lines],    edge_coeffs[k][1]);
+      sgnint32_t<int32_t> e3(e_labels[k+2*lines],  edge_coeffs[k][2]);
+      sgnint32_t<int32_t> e4(e_labels[k+3*lines],  edge_coeffs[k][3]);
+
+      curlmat[k][abs(e1)] = double(e1.Sign());
+      curlmat[k][abs(e2)] = double(e2.Sign());
+      curlmat[k][abs(e3)] = double(e3.Sign());
+      curlmat[k][abs(e4)] = double(e4.Sign());
+      
+      std::vector<sgnint32_t<int32_t> > dummy(4);
+      _fte_list.push_back(dummy);
+      _fte_list[k][0] = e1;
+      _fte_list[k][1] = e2;
+      _fte_list[k][2] = e3;
+      _fte_list[k][3] = e4;
       
       _etf_list[e_labels[k]].push_back(f1);
       _etf_list[e_labels[k+lines]].push_back(f2); 
       _etf_list[e_labels[k+2*lines]].push_back(f3);
       _etf_list[e_labels[k+3*lines]].push_back(f4);
       
-      sgnint32_t<int32_t> e1(e_labels[k],         1);
-      sgnint32_t<int32_t> e2(e_labels[k+lines],   1);
-      sgnint32_t<int32_t> e3(e_labels[k+2*lines], 1);
-      sgnint32_t<int32_t> e4(e_labels[k+3*lines],-1);
-      
-      std::vector<sgnint32_t<int32_t> > dummy(4);      
-      _fte_list.push_back(dummy);
-      
-      _fte_list[k][0] = e1;
-      _fte_list[k][1] = e2;
-      _fte_list[k][2] = e3;
-      _fte_list[k][3] = e4;
-      
       auto vols = _ftv_list[k];
+      auto ex = edges[e_labels[k]];
+      auto ey = edges[e_labels[k+lines]];
+      auto v1 = std::array<double,3>({pts[ex[1]][0]-pts[ex[0]][0], 
+                                 pts[ex[1]][1]-pts[ex[0]][1], 
+                                 pts[ex[1]][2]-pts[ex[0]][2]});
+      auto v2 = std::array<double,3>({pts[ey[1]][0]-pts[ey[0]][0], 
+                                 pts[ey[1]][1]-pts[ey[0]][1], 
+                                 pts[ey[1]][2]-pts[ey[0]][2]});
+      // FIX THE DIVERGENCE MATRIX HERE USING v1, v2 AND THE VOLUMETRIC CENTROIDS
+      uint8_t ivol = 0;
+      for (auto vv : vols)
+      {
+         auto v3 = vol_barycenter(abs(vv));
+         v3[0] = v3[0] - pts[ex[0]][0];
+         v3[1] = v3[1] - pts[ex[0]][1];
+         v3[2] = v3[2] - pts[ex[0]][2];
+
+         auto signed_volume = this->stddot(v3, stdcross(v1, v2));
+
+         if (signed_volume>0)
+            _ftv_list[k][ivol] = sgnint32_t<int32_t>(abs(vv), -1);
+         else
+            _ftv_list[k][ivol] = sgnint32_t<int32_t>(abs(vv), 1);
+         
+         // std::cout << _ftv_list[k][ivol] << " ";
+         divmat[abs(vv)][k] = _ftv_list[k][ivol].Sign();
+
+         for (uint8_t ifacet=0; ifacet<6; ++ifacet)
+         {
+            if (abs(_vtf_list[abs(vv)][ifacet]) == k)
+            {
+               _vtf_list[abs(vv)][ifacet] = sgnint32_t<int32_t>(k, _ftv_list[k][ivol].Sign());
+               break;
+            }
+         }
+         ++ivol;
+      }
+      // std::cout << std::endl;
+      ///////////////////////////////////////////////////////////////////////////
       
       switch (vols.size()) 
       {
@@ -1182,16 +1571,13 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
                   //~ std::cout << __FILE__ << ":" << __LINE__ << std::endl;
                if (is_conductor(vol1))
                {
-                  cuts_pre_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
-                  // cuts_post_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+                  cuts_pre_minimization << print_face(0,k,(*vols.begin()).Sign()>0,122, 122, 122);
                }
                else// if (domains[vol2] == conductor_id )
                {
-                  cuts_pre_minimization  << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
-                  // cuts_post_minimization << print_face(0,k,(*vols.rbegin()).Sgn()>0,122, 122, 122);
+                  cuts_pre_minimization  << print_face(0,k,(*vols.rbegin()).Sign()>0,122, 122, 122);
                }
                // }
-               
                for (auto ee : _fte_list[k])
                {
                   if (!physical_edges[abs(ee)])
@@ -1222,10 +1608,10 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
                conductor_on_bnd = true;
                intersurface[k]++;
                
-               cuts_pre_minimization  << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+               cuts_pre_minimization  << print_face(0,k,(*vols.begin()).Sign()>0,122, 122, 122);
                // if (debuggy)
                // {
-               //    cuts_post_minimization << print_face(0,k,(*vols.begin()).Sgn()>0,122, 122, 122);
+               //    cuts_post_minimization << print_face(0,k,(*vols.begin()).Sign()>0,122, 122, 122);
                // }
                
                for (auto ee : _fte_list[k])
@@ -1248,12 +1634,16 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
          }
          case 0:
          {
-            throw std::invalid_argument("    ERROR: The whole domain must be a differentiable manifold!");
+            throw std::invalid_argument("    ERROR: The whole domain must be a manifold!");
             break;
          }
       }   
    }
    
+   ///////// DEBUG DIFFERENTIAL OPERATORS
+   // for (uint32_t k=0; k<surfaces_size(); ++k)
+   //    std::cout << _ftv_list[k][0].Sign() << " " << _ftv_list[k][1].Sign() << std::endl;
+
    if (debuggy)
    {
       cuts_pre_minimization.close();
@@ -1264,23 +1654,29 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    _nte_list.resize(pts.size());
    // _etn_list.reserve(edges.size());
    
-   for (uint32_t k = 0; k < edges.size(); k++)
+   for (uint32_t k = 0; k < edges.size(); ++k)
    {
       auto t = edges[k];
       
-      uint32_t       p0(std::get<0>(t));
-      uint32_t       p1(std::get<1>(t));
+      uint32_t p0(std::get<0>(t));
+      uint32_t p1(std::get<1>(t));
+
+      if (p1 < p0)
+      {
+         std::swap(p0,p1);
+         std::swap(edges[k][0],edges[k][1]);
+      }
+
+      sgnint32_t<int32_t> n1(p0, 1);
+      sgnint32_t<int32_t> n2(p1,-1);
       
-      sgnint32_t<int32_t> n1(p0,-1);
-      sgnint32_t<int32_t> n2(p1, 1);
-      
-      std::vector<sgnint32_t<int32_t> > dummy(2);      
+      std::vector<sgnint32_t<int32_t> > dummy(2);
       _etn_list.push_back(dummy);
       _etn_list[k][0] = n1;
       _etn_list[k][1] = n2;
       
-      sgnint32_t<int32_t> e1(k,-1);
-      sgnint32_t<int32_t> e2(k, 1);
+      sgnint32_t<int32_t> e1(k, 1);
+      sgnint32_t<int32_t> e2(k,-1);
       
       _nte_list[p0].push_back(e1);
       _nte_list[p1].push_back(e2);
@@ -1351,6 +1747,21 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    std::cout << "/" << lines  << " - " << tc << " seconds"  << std::endl;
 
    tctot.toc();
+
+   // DEBUG differential operators
+   timecounter tcnew;
+   tcnew.tic();
+   
+   std::cout << "    C++ Debugging sequence, very slow, remember to remove!"  << std::endl;
+   std::cout << "    " << __FILE__ << " : " << __LINE__ << std::endl;
+   os_divergence.open("D.dat",std::ofstream::out);
+   os_curl.open("C.dat",std::ofstream::out);
+   os_divergence << gmatrix<int32_t>(divmat);
+   os_curl << gmatrix<int32_t>(curlmat);
+   os_divergence.close();
+   os_curl.close();
+   tcnew.toc();
+   std::cout << "    Printing differential operators (debug, remember to remove!) to file took: " << tcnew << " seconds" << std::endl;
 
    // std::cout << cyan << "Total time spent in reading mesh: ";
    // std::cout << tctot << " seconds" << nocolor << std::endl;
@@ -1818,9 +2229,39 @@ std::vector<double> lean_cohomology :: face_barycenter(const uint32_t& f)
    return bc;
 }
 
-std::vector<double> lean_cohomology :: vol_barycenter(const uint32_t& v)
+std::vector<double> lean_cohomology :: face_centroid(const uint32_t& f)
 {
+   // std::vector<double> bc(3,0);
+   
+   // auto p0 = std::get<0>(surfaces[f]);
+   // auto p1 = std::get<1>(surfaces[f]);
+   // auto p2 = std::get<2>(surfaces[f]);
+   
+   // double one_third = double(1)/double(3);
+   
+   // bc[0] = one_third*(pts[p0][0]+pts[p1][0]+pts[p2][0]);
+   // bc[1] = one_third*(pts[p0][1]+pts[p1][1]+pts[p2][1]);
+   // bc[2] = one_third*(pts[p0][2]+pts[p1][2]+pts[p2][2]);
+
    std::vector<double> bc(3,0);
+   
+   auto p0 = std::get<0>(surfaces[f]);
+   auto p1 = std::get<1>(surfaces[f]);
+   auto p2 = std::get<2>(surfaces[f]);
+   auto p3 = std::get<3>(surfaces[f]);
+   
+   double one_third = double(1)/double(3);
+   
+   bc[0] = 0.25*(pts[p0][0]+pts[p1][0]+pts[p2][0]+pts[p3][0]);
+   bc[1] = 0.25*(pts[p0][1]+pts[p1][1]+pts[p2][1]+pts[p3][1]);
+   bc[2] = 0.25*(pts[p0][2]+pts[p1][2]+pts[p2][2]+pts[p3][2]);
+
+   return bc;
+}
+
+std::array<double,3> lean_cohomology :: vol_barycenter(const uint32_t& v)
+{
+   std::array<double,3> bc({0,0,0});
    
    auto p0 = std::get<0>(volumes[v]);
    auto p1 = std::get<1>(volumes[v]);
@@ -1844,6 +2285,11 @@ std::vector<double> lean_cohomology :: vol_barycenter(const uint32_t& v)
 }
 
 std::vector<double> lean_cohomology :: edge_barycenter(const uint32_t& e)
+{
+   return edge_centroid(e);
+}
+
+std::vector<double> lean_cohomology :: edge_centroid(const uint32_t& e)
 {
    std::vector<double> bc(3,0);
    
@@ -1917,8 +2363,8 @@ std::string lean_cohomology :: print_dual_edge(const uint32_t& label, const uint
 {
    std::ostringstream fr;
    
-   std::vector<double> fb =  face_barycenter(f);
-   std::vector<double> vb =  vol_barycenter(v);
+   auto fb =  face_barycenter(f);
+   auto vb =  vol_barycenter(v);
    
    fr << "102.100 " << label << " " << r << " " << g << " " << b << " 0.0 ";
    if (orient)
@@ -1941,7 +2387,7 @@ std::vector<std::string> lean_cohomology :: print_dual_face(const uint32_t& labe
    
    for (auto n : _etn_list[e])
    {
-      auto segno = n.Sgn();
+      auto segno = n.Sign();
       x+= new_or*segno*pts[abs(n)][0];
       y+= new_or*segno*pts[abs(n)][1];
       z+= new_or*segno*pts[abs(n)][2];
@@ -1955,8 +2401,8 @@ std::vector<std::string> lean_cohomology :: print_dual_face(const uint32_t& labe
       
       for (auto v : _ftv_list[abs(f)])
       {
-         orient = new_or*f.Sgn()>0;
-         std::vector<double> vb =  vol_barycenter(abs(v));
+         orient = new_or*f.Sign()>0;
+         auto vb =  vol_barycenter(abs(v));
 
          std::array<double,3> v2 { eb[0]-vb[0], eb[1]-vb[1],eb[2]-vb[2] };
          std::array<double,3> v3 { fb[0]-vb[0], fb[1]-vb[1], fb[2]-vb[2] };

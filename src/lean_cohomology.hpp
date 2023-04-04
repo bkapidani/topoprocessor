@@ -231,6 +231,7 @@ class lean_cohomology
                                                      std::vector<uint32_t>&,
                                                      std::map<uint32_t,uint32_t>&,
                                                      std::map<uint32_t,uint32_t>&);
+      bool                                      ESTT(std::vector<std::vector<double> >&);
       size_t                                    volumes_size() { return volumes.size(); }
       size_t                                    surfaces_size() { return surfaces.size(); }
       size_t                                    edges_size() { return edges.size(); }
@@ -242,16 +243,19 @@ class lean_cohomology
       const std::vector<sgnint32_t<int32_t> >&   etn(const int32_t& e_id) const;
       const std::vector<sgnint32_t<int32_t> >&   nte(const int32_t& n_id) const;
       bool                                      is_conductor(const uint32_t& );
+      bool                                      is_boundary (const uint32_t& );
       std::string                               print_face(const uint32_t&, const uint32_t&, bool, double, double, double);
       std::string                               print_face(const uint32_t& f, const int32_t& orient);
       std::string                               print_edge(const uint32_t, double, double, double, double, double, double);
       std::string                               print_edge(const uint32_t&, const uint32_t&, bool, double, double, double);
       std::string                               print_dual_edge(const uint32_t& , const uint32_t&, const uint32_t&, bool, double, double, double);
       std::vector<std::string>                  print_dual_face(const uint32_t&, const uint32_t&, bool, double, double, double);
-      std::string                               print_face(const uint32_t, bool, double, double, double, double, double, double,                                                                           double, double, double, double, double, double );
+      std::string                               print_face(const uint32_t, bool, double, double, double, double, double, double,double, double, double, double, double, double );
       std::vector<double>                       face_barycenter(const uint32_t& );
+      std::vector<double>                       face_centroid(const uint32_t& );
       std::vector<double>                       edge_barycenter(const uint32_t& );
-      std::vector<double>                       vol_barycenter(const uint32_t& );
+      std::vector<double>                       edge_centroid(const uint32_t& );
+      std::array<double,3>                      vol_barycenter(const uint32_t& );
       std::vector<bool>                         edge_in_conductor, conductor_bool;
       uint32_t                                  f2d,e2d,n2d, tree_element_id;
       

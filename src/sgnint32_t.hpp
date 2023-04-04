@@ -11,11 +11,11 @@ class sgnint32_t
 {
    public:
       uint32_t val;
-      T sgn;
-      sgnint32_t<T>(void) { this->val=0; this->sgn=1; }
-      sgnint32_t<T>(uint32_t v, T s) { this->val=v; this->sgn=s; }
+      T sign;
+      sgnint32_t<T>(void) { this->val=0; this->sign=1; }
+      sgnint32_t<T>(uint32_t v, T s) { this->val=v; this->sign=s; }
       uint32_t Val() const { return this->val; }
-      T Sgn()  const { return this->sgn; } 
+      T Sign()  const { return this->sign; } 
       sgnint32_t<T>& operator=(const sgnint32_t<T>& i);
       sgnint32_t<T>& operator-(const sgnint32_t<T>& i);
 };
@@ -32,13 +32,13 @@ class sgnint32_t
 // bool operator<(const sgnint32_t<T> a, const double b);
 // uint32_t abs(const sgnint32_t<T> a);
 // bool signbit(const sgnint32_t<T>& a);
-// int32_t sgn(const sgnint32_t<T>& a);
+// int32_t Sign(const sgnint32_t<T>& a);
 
 template <typename T>
 sgnint32_t<T>& sgnint32_t<T> :: operator=(const sgnint32_t<T>& i)
 {
    this->val=i.Val();
-   this->sgn=i.Sgn();
+   this->sign=i.Sign();
    
    return *this;
 }
@@ -46,7 +46,7 @@ sgnint32_t<T>& sgnint32_t<T> :: operator=(const sgnint32_t<T>& i)
 template <typename T>
 sgnint32_t<T> operator-(const sgnint32_t<T>& i)
 {
-   sgnint32_t<T> ret(i.Val(),-i.Sgn());
+   sgnint32_t<T> ret(i.Val(),-i.Sign());
    
    return ret;
 }
@@ -125,7 +125,7 @@ template <typename T>
 bool operator<(const sgnint32_t<T> a, const int b)
 {
    auto aval= a.Val();
-   auto asgn= a.Sgn();
+   auto asgn= a.Sign();
    
    if ( b == 0 && asgn < 0)
       return true;
@@ -139,7 +139,7 @@ template <typename T>
 bool operator<(const int b, const sgnint32_t<T> a )
 {
    auto aval= a.Val();
-   auto asgn= a.Sgn();
+   auto asgn= a.Sign();
    
    if ( b == 0 && asgn < 0)
       return false;
@@ -153,7 +153,7 @@ template <typename T>
 bool operator<(const sgnint32_t<T> a, const double b)
 {
    auto aval= a.Val();
-   auto asgn= a.Sgn();
+   auto asgn= a.Sign();
    
    if ( b == 0 && asgn < 0)
       return true;
@@ -172,19 +172,19 @@ uint32_t abs(const sgnint32_t<T> a)
 template <typename T>
 bool signbit(const sgnint32_t<T>& a)
 {
-   return a.Sgn()<0; 
+   return a.Sign()<0; 
 }
 
 template <typename T>
-T sgn(const sgnint32_t<T>& a)
+T Sign(const sgnint32_t<T>& a)
 {
-   return a.Sgn();
+   return a.Sign();
 }
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const sgnint32_t<T>& s)
 {
-    T d = s.Sgn()*(s.Val());
+    T d = s.Sign()*(s.Val());
     os << d;
     
     return os;

@@ -14,6 +14,7 @@ public:
     gmatrix(std::vector< std::vector< T > > coef);
     gmatrix(const char* filename);
     gmatrix( size_t i );//construct i \times i diagonal gmatrix with 1 on diagonal;
+    gmatrix( size_t sizei, size_t sizej ); //empty non-square matrix
 
     void exchangeRows( size_t i , size_t j );
     void multiplyRow( size_t row_no , T numberToMultiply );
@@ -144,6 +145,18 @@ gmatrix<T>::gmatrix( size_t sizee )
                 v.push_back(1);
             }
         }
+        this->mat.push_back(v);
+    }
+}
+
+template <typename T>
+gmatrix<T>::gmatrix( size_t sizei, size_t sizej )
+{
+    for ( size_t i = 0 ; i != sizei ; ++i )
+    {
+        std::vector< T > v;
+        for ( size_t j = 0 ; j != sizej ; ++j )
+            v.push_back(0);
         this->mat.push_back(v);
     }
 }

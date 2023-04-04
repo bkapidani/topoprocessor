@@ -41,8 +41,8 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
    k=0;
    t_h1.tic();
    
-   std::ofstream treeos("tree.txt");//, std::ofstream::out | std::ofstream::app);
-   std::ofstream gmshos("tree_debug.txt");//, std::ofstream::out | std::ofstream::app);
+   // std::ofstream treeos("tree.txt");//, std::ofstream::out | std::ofstream::app);
+   // std::ofstream gmshos("tree_debug.txt");//, std::ofstream::out | std::ofstream::app);
 
 
    auto top_priority = physical_nodes[0];
@@ -109,11 +109,11 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
                            p_parent[nn]=qtop;
                            p_paredge[nn]=ee;
                            cotree_edges[ee]=false;
-                           treeos << abs(vol_mesh->etn(ee)[0])+1 << " "
-                                 << abs(vol_mesh->etn(ee)[1])+1 << std::endl;
-                           gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99 << " "
-                                 << abs(vol_mesh->etn(ee)[0])+1 << " "
-                                 << abs(vol_mesh->etn(ee)[1])+1 << std::endl;
+                           // treeos << abs(vol_mesh->etn(ee)[0])+1 << " "
+                           //       << abs(vol_mesh->etn(ee)[1])+1 << std::endl;
+                           // gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99 << " "
+                           //       << abs(vol_mesh->etn(ee)[0])+1 << " "
+                           //       << abs(vol_mesh->etn(ee)[1])+1 << std::endl;
 
                            if (physical_nodes[nn] >= priority)
                               p_queue.push_back(nn);
@@ -146,8 +146,8 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
       // std::cout << "    ----" << root << "----" << std::endl;
    }
 
-   treeos.close();
-   gmshos.close();
+   // treeos.close();
+   // gmshos.close();
    //std::cout << "primal queue size = " << p_queue.size() << std::endl;
    k=0;
    
@@ -224,8 +224,8 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
       // std::ofstream os;
       // os.open("./output/h1_lazy.txt");
       std::ofstream os;
-      os.open("thinned_currents.txt", std::ofstream::out);
-      os.close();   
+      // os.open("thinned_currents.txt", std::ofstream::out);
+      // os.close();   
       std::cout << "    Number of lazy generators : "
                 << remaining_edges.size() << std::endl;
 
@@ -289,10 +289,10 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
    p1_pushback_mutex.lock();
    h1b[added_edge].push_back(n_gen);
    p1_pushback_mutex.unlock();
-   std::ofstream gmshos("tree_debug.txt", std::ofstream::out | std::ofstream::app);
-   gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99+n_gen << " "
-            << abs(vol_mesh->etn(added_edge)[0])+1 << " "
-            << abs(vol_mesh->etn(added_edge)[1])+1 << std::endl;
+   // std::ofstream gmshos("tree_debug.txt", std::ofstream::out | std::ofstream::app);
+   // gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99+n_gen << " "
+   //          << abs(vol_mesh->etn(added_edge)[0])+1 << " "
+   //          << abs(vol_mesh->etn(added_edge)[1])+1 << std::endl;
    if (debuggy)
    {
       os.open("homology_gens.txt", std::ofstream::out | std::ofstream::app);
@@ -391,9 +391,9 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
          s_edge = added_edge;
          t_edge = *HomologyEdges.begin();
          HomologyEdges.insert(HomologyEdges.begin(),added_edge);
-         gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99+n_gen << " "
-                  << abs(vol_mesh->etn(added_edge)[0])+1 << " "
-                  << abs(vol_mesh->etn(added_edge)[1])+1 << std::endl;
+         // gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99+n_gen << " "
+         //          << abs(vol_mesh->etn(added_edge)[0])+1 << " "
+         //          << abs(vol_mesh->etn(added_edge)[1])+1 << std::endl;
          if (debuggy)
             os << vol_mesh->print_edge(n_gen,added_edge,coeff>0,0,255,255);
       }
@@ -407,9 +407,9 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
          t_edge = added_edge;            
          HomologyEdges.push_back(added_edge);
          
-         gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99+n_gen << " "
-                  << abs(vol_mesh->etn(added_edge)[0])+1 << " "
-                  << abs(vol_mesh->etn(added_edge)[1])+1 << std::endl;
+         // gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99+n_gen << " "
+         //          << abs(vol_mesh->etn(added_edge)[0])+1 << " "
+         //          << abs(vol_mesh->etn(added_edge)[1])+1 << std::endl;
          if (debuggy)
             os << vol_mesh->print_edge(n_gen,added_edge,coeff<0,0,255,255);
       }
@@ -434,7 +434,7 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
       added_edge_v=added_edge;
       or_edge_v=or_edge;
    }
-   gmshos.close();
+   // gmshos.close();
    if (debuggy)
       os.close();
 }
@@ -627,7 +627,7 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
       auto ff = abs(face);
       auto vols = vol_mesh->ftv(ff);
       for (auto vol : vols)
-         if (vol_mesh->is_conductor(abs(vol))) 
+         if (vol_mesh->is_conductor(abs(vol)))
             if (abs(vol)<target)
                target=abs(vol);
    }
@@ -707,12 +707,12 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
       auto head = target;
       //~ if (debuggy)
       //~ {
-         write_thinned_current.lock();
-         os.open("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
-         os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
-         os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
-         os.close();
-         write_thinned_current.unlock();
+         // write_thinned_current.lock();
+         // os.open("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
+         // os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
+         // os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
+         // os.close();
+         // write_thinned_current.unlock();
       //~ }
       
       while (parent[head] != source)
@@ -722,13 +722,13 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
             if (abs(vv) == parent[head])
             {
                // p2_pushback_mutex.lock();
-               tc[par_e[head]].push_back(n_gen*vv.Sgn());
+               tc[par_e[head]].push_back(n_gen*vv.Sign());
                // p2_pushback_mutex.unlock();
             }
             else
             {
                // p2_pushback_mutex.lock();
-               tc[par_e[head]].push_back(-n_gen*vv.Sgn());
+               tc[par_e[head]].push_back(-n_gen*vv.Sign());
                // p2_pushback_mutex.unlock();
             }
             break;
@@ -738,12 +738,12 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
          
          //~ if (debuggy)
          //~ {
-            write_thinned_current.lock();
-            os.open("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
-            os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
-            os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
-            os.close();
-            write_thinned_current.unlock();
+            // write_thinned_current.lock();
+            // os.open("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
+            // os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
+            // os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
+            // os.close();
+            // write_thinned_current.unlock();
          //~ }         
       }
       
@@ -752,13 +752,13 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
          if (abs(vv) == parent[head])
          {
             // p2_pushback_mutex.lock();
-            tc[par_e[head]].push_back(n_gen*vv.Sgn());
+            tc[par_e[head]].push_back(n_gen*vv.Sign());
             // p2_pushback_mutex.unlock();
          }
          else
          {
             // p2_pushback_mutex.lock();
-            tc[par_e[head]].push_back(-n_gen*vv.Sgn());
+            tc[par_e[head]].push_back(-n_gen*vv.Sign());
             // p2_pushback_mutex.unlock();
          }
          
