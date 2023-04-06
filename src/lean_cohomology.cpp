@@ -577,7 +577,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
    }
    
    std::ofstream treeos("tree.txt", std::ofstream::out);
-   std::ofstream gmshos("tree_debug.txt", std::ofstream::out);
+   // std::ofstream gmshos("tree_debug.txt", std::ofstream::out);
 
    //treeos << "internal tree: " << std::endl;
    while (k<queue.size())
@@ -603,9 +603,9 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
                
                treeos << abs(this->etn(abs(curr_e))[0])+1 << " "
                      << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
-               gmshos << ++tree_element_id << " " << 1 << " " << 1 << " " << 99 << " "
-                     << abs(this->etn(abs(curr_e))[0])+1 << " "
-                     << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
+               // gmshos << ++tree_element_id << " " << 1 << " " << 1 << " " << 99 << " "
+               //       << abs(this->etn(abs(curr_e))[0])+1 << " "
+               //       << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
                
                nnz++;
             }
@@ -640,9 +640,9 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
             
             treeos << abs(this->etn(abs(curr_e))[0])+1 << " "
                    << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
-            gmshos << ++tree_element_id << " " << 1 << " " << 1 << " " << 99 << " "
-                   << abs(this->etn(abs(curr_e))[0])+1 << " "
-                   << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
+            // gmshos << ++tree_element_id << " " << 1 << " " << 1 << " " << 99 << " "
+            //        << abs(this->etn(abs(curr_e))[0])+1 << " "
+            //        << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
             
             nnz++;
          }
@@ -655,7 +655,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
    }
    
    treeos.close();
-   gmshos.close();
+   // gmshos.close();
 
    for(j=0; j<surfaces.size(); ++j)
    {
@@ -1394,8 +1394,8 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    
    ///////// DEBUG DIFFERENTIAL OPERATORS
    std::ofstream os_divergence, os_curl, os_grad;
-   std::vector<int32_t> dummy_vec1(surfaces.size(),0);
-   std::vector<std::vector<int32_t> > divmat(volumes.size(),dummy_vec1);
+   // std::vector<int32_t> dummy_vec1(surfaces.size(),0);
+   // std::vector<std::vector<int32_t> > divmat(volumes.size(),dummy_vec1);
    
    for (uint32_t k=0; k<lines; ++k) // uses possible non-consistent local labelling, fixed two loops below
    {
@@ -1480,10 +1480,10 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       cuts_post_minimization.open("./cuts_post_minimization.txt");
 
 
-   std::cout << "    C++ Debugging sequence, very slow, remember to remove!"  << std::endl;
-   std::cout << "    " << __FILE__ << " : " << __LINE__ << std::endl;
-   std::vector<int32_t> dummy_vec2(edges.size(),0);
-   std::vector<std::vector<int32_t> > curlmat(surfaces.size(),dummy_vec2);
+   // std::cout << "    C++ Debugging sequence, very slow, remember to remove!"  << std::endl;
+   // std::cout << "    " << __FILE__ << " : " << __LINE__ << std::endl;
+   // std::vector<int32_t> dummy_vec2(edges.size(),0);
+   // std::vector<std::vector<int32_t> > curlmat(surfaces.size(),dummy_vec2);
 
    for (uint32_t k=0; k<lines; ++k)
    {
@@ -1497,10 +1497,10 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
       sgnint32_t<int32_t> e3(e_labels[k+2*lines],  edge_coeffs[k][2]);
       sgnint32_t<int32_t> e4(e_labels[k+3*lines],  edge_coeffs[k][3]);
 
-      curlmat[k][abs(e1)] = double(e1.Sign());
-      curlmat[k][abs(e2)] = double(e2.Sign());
-      curlmat[k][abs(e3)] = double(e3.Sign());
-      curlmat[k][abs(e4)] = double(e4.Sign());
+      // curlmat[k][abs(e1)] = double(e1.Sign());
+      // curlmat[k][abs(e2)] = double(e2.Sign());
+      // curlmat[k][abs(e3)] = double(e3.Sign());
+      // curlmat[k][abs(e4)] = double(e4.Sign());
       
       std::vector<sgnint32_t<int32_t> > dummy(4);
       _fte_list.push_back(dummy);
@@ -1540,7 +1540,7 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
             _ftv_list[k][ivol] = sgnint32_t<int32_t>(abs(vv), 1);
          
          // std::cout << _ftv_list[k][ivol] << " ";
-         divmat[abs(vv)][k] = _ftv_list[k][ivol].Sign();
+         // divmat[abs(vv)][k] = _ftv_list[k][ivol].Sign();
 
          for (uint8_t ifacet=0; ifacet<6; ++ifacet)
          {
@@ -1749,19 +1749,19 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    tctot.toc();
 
    // DEBUG differential operators
-   timecounter tcnew;
-   tcnew.tic();
+   // timecounter tcnew;
+   // tcnew.tic();
    
-   std::cout << "    C++ Debugging sequence, very slow, remember to remove!"  << std::endl;
-   std::cout << "    " << __FILE__ << " : " << __LINE__ << std::endl;
-   os_divergence.open("D.dat",std::ofstream::out);
-   os_curl.open("C.dat",std::ofstream::out);
-   os_divergence << gmatrix<int32_t>(divmat);
-   os_curl << gmatrix<int32_t>(curlmat);
-   os_divergence.close();
-   os_curl.close();
-   tcnew.toc();
-   std::cout << "    Printing differential operators (debug, remember to remove!) to file took: " << tcnew << " seconds" << std::endl;
+   // std::cout << "    C++ Debugging sequence, very slow, remember to remove!"  << std::endl;
+   // std::cout << "    " << __FILE__ << " : " << __LINE__ << std::endl;
+   // os_divergence.open("D.dat",std::ofstream::out);
+   // os_curl.open("C.dat",std::ofstream::out);
+   // os_divergence << gmatrix<int32_t>(divmat);
+   // os_curl << gmatrix<int32_t>(curlmat);
+   // os_divergence.close();
+   // os_curl.close();
+   // tcnew.toc();
+   // std::cout << "    Printing differential operators (debug, remember to remove!) to file took: " << tcnew << " seconds" << std::endl;
 
    // std::cout << cyan << "Total time spent in reading mesh: ";
    // std::cout << tctot << " seconds" << nocolor << std::endl;
