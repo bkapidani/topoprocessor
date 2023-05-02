@@ -41,8 +41,8 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
    k=0;
    t_h1.tic();
    
-   // std::ofstream treeos("tree.txt");//, std::ofstream::out | std::ofstream::app);
-   // std::ofstream gmshos("tree_debug.txt");//, std::ofstream::out | std::ofstream::app);
+   // std::ofstream treeos("tree_topoprocessor.txt");//, std::ofstream::out | std::ofstream::app);
+   // std::ofstream gmshos("tree_debug_topoprocessor.txt");//, std::ofstream::out | std::ofstream::app);
 
 
    auto top_priority = physical_nodes[0];
@@ -222,9 +222,9 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
    if (remaining_edges.size()>0)
    {   
       // std::ofstream os;
-      // os.open("./output/h1_lazy.txt");
+      // os.open("./output/h1_lazy_topoprocessor.txt");
       std::ofstream os;
-      // os.open("thinned_currents.txt", std::ofstream::out);
+      // os.open("thinned_currents_topoprocessor.txt", std::ofstream::out);
       // os.close();   
       std::cout << "    Number of lazy generators : "
                 << remaining_edges.size() << std::endl;
@@ -255,7 +255,7 @@ H_to_CoH( const std::vector<uint32_t>& physical_surface,
       // h1_multithreading[i].join();
    //~ if (debuggy)
    //~ {
-      //~ std::ofstream os("homology_gens.txt", std::ofstream::out | std::ofstream::app);
+      //~ std::ofstream os("homology_gens_topoprocessor.txt", std::ofstream::out | std::ofstream::app);
       //~ for (uint32_t fff = 0; fff < vol_mesh->surfaces_size(); ++fff)
       //~ {
          //~ if (physical_surface[fff]>0)
@@ -289,13 +289,13 @@ void generic_two_manifold :: RetrieveGenAndTC(const int16_t& n_gen, const uint32
    p1_pushback_mutex.lock();
    h1b[added_edge].push_back(n_gen);
    p1_pushback_mutex.unlock();
-   // std::ofstream gmshos("tree_debug.txt", std::ofstream::out | std::ofstream::app);
+   // std::ofstream gmshos("tree_debug_topoprocessor.txt", std::ofstream::out | std::ofstream::app);
    // gmshos << (++(vol_mesh->tree_element_id)) << " " << 1 << " " << 1 << " " << 99+n_gen << " "
    //          << abs(vol_mesh->etn(added_edge)[0])+1 << " "
    //          << abs(vol_mesh->etn(added_edge)[1])+1 << std::endl;
    if (debuggy)
    {
-      os.open("homology_gens.txt", std::ofstream::out | std::ofstream::app);
+      os.open("homology_gens_topoprocessor.txt", std::ofstream::out | std::ofstream::app);
       os << vol_mesh->print_edge(n_gen,added_edge,true,0,255,255);
    }
    std::vector<uint32_t> HomologyEdges;
@@ -447,7 +447,7 @@ std::vector<int> generic_two_manifold :: RetrieveCoH(const std::vector<int>& gen
    {
       if (gen_comb[n_gen] != 0)
       {
-         std::ofstream os("cohomology_gens.txt", std::ofstream::out | std::ofstream::app);
+         std::ofstream os("cohomology_gens_topoprocessor.txt", std::ofstream::out | std::ofstream::app);
          int32_t gcvalue = gen_comb[n_gen]; //this is the value i have to multiply for
          
          auto ee = remaining_edges[n_gen];
@@ -687,7 +687,7 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
          if (k>=queue.size())
          {
             std::ofstream os;
-            os.open("./dk.txt", std::ofstream::out | std::ofstream::app);
+            os.open("./dk_topoprocessor.txt", std::ofstream::out | std::ofstream::app);
             for (auto j=k-1;k>0;k--)
             {
                os << vol_mesh->print_dual_edge(9,parent[queue[k]],par_e[queue[k]],false,0,255,0);
@@ -708,7 +708,7 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
       //~ if (debuggy)
       //~ {
          // write_thinned_current.lock();
-         // os.open("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
+         // os.open("thinned_currents_topoprocessor.txt", std::ofstream::out | std::ofstream::app);
          // os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
          // os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
          // os.close();
@@ -739,7 +739,7 @@ void generic_two_manifold :: TwoSidedAlg(const int16_t& n_gen, const uint32_t& t
          //~ if (debuggy)
          //~ {
             // write_thinned_current.lock();
-            // os.open("thinned_currents.txt", std::ofstream::out | std::ofstream::app);
+            // os.open("thinned_currents_topoprocessor.txt", std::ofstream::out | std::ofstream::app);
             // os << vol_mesh->print_dual_edge(n_gen,parent[head],par_e[head],false,255,0,0);
             // os << vol_mesh->print_dual_edge(n_gen,head,par_e[head],true,255,0,0);
             // os.close();

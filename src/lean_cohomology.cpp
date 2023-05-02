@@ -108,8 +108,8 @@ lean_cohomology :: lean_cohomology(
          std::cout << "Final linking # matrix:" << std::endl <<  gm << std::endl;
       }
 
-      // std::ofstream treeos("tree.txt", std::ofstream::out | std::ofstream::app);
-      // std::ofstream gmshos("tree_debug.txt", std::ofstream::out | std::ofstream::app);
+      // std::ofstream treeos("tree_topoprocessor.txt", std::ofstream::out | std::ofstream::app);
+      // std::ofstream gmshos("tree_debug_topoprocessor.txt", std::ofstream::out | std::ofstream::app);
             
       for (uint32_t k=0; k<gm.number_nonzero_rows(); ++k)
       {
@@ -158,16 +158,16 @@ lean_cohomology :: lean_cohomology(
    t_gauss.tic();
    std::ofstream h1_pre_minimization, h1_post_minimization, cuts_pre_minimization;
    // if (debuggy)
-      cuts_pre_minimization.open("./cuts_pre_minimization.txt", std::ofstream::out);
+      cuts_pre_minimization.open("./cuts_pre_minimization_topoprocessor.txt", std::ofstream::out);
    
    if (!sullivan)
    {
-      h1_pre_minimization.open("h1.txt", std::ofstream::out);
+      h1_pre_minimization.open("h1_topoprocessor.txt", std::ofstream::out);
       h1_pre_minimization  << gen_comb.size() << std::endl;
    }
    else
    {
-      h1_post_minimization.open("h1.txt", std::ofstream::out);
+      h1_post_minimization.open("h1_topoprocessor.txt", std::ofstream::out);
       h1_post_minimization << 1 << std::endl;
    }
    
@@ -218,8 +218,8 @@ lean_cohomology :: lean_cohomology(
             //~ MinCost(start_s,indigen);
         //~ else
         //~ {
-            //~ std::remove("cuts_post_minimization.txt");
-            //~ std::remove("h1.txt");
+            //~ std::remove("cuts_post_minimization_topoprocessor.txt");
+            //~ std::remove("h1_topoprocessor.txt");
         //~ }
       if (!sullivan)
       {
@@ -237,19 +237,19 @@ lean_cohomology :: lean_cohomology(
     if (sullivan)
     {
         MinCost(start_s,1);
-        //~ std::remove("h1.txt");
+        //~ std::remove("h1_topoprocessor.txt");
     }
     else
     {
-       std::remove("cuts_post_minimization.txt");
-       //~ std::remove("h1.txt");
+       std::remove("cuts_post_minimization_topoprocessor.txt");
+       //~ std::remove("h1_topoprocessor.txt");
     }
     
     if (!debuggy)
     {
-       std::remove("cuts_post_minimization.txt");
-       //~ std::remove("h1.txt");
-      //  std::remove("cuts_pre_minimization.txt");
+       std::remove("cuts_post_minimization_topoprocessor.txt");
+       //~ std::remove("h1_topoprocessor.txt");
+      //  std::remove("cuts_pre_minimization_topoprocessor.txt");
     }
     
     h1_pre_minimization.close();
@@ -268,65 +268,76 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat)
 
    pair<uint32_t,sgnint32_t<int32_t> > dummy;
    int32_t adj_f, adj_v;
-   uint32_t root, k, nnz, j, qtop;
-   sgnint32_t<int32_t>  curr_n;
+   uint32_t root, k, e, nnz, j, qtop, i_ccomp_bnd;
+   // sgnint32_t<int32_t>  curr_n;
 
    srand (time(NULL));
    
    // std::cout << __FILE__ << " : " << __LINE__ << std::endl;
-   std::ofstream treeos("tree.txt", std::ofstream::out);
+   std::ofstream treeos("tree_topoprocessor.txt", std::ofstream::out);
 
-   k=nnz=0;
+   k= nnz = e = i_ccomp_bnd = 0;
+   std::vector<std::vector<uint32_t> > vertex_of_cc;
    while (true)
    {
-      if (is_boundary(k))
+      bool found_root = false;
+      while (e<edges_size() && !found_root)
       {
-         auto root_n = abs(etn(k)[0]);
-         p_queue.push_back(root_n);
-         colour[root_n]++;
-         distance[root_n] = 0;
-         break;
-      }
-      ++k;
-   }
-
-   // p_queue.push_back(0);
-   // colour[0]++;
-   k=0;
-   // distance[0] = 0;
-   while (k<p_queue.size())
-   {
-      qtop=p_queue[k];
-
-      for (auto curr_e : _nte_list[qtop])
-      {   
-         if (is_boundary(abs(curr_e)))
+         auto possible_root = abs(etn(e)[0]);
+         if (is_boundary(e) && colour[possible_root] == 0)
          {
-            curr_n=*(_etn_list[abs(curr_e)].begin());
+            p_queue.push_back(possible_root);
+            colour[possible_root] = ++i_ccomp_bnd;
+            distance[possible_root] = 0;
+            found_root = true;
 
-            if (abs(curr_n)==qtop)
-               curr_n=*(std::prev(_etn_list[abs(curr_e)].end()));
-
-            if (colour[abs(curr_n)]==0)
-            {
-               p_queue.push_back(abs(curr_n));
-               colour[abs(curr_n)]++;
-               parent[abs(curr_n)]=qtop;
-               distance[abs(curr_n)] = distance[qtop]+1;
-               wired[abs(curr_e)]=true;
-
-               treeos << abs(this->etn(abs(curr_e))[0])+1 << " "
-                     << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
-               
-               nnz++;
-            }
-            else;
+            std::vector<uint32_t> dummy(possible_root);
+            vertex_of_cc.push_back(dummy);
+            
+            break;
          }
-
+         ++e;
       }
-        
-      colour[qtop]++;
-      k++;
+      
+      if (e == edges_size())
+         break;
+         
+      while (k<p_queue.size())
+      {
+         qtop=p_queue[k];
+
+         for (auto curr_e : _nte_list[qtop])
+         {   
+            if (is_boundary(abs(curr_e)))
+            {
+               auto curr_n = abs(*(_etn_list[abs(curr_e)].begin()));
+
+               if (curr_n==qtop)
+                  curr_n=abs(*(std::prev(_etn_list[abs(curr_e)].end())));
+
+               if (colour[curr_n]==0)
+               {
+                  p_queue.push_back(curr_n);
+                  colour[curr_n]=colour[qtop];
+
+                  parent[curr_n]=qtop;
+                  vertex_of_cc[colour[qtop]-1].push_back(curr_n);
+                  distance[curr_n] = distance[qtop]+1;
+                  wired[abs(curr_e)]=true;
+
+                  treeos << abs(this->etn(abs(curr_e))[0])+1 << " "
+                        << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
+                  
+                  nnz++;
+               }
+               else;
+            }
+
+         }
+         
+         // colour[qtop]++;
+         k++;
+      }
    }
    
    k = 0;
@@ -336,18 +347,19 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat)
 
       for (auto curr_e : _nte_list[qtop])
       {   
-         curr_n=*(_etn_list[abs(curr_e)].begin());
+         auto curr_n=abs(*(_etn_list[abs(curr_e)].begin()));
 
-         if (abs(curr_n)==qtop)
-            curr_n=*(std::prev(_etn_list[abs(curr_e)].end()));
+         if (curr_n==qtop)
+            curr_n=abs(*(std::prev(_etn_list[abs(curr_e)].end())));
 
-         if (colour[abs(curr_n)]==0)
+         if (colour[curr_n]==0)
          {
-            p_queue.push_back(abs(curr_n));
-            colour[abs(curr_n)]++;
-            parent[abs(curr_n)]=qtop;
-            distance[abs(curr_n)] = distance[qtop]+1;
-            par_edge[abs(curr_n)]=abs(curr_e);
+            p_queue.push_back(curr_n);
+            colour[curr_n] = colour[qtop];
+            vertex_of_cc[colour[qtop]-1].push_back(curr_n);
+            parent[curr_n]=qtop;
+            distance[curr_n] = distance[qtop]+1;
+            par_edge[curr_n]=abs(curr_e);
             wired[abs(curr_e)]=true;
             treeos << abs(this->etn(abs(curr_e))[0])+1 << " "
                    << abs(this->etn(abs(curr_e))[1])+1 << std::endl;
@@ -356,10 +368,46 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat)
          else;
       }
         
-      colour[qtop]++;
+      // colour[qtop]++;
       k++;
    }
    
+   k=0;
+   while (i_ccomp_bnd > 1 )
+   {
+      auto n1 = abs(*(_etn_list[k].begin()));
+      auto n2 = abs(*(_etn_list[k].rbegin()));
+
+      if (colour[n1] == colour[n2] || wired[k])
+      {
+         ++k;
+         continue;
+      }
+
+      i_ccomp_bnd--;
+
+      wired[k++] = true;
+      treeos << n1+1 << " " << n2+1 << std::endl;
+      nnz++;
+
+      if (colour[n1] > colour[n2])
+         std::swap(n1,n2);
+
+      auto to_be_condensed = colour[n2]-1;
+      auto to_be_augmented = colour[n1]-1;
+
+      for (auto nn : vertex_of_cc[to_be_condensed])
+      {
+         colour[nn] = colour[n1];
+         vertex_of_cc[to_be_augmented].push_back(nn);
+      }
+
+      std::cout << "    Condensed connected component #" << to_be_condensed+1
+                << " into connected component #" << to_be_augmented+1 << std::endl;
+                
+      vertex_of_cc[to_be_condensed].clear();
+   }
+
    treeos.close();
 
    for(j=0; j<surfaces.size(); j++)
@@ -553,7 +601,7 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
    pair<uint32_t,sgnint32_t<int32_t> > dummy;
    int32_t adj_f, adj_v;
    uint32_t root, k, nnz, j, qtop;
-   sgnint32_t<int32_t>  curr_n;
+   // sgnint32_t<int32_t>  curr_n;
 
    srand (time(NULL));
    
@@ -576,8 +624,8 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
       }
    }
    
-   std::ofstream treeos("tree.txt", std::ofstream::out);
-   // std::ofstream gmshos("tree_debug.txt", std::ofstream::out);
+   std::ofstream treeos("tree_topoprocessor.txt", std::ofstream::out);
+   // std::ofstream gmshos("tree_debug_topoprocessor.txt", std::ofstream::out);
 
    //treeos << "internal tree: " << std::endl;
    while (k<queue.size())
@@ -588,17 +636,17 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
       {   
          if (is_boundary(abs(curr_e)))
          {
-            curr_n=*(_etn_list[abs(curr_e)].begin());
+            auto curr_n=abs(*(_etn_list[abs(curr_e)].begin()));
 
-            if (abs(curr_n)==qtop)
-               curr_n=*(std::prev(_etn_list[abs(curr_e)].end()));
+            if (curr_n==qtop)
+               curr_n=abs(*(std::prev(_etn_list[abs(curr_e)].end())));
 
-            if (colour[abs(curr_n)]==0)
+            if (colour[curr_n]==0)
             {
-               queue.push_back(abs(curr_n));
-               colour[abs(curr_n)]++;
-               parent[abs(curr_n)]=qtop;
-               distance[abs(curr_n)] = distance[qtop]+1;
+               queue.push_back(curr_n);
+               colour[curr_n]++;
+               parent[curr_n]=qtop;
+               distance[curr_n] = distance[qtop]+1;
                wired[abs(curr_e)]=true;
                
                treeos << abs(this->etn(abs(curr_e))[0])+1 << " "
@@ -625,17 +673,17 @@ bool lean_cohomology :: ESTT(std::vector<std::vector<double> >& gmat,
 
       for (auto curr_e : _nte_list[qtop])
       {   
-         curr_n=*(_etn_list[abs(curr_e)].begin());
+         auto curr_n=abs(*(_etn_list[abs(curr_e)].begin()));
 
-         if (abs(curr_n)==qtop)
-            curr_n=*(std::prev(_etn_list[abs(curr_e)].end()));
+         if (curr_n==qtop)
+            curr_n=abs(*(std::prev(_etn_list[abs(curr_e)].end())));
 
-         if (colour[abs(curr_n)]==0)
+         if (colour[curr_n]==0)
          {
-            queue.push_back(abs(curr_n));
-            colour[abs(curr_n)]++;
-            parent[abs(curr_n)]=qtop;
-            distance[abs(curr_n)] = distance[qtop]+1;
+            queue.push_back(curr_n);
+            colour[curr_n]++;
+            parent[curr_n]=qtop;
+            distance[curr_n] = distance[qtop]+1;
             wired[abs(curr_e)]=true;
             
             treeos << abs(this->etn(abs(curr_e))[0])+1 << " "
@@ -1475,9 +1523,9 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    edge_in_conductor.resize(edges_size());
    
    std::ofstream cuts_pre_minimization, cuts_post_minimization;
-   cuts_pre_minimization.open("./interface_facets.txt");
+   cuts_pre_minimization.open("./interface_facets_topoprocessor.txt");
    if (debuggy)
-      cuts_post_minimization.open("./cuts_post_minimization.txt");
+      cuts_post_minimization.open("./cuts_post_minimization_topoprocessor.txt");
 
 
    // std::cout << "    C++ Debugging sequence, very slow, remember to remove!"  << std::endl;
@@ -1864,9 +1912,9 @@ void lean_cohomology :: MinCost(const std::vector<int32_t>& start_s, uint32_t in
    std::ofstream cuts_post_minimization, h1_post_minimization;
    
    if (debuggy)
-      cuts_post_minimization.open("./cuts_post_minimization.txt", std::ofstream::out | std::ofstream::app);   
+      cuts_post_minimization.open("./cuts_post_minimization_topoprocessor.txt", std::ofstream::out | std::ofstream::app);   
    
-   h1_post_minimization.open("./h1.txt", std::ofstream::out | std::ofstream::app);
+   h1_post_minimization.open("./h1_topoprocessor.txt", std::ofstream::out | std::ofstream::app);
    
    std::vector<int32_t> coeff_cf_array;
    std::vector<std::array<uint32_t,2> > coeff_id_array;
