@@ -55,6 +55,16 @@ lean_cohomology :: lean_cohomology(
    
    std::vector<uint32_t> intersurface, physical_nodes, physical_edges, queue;
    std::map<uint32_t,uint32_t> parent, distance;
+
+
+   std::ofstream timings("topopro_timings.csv", std::ofstream::out);
+   timings << "Loading complex" << "\t"
+           <<  "Computing h^1(dK)" << "\t"
+           <<  "Computing cuts" << "\t"
+           <<  "Computing null space" << "\t"
+           <<  "Computing h^1(K)" << "\t"
+           <<  "Saving output" << std::endl;
+
    f2d=e2d=n2d=0;
    t_lean.tic();
 
@@ -67,6 +77,7 @@ lean_cohomology :: lean_cohomology(
    t_read.toc();
    
    std::cout << "    Loading complex took: " << t_read << " seconds" << std::endl;
+   timings << t_read << ",\t";
 
    t_hdk.tic();
    generic_two_manifold cond_ins_interface(this);
@@ -79,7 +90,8 @@ lean_cohomology :: lean_cohomology(
    n_lazy = cond_ins_interface.number_of_gens();
    this->g2m = &cond_ins_interface;
    t_hdk.toc();
-   std::cout << "    Computing h^1(dK) and thinned currents took: " << t_hdk << " seconds" << std::endl;      
+   std::cout << "    Computing h^1(dK) and thinned currents took: " << t_hdk << " seconds" << std::endl;
+   timings << t_hdk << ",\t";
    
    t_estt.tic();
    std::vector<double> vg(n_lazy,0);
@@ -90,7 +102,8 @@ lean_cohomology :: lean_cohomology(
       throw std::invalid_argument("Failed to complete ESTT routine!");
    
    t_estt.toc();
-   std::cout << "    Computing cuts took: " << t_estt << " seconds" << std::endl;      
+   std::cout << "    Computing cuts took: " << t_estt << " seconds" << std::endl;
+   timings << t_estt << ",\t";
    
    // std::vector<double> gen_comb(n_lazy,0);
    std::vector<std::vector<double> > gen_comb;
@@ -110,7 +123,7 @@ lean_cohomology :: lean_cohomology(
 
       // std::ofstream treeos("tree.txt", std::ofstream::out | std::ofstream::app);
       // std::ofstream gmshos("tree_debug.txt", std::ofstream::out | std::ofstream::app);
-            
+      
       for (uint32_t k=0; k<gm.number_nonzero_rows(); ++k)
       {
          std::vector<double> new_gen_comb(n_lazy,0);
@@ -137,6 +150,7 @@ lean_cohomology :: lean_cohomology(
 
       t_gauss.toc();
       std::cout << "    Computing null space of l.n. matrix took: " << t_gauss << " seconds" << std::endl;
+      timings << t_gauss << ",\t";
       
       std::cout << "    (Kernel dimension: " << gm.number_nonzero_rows() << "  ";
       std::cout << "Determinant: " << gm.determinant() << ")" << std::endl;
@@ -154,6 +168,7 @@ lean_cohomology :: lean_cohomology(
    // cuts_pre_minimization.close();
    t_lean.toc();
    std::cout << "    Lean cohomology computation took: " << t_lean << " seconds" << std::endl;
+   timings << t_lean << ",\t";
 
    t_gauss.tic();
    std::ofstream h1_pre_minimization, h1_post_minimization, cuts_pre_minimization;
@@ -229,8 +244,10 @@ lean_cohomology :: lean_cohomology(
       }
    }
    t_gauss.toc();
-   std::cout << "    Output to file took: " << t_gauss << " seconds" << std::endl;   
-    
+   std::cout << "    Output to file took: " << t_gauss << " seconds" << std::endl;
+   timings << t_gauss << std::endl;
+   timings.close();
+
     //~ timecounter t_sullivan;
     //~ t_sullivan.tic();
     /*Run Sullivan*/
