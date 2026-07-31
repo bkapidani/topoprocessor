@@ -1,4 +1,5 @@
 #include "mesh.hpp"
+#include "mesh_adapters.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -7,7 +8,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(topoprocessor, module)
 {
-    module.doc() = "Mesher-neutral Topoprocessor mesh model";
+    module.doc() = "Mesher-neutral Topoprocessor mesh model and adapters";
 
     py::enum_<topo::CellKind>(module, "CellKind")
         .value("tetrahedron", topo::CellKind::tetrahedron)
@@ -43,4 +44,12 @@ PYBIND11_MODULE(topoprocessor, module)
     module.def("node_count", &topo::node_count, py::arg("kind"));
     module.def("facet_node_count", &topo::facet_node_count,
                py::arg("kind"));
+    module.def(
+        "read_netgen",
+        static_cast<topo::Mesh (*)(const std::string&)>(&topo::read_netgen),
+        py::arg("filename"));
+    module.def(
+        "read_gmsh",
+        static_cast<topo::Mesh (*)(const std::string&)>(&topo::read_gmsh),
+        py::arg("filename"));
 }
