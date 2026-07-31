@@ -55,3 +55,8 @@ Follow-on changes should remain reviewable and proceed in this dependency
 order: mesher-neutral C++ core; Python bindings; Netgen and Gmsh adapters; OCC
 workflows; user documentation; CI; and packaging. Each layer must run these
 recovery tests so adapters cannot change the established topology unnoticed.
+
+The first layer is now represented by `mesh.hpp`: it stores zero-based points,
+labelled cells, and labelled boundary facets without depending on a file format.
+Cell kind is explicit, tetrahedral and hexahedral arities are checked, and the
+current no-hybrid contract is enforced before algorithms consume the mesh.
