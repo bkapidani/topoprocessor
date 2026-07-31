@@ -217,7 +217,7 @@ read_triangle_line(const char *str, char **endptr)
 }
 
 template<typename T>
-std::tuple<T, T, T, T>
+std::tuple<T, T, T, T, T>
 read_quad_line(const char *str, char **endptr)
 {
     T t1, t2, t3, t4, t5;

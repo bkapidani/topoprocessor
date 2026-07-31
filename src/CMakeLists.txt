@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.13)
 project(topoprocessor)
 
+include(CTest)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -31,3 +33,11 @@ include_directories(./)
 add_executable(topoprocessor ./main/main.cpp ${SOURCE})
 target_link_libraries(topoprocessor ${LINK_LIBS})
 install (TARGETS topoprocessor DESTINATION .)
+
+if (BUILD_TESTING)
+	find_package(Python3 REQUIRED COMPONENTS Interpreter)
+	add_test(
+		NAME recovered_mesh_invariants
+		COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tests/test_recovered_meshes.py
+	)
+endif()
