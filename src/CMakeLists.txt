@@ -26,7 +26,7 @@ if ( ${CMAKE_SYSTEM_NAME} MATCHES "Apple" )
 	set(LINK_LIBS ${LINK_LIBS})
 endif( )
 
-set(SOURCE lean_cohomology.cpp generic_two_manifold.cpp mapped_file.cpp timecounter.cpp)
+set(SOURCE lean_cohomology.cpp generic_two_manifold.cpp mapped_file.cpp mesh.cpp timecounter.cpp)
 
 include_directories(./)
 
@@ -36,6 +36,9 @@ install (TARGETS topoprocessor DESTINATION .)
 
 if (BUILD_TESTING)
 	find_package(Python3 REQUIRED COMPONENTS Interpreter)
+	add_executable(test_mesh ../tests/test_mesh.cpp mesh.cpp)
+	target_include_directories(test_mesh PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+	add_test(NAME mesh_core COMMAND test_mesh)
 	add_test(
 		NAME recovered_mesh_invariants
 		COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tests/test_recovered_meshes.py
