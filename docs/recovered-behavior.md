@@ -60,3 +60,9 @@ The first layer is now represented by `mesh.hpp`: it stores zero-based points,
 labelled cells, and labelled boundary facets without depending on a file format.
 Cell kind is explicit, tetrahedral and hexahedral arities are checked, and the
 current no-hybrid contract is enforced before algorithms consume the mesh.
+
+The second layer is provided by the optional pybind11 module in
+`python_bindings.cpp`. It exposes the same read-only mesh entities, explicit
+cell kinds, arity helpers, and validation behavior to Python without adding a
+file-format dependency. Build it with `-DTOPOPROCESSOR_BUILD_PYTHON=ON`; C++
+validation failures are translated to the corresponding Python exceptions.
