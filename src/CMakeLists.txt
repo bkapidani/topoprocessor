@@ -30,7 +30,7 @@ set(SOURCE lean_cohomology.cpp generic_two_manifold.cpp mapped_file.cpp timecoun
 
 include_directories(./)
 
-add_library(topoprocessor_mesh STATIC mesh.cpp)
+add_library(topoprocessor_mesh STATIC mesh.cpp mesh_adapters.cpp)
 target_include_directories(topoprocessor_mesh PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(topoprocessor_mesh PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -54,6 +54,12 @@ if (BUILD_TESTING)
 	add_executable(test_mesh ../tests/test_mesh.cpp)
 	target_link_libraries(test_mesh PRIVATE topoprocessor_mesh)
 	add_test(NAME mesh_core COMMAND test_mesh)
+	add_executable(test_mesh_adapters ../tests/test_mesh_adapters.cpp)
+	target_link_libraries(test_mesh_adapters PRIVATE topoprocessor_mesh)
+	add_test(
+		NAME mesh_adapters
+		COMMAND test_mesh_adapters ${CMAKE_CURRENT_SOURCE_DIR}/../tests/fixtures
+	)
 	add_test(
 		NAME recovered_mesh_invariants
 		COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tests/test_recovered_meshes.py

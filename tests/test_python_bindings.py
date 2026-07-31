@@ -1,6 +1,10 @@
 import unittest
+from pathlib import Path
 
 import topoprocessor as topo
+
+
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
 class PythonBindingsTest(unittest.TestCase):
@@ -68,6 +72,22 @@ class PythonBindingsTest(unittest.TestCase):
             cell.label = 8
         with self.assertRaises(AttributeError):
             cell.nodes = [3, 2, 1, 0]
+
+    def test_netgen_adapter(self):
+        mesh = topo.read_netgen(str(FIXTURES / "netgen" / "unit_hex.mesh"))
+
+        self.assertEqual(mesh.cell_kind, topo.CellKind.hexahedron)
+        self.assertEqual(len(mesh.points), 8)
+        self.assertEqual(mesh.cells[0].nodes, list(range(8)))
+        self.assertEqual(len(mesh.boundary_facets), 6)
+
+    def test_gmsh_adapter(self):
+        mesh = topo.read_gmsh(str(FIXTURES / "gmsh" / "unit_tetra.msh"))
+
+        self.assertEqual(mesh.cell_kind, topo.CellKind.tetrahedron)
+        self.assertEqual(mesh.cells[0].label, 7)
+        self.assertEqual(mesh.cells[0].nodes, [0, 1, 2, 3])
+        self.assertEqual(mesh.boundary_facets[0].label, 11)
 
 
 if __name__ == "__main__":

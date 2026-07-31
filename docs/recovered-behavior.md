@@ -66,3 +66,12 @@ The second layer is provided by the optional pybind11 module in
 cell kinds, arity helpers, and validation behavior to Python without adding a
 file-format dependency. Build it with `-DTOPOPROCESSOR_BUILD_PYTHON=ON`; C++
 validation failures are translated to the corresponding Python exceptions.
+
+The third layer is implemented by `mesh_adapters.hpp`. The Netgen adapter reads
+the recovered counted neutral format and infers tetrahedral or hexahedral shape
+from its volume records. The Gmsh adapter reads ASCII legacy 2.2 files, retains
+the first (physical) element tag as the label, and supports linear triangles,
+quadrilaterals, tetrahedra, and hexahedra. Both adapters normalize external node
+identifiers to zero-based mesh indices and pass their result through the common
+mesh validation. Their filename-based entry points are also available from the
+Python module as `read_netgen` and `read_gmsh`.
