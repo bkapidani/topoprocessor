@@ -1090,15 +1090,16 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
          std::cout.flush();
       }
       
-      auto t = parser::read_triangle_line<uint32_t>(endptr, &endptr);
+      auto t = parser::read_quad_line<uint32_t>(endptr, &endptr);
 
       
       uint32_t       p0( std::get<1>(t) );
       uint32_t       p1( std::get<2>(t) );
       uint32_t       p2( std::get<3>(t) );
+      uint32_t       p3( std::get<4>(t) );
       uint32_t       bid( std::get<0>(t) );
       
-      surface_type   tri( p0, p1, p2 );
+      surface_type   tri( p0, p1, p2, p3 );
       
       if (!physical_surfaces[bid].size())
          physical_surfaces[bid].resize(surfaces.size(),0);
