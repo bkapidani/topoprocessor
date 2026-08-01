@@ -6,7 +6,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(topoprocessor, module)
+PYBIND11_MODULE(_core, module)
 {
     module.doc() = "Mesher-neutral Topoprocessor mesh model and adapters";
 
