@@ -2,6 +2,28 @@
 
 - [In-memory Python mesh workflows](docs/python-workflows.md)
 
+### Current library API
+
+The mesher-neutral C++ core and Python module compute integral first
+cohomology generators directly from labelled tetrahedral or hexahedral meshes.
+Python users can load current Gmsh MSH 4.1 and Netgen `.vol` files through the
+optional mesher libraries:
+
+```python
+import topoprocessor as topo
+
+mesh = topo.load_gmsh("model.msh")
+materials = topo.MaterialSelection(conductor_labels=[2])
+result = topo.compute_cohomology(mesh, materials)
+print(result.betti_number)
+```
+
+Install the Python package from a checkout with `python -m pip install .`.
+Use `.[gmsh]`, `.[netgen]`, or `.[meshers]` for the optional file loaders.
+Prisms, pyramids, and hybrid meshes are rejected. Higher-order elements are
+accepted when their primary vertices identify the embedded low-order cochain
+complex.
+
 - [Table of contents:](#)
     + [What is this repository for?](#what-is-this-repository-for-)
     + [How do I install Topoprocessor?](#how-do-i-install-topoprocessor-)

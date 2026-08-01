@@ -270,6 +270,12 @@ Mesh read_netgen(std::istream& input)
         for (std::size_t field = 1; field < fields.size(); ++field) {
             nodes.push_back(one_based_node(fields[field], "Netgen cell node"));
         }
+        if (kind == CellKind::hexahedron) {
+            // Netgen uses tensor-product vertex numbering. Normalize it to
+            // the cyclic Gmsh/VTK convention used by the topology core.
+            nodes = {nodes[0], nodes[1], nodes[3], nodes[2],
+                     nodes[4], nodes[5], nodes[7], nodes[6]};
+        }
         cells.emplace_back(kind, uint32_value(fields[0], "Netgen cell label"),
                            std::move(nodes));
     }
