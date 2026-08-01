@@ -1,0 +1,13 @@
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/Experimental.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/Nightly.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/Continuous.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/NightlyMemoryCheck.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/topoprocessor_mesh.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/topoprocessor.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/topoprocessor_python.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/test_mesh.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/test_mesh_adapters.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/RUN_TESTS.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/INSTALL.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/ALL_BUILD.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/CMakeFiles/ZERO_CHECK.dir

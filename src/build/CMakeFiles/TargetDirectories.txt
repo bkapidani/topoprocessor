@@ -1,0 +1,12 @@
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/Experimental.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/Nightly.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/Continuous.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/NightlyMemoryCheck.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/topoprocessor_mesh.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/topoprocessor.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/test_mesh.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/test_mesh_adapters.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/RUN_TESTS.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/INSTALL.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/CMakeFiles/ZERO_CHECK.dir

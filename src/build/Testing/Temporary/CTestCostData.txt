@@ -1,0 +1,4 @@
+mesh_core 2 0.00826045
+mesh_adapters 2 0.210975
+recovered_mesh_invariants 2 0.200137
+---
