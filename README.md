@@ -1,5 +1,7 @@
 ### Documentation
 
+- [In-memory Python mesh workflows](docs/python-workflows.md)
+
 - [Table of contents:](#)
     + [What is this repository for?](#what-is-this-repository-for-)
     + [How do I install Topoprocessor?](#how-do-i-install-topoprocessor-)

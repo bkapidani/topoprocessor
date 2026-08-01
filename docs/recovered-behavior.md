@@ -67,7 +67,8 @@ cell kinds, arity helpers, and validation behavior to Python without adding a
 file-format dependency. Build it with `-DTOPOPROCESSOR_BUILD_PYTHON=ON`; C++
 validation failures are translated to the corresponding Python exceptions.
 
-The third layer is implemented by `mesh_adapters.hpp`. The Netgen adapter reads
+The third layer's legacy-file compatibility is implemented by
+`mesh_adapters.hpp`. The Netgen adapter reads
 the recovered counted neutral format and infers tetrahedral or hexahedral shape
 from its volume records. The Gmsh adapter reads ASCII legacy 2.2 files, retains
 the first (physical) element tag as the label, and supports linear triangles,
@@ -75,3 +76,9 @@ quadrilaterals, tetrahedra, and hexahedra. Both adapters normalize external node
 identifiers to zero-based mesh indices and pass their result through the common
 mesh validation. Their filename-based entry points are also available from the
 Python module as `read_netgen` and `read_gmsh`.
+
+The preferred adapters are Python-side `from_netgen`, `from_ngsolve`, and
+`from_gmsh` functions. They consume live mesher objects through their public
+APIs, normalize node identifiers, and construct the same C++ `Mesh`. OCC stays
+a geometry source: `netgen.occ` and `gmsh.model.occ` generate meshes that flow
+through these existing adapters without adding an OCC dependency to the core.
