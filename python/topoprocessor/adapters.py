@@ -78,10 +78,25 @@ def from_netgen(mesh):
         elif len(vertices) == 8:
             kind = CellKind.hexahedron
         else:
-            raise ValueError("Netgen cells must be linear tetrahedra or hexahedra")
+            raise ValueError(
+                "Netgen cells must expose four or eight primary vertices"
+            )
         nodes = _netgen_vertices(
             element, node_indices, len(vertices), "Netgen cell"
         )
+        if kind == CellKind.hexahedron:
+            # Normalize Netgen's tensor-product numbering to the cyclic
+            # Gmsh/VTK convention used by the C++ topology core.
+            nodes = [
+                nodes[0],
+                nodes[1],
+                nodes[3],
+                nodes[2],
+                nodes[4],
+                nodes[5],
+                nodes[7],
+                nodes[6],
+            ]
         label = _integer(element.index, "Netgen cell label")
         cells.append(Cell(kind, label, nodes))
 
@@ -157,8 +172,40 @@ def _gmsh_nodes(model):
     return points, node_indices
 
 
-def _gmsh_entities(model, dimension, node_indices):
-    supported = {2: (3, False), 3: (4, False), 4: (4, True), 5: (8, True)}
+def _gmsh_element_layout(model, element_type, expected_dimension, high_order):
+    properties = _sequence(
+        model.mesh.getElementProperties(element_type),
+        "Gmsh element properties",
+    )
+    if len(properties) < 6:
+        raise ValueError("Gmsh returned incomplete element properties")
+    name, dimension, order, node_count, _, primary_node_count = properties[:6]
+    dimension = _integer(dimension, "Gmsh element dimension")
+    order = _integer(order, "Gmsh element order")
+    node_count = _integer(node_count, "Gmsh element node count")
+    primary_node_count = _integer(
+        primary_node_count, "Gmsh primary node count"
+    )
+    if dimension != expected_dimension:
+        raise ValueError(
+            f"Gmsh element type {element_type} has an unexpected dimension"
+        )
+    supported_primary_nodes = {2: (3, 4), 3: (4, 8)}[expected_dimension]
+    if primary_node_count not in supported_primary_nodes:
+        raise ValueError(
+            f"unsupported Gmsh {name} element type {element_type}: "
+            "prisms, pyramids, and other cell shapes are not supported"
+        )
+    if node_count < primary_node_count:
+        raise ValueError("Gmsh element has fewer nodes than primary nodes")
+    if order > 1 and high_order == "reject":
+        raise ValueError(
+            f"higher-order Gmsh element type {element_type} was rejected by policy"
+        )
+    return node_count, primary_node_count
+
+
+def _gmsh_entities(model, dimension, node_indices, high_order):
     entities = []
     for raw_dimension, raw_entity_tag in model.getEntities(dimension):
         entity_dimension = _integer(raw_dimension, "Gmsh entity dimension")
@@ -179,21 +226,16 @@ def _gmsh_entities(model, dimension, node_indices):
             element_types, element_tags, element_nodes
         ):
             element_type = _integer(raw_type, "Gmsh element type")
-            if element_type not in supported:
-                kind = "surface" if dimension == 2 else "volume"
-                raise ValueError(f"unsupported Gmsh {kind} element type {element_type}")
-            arity, is_cell = supported[element_type]
-            if is_cell != (dimension == 3):
-                raise ValueError(
-                    f"Gmsh element type {element_type} has an unexpected dimension"
-                )
+            full_arity, primary_arity = _gmsh_element_layout(
+                model, element_type, dimension, high_order
+            )
             tags_for_type = _sequence(tags_for_type, "Gmsh element tags")
             nodes_for_type = _sequence(nodes_for_type, "Gmsh element nodes")
-            if len(nodes_for_type) != arity * len(tags_for_type):
+            if len(nodes_for_type) != full_arity * len(tags_for_type):
                 raise ValueError("Gmsh returned an inconsistent element node array")
-            for offset in range(0, len(nodes_for_type), arity):
+            for offset in range(0, len(nodes_for_type), full_arity):
                 nodes = []
-                for raw_node in nodes_for_type[offset : offset + arity]:
+                for raw_node in nodes_for_type[offset : offset + primary_arity]:
                     node_tag = _integer(raw_node, "Gmsh element node tag")
                     try:
                         nodes.append(node_indices[node_tag])
@@ -204,7 +246,7 @@ def _gmsh_entities(model, dimension, node_indices):
                 if dimension == 3:
                     cell_kind = (
                         CellKind.tetrahedron
-                        if element_type == 4
+                        if primary_arity == 4
                         else CellKind.hexahedron
                     )
                     entities.append(Cell(cell_kind, label, nodes))
@@ -213,18 +255,24 @@ def _gmsh_entities(model, dimension, node_indices):
     return entities
 
 
-def from_gmsh(model):
+def from_gmsh(model, high_order="primary"):
     """Create a canonical mesh from the active in-memory ``gmsh.model``.
 
-    Linear triangles/quadrangles and tetrahedra/hexahedra are supported. Each
-    model entity must belong to at most one physical group; its physical tag is
-    retained as the canonical label, or zero when the entity is ungrouped.
+    Triangles/quadrangles and tetrahedra/hexahedra are supported. For a
+    higher-order element, ``high_order="primary"`` (the default) identifies
+    its embedded low-order cochain complex from Gmsh's primary nodes;
+    ``high_order="reject"`` rejects it. Each model entity must belong to at
+    most one physical group; its physical tag is retained as the canonical
+    label, or zero when the entity is ungrouped.
     """
+
+    if high_order not in ("primary", "reject"):
+        raise ValueError("high_order must be 'primary' or 'reject'")
 
     model = _gmsh_model(model)
     points, node_indices = _gmsh_nodes(model)
-    cells = _gmsh_entities(model, 3, node_indices)
+    cells = _gmsh_entities(model, 3, node_indices, high_order)
     if not cells:
         raise ValueError("Gmsh model has no volume cells")
-    facets = _gmsh_entities(model, 2, node_indices)
+    facets = _gmsh_entities(model, 2, node_indices, high_order)
     return Mesh(points, cells, facets)

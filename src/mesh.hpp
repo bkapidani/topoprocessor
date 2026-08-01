@@ -17,6 +17,9 @@ enum class CellKind {
     hexahedron,
 };
 
+// Hexahedra use the cyclic Gmsh/VTK convention: nodes 0..3 form one
+// quadrilateral face and nodes 4..7 form the corresponding opposite face.
+
 class Cell {
 public:
     Cell(CellKind kind, Label label, std::vector<NodeId> nodes);

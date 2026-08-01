@@ -45,7 +45,8 @@ int main(int argc, char** argv)
     if (hex.cell_kind() != topo::CellKind::hexahedron ||
         hex.points().size() != 8U || hex.cells().size() != 1U ||
         hex.boundary_facets().size() != 6U ||
-        hex.cells().front().nodes().front() != 0U) {
+        hex.cells().front().nodes() !=
+            std::vector<topo::NodeId>({0U, 1U, 3U, 2U, 4U, 5U, 7U, 6U})) {
         throw std::runtime_error("Netgen hexahedral fixture changed in transit");
     }
 

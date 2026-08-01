@@ -78,7 +78,7 @@ class PythonBindingsTest(unittest.TestCase):
 
         self.assertEqual(mesh.cell_kind, topo.CellKind.hexahedron)
         self.assertEqual(len(mesh.points), 8)
-        self.assertEqual(mesh.cells[0].nodes, list(range(8)))
+        self.assertEqual(mesh.cells[0].nodes, [0, 1, 3, 2, 4, 5, 7, 6])
         self.assertEqual(len(mesh.boundary_facets), 6)
 
     def test_gmsh_adapter(self):
@@ -88,6 +88,25 @@ class PythonBindingsTest(unittest.TestCase):
         self.assertEqual(mesh.cells[0].label, 7)
         self.assertEqual(mesh.cells[0].nodes, [0, 1, 2, 3])
         self.assertEqual(mesh.boundary_facets[0].label, 11)
+
+    def test_cohomology_api_for_contractible_mesh(self):
+        points = [
+            (0.0, 0.0, 0.0),
+            (1.0, 0.0, 0.0),
+            (0.0, 1.0, 0.0),
+            (0.0, 0.0, 1.0),
+        ]
+        mesh = topo.Mesh(
+            points,
+            [topo.Cell(topo.CellKind.tetrahedron, 1, [0, 1, 2, 3])],
+            [],
+        )
+
+        result = topo.compute_cohomology(mesh)
+
+        self.assertEqual(result.betti_number, 0)
+        self.assertEqual(result.selected_cell_count, 1)
+        self.assertEqual(len(result.edges), 6)
 
 
 if __name__ == "__main__":
