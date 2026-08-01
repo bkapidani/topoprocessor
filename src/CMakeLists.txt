@@ -26,16 +26,24 @@ if ( ${CMAKE_SYSTEM_NAME} MATCHES "Apple" )
 	set(LINK_LIBS ${LINK_LIBS})
 endif( )
 
-set(SOURCE lean_cohomology.cpp generic_two_manifold.cpp mapped_file.cpp timecounter.cpp)
+set(SOURCE lean_cohomology.cpp generic_two_manifold.cpp timecounter.cpp)
 
 include_directories(./)
 
 add_library(topoprocessor_mesh STATIC mesh.cpp mesh_adapters.cpp)
 target_include_directories(topoprocessor_mesh PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_options(
+	topoprocessor_mesh PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/EHsc>)
 set_target_properties(topoprocessor_mesh PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+add_library(topoprocessor_io STATIC mapped_file.cpp)
+target_include_directories(topoprocessor_io PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_options(
+	topoprocessor_io PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/EHsc>)
+
 add_executable(topoprocessor ./main/main.cpp ${SOURCE})
-target_link_libraries(topoprocessor PRIVATE topoprocessor_mesh ${LINK_LIBS})
+target_link_libraries(
+	topoprocessor PRIVATE topoprocessor_mesh topoprocessor_io ${LINK_LIBS})
 install (TARGETS topoprocessor DESTINATION .)
 
 option(TOPOPROCESSOR_BUILD_PYTHON "Build the Python mesh bindings" OFF)
@@ -45,8 +53,39 @@ if (TOPOPROCESSOR_BUILD_PYTHON)
 	find_package(pybind11 CONFIG REQUIRED)
 	pybind11_add_module(topoprocessor_python MODULE python_bindings.cpp)
 	target_link_libraries(topoprocessor_python PRIVATE topoprocessor_mesh)
-	set_target_properties(topoprocessor_python PROPERTIES OUTPUT_NAME topoprocessor)
-	install(TARGETS topoprocessor_python LIBRARY DESTINATION . RUNTIME DESTINATION .)
+	set(TOPOPROCESSOR_PYTHON_PACKAGE_DIR
+		${CMAKE_CURRENT_BINARY_DIR}/python/topoprocessor)
+	file(MAKE_DIRECTORY ${TOPOPROCESSOR_PYTHON_PACKAGE_DIR})
+	configure_file(
+		${CMAKE_CURRENT_SOURCE_DIR}/../python/topoprocessor/__init__.py
+		${TOPOPROCESSOR_PYTHON_PACKAGE_DIR}/__init__.py COPYONLY)
+	configure_file(
+		${CMAKE_CURRENT_SOURCE_DIR}/../python/topoprocessor/adapters.py
+		${TOPOPROCESSOR_PYTHON_PACKAGE_DIR}/adapters.py COPYONLY)
+	set_target_properties(
+		topoprocessor_python
+		PROPERTIES
+			OUTPUT_NAME _core
+			LIBRARY_OUTPUT_DIRECTORY ${TOPOPROCESSOR_PYTHON_PACKAGE_DIR}
+			RUNTIME_OUTPUT_DIRECTORY ${TOPOPROCESSOR_PYTHON_PACKAGE_DIR})
+	foreach(configuration DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+		set_target_properties(
+			topoprocessor_python
+			PROPERTIES
+				LIBRARY_OUTPUT_DIRECTORY_${configuration}
+					${TOPOPROCESSOR_PYTHON_PACKAGE_DIR}
+				RUNTIME_OUTPUT_DIRECTORY_${configuration}
+					${TOPOPROCESSOR_PYTHON_PACKAGE_DIR})
+	endforeach()
+	install(
+		TARGETS topoprocessor_python
+		LIBRARY DESTINATION topoprocessor
+		RUNTIME DESTINATION topoprocessor)
+	install(
+		FILES
+			${CMAKE_CURRENT_SOURCE_DIR}/../python/topoprocessor/__init__.py
+			${CMAKE_CURRENT_SOURCE_DIR}/../python/topoprocessor/adapters.py
+		DESTINATION topoprocessor)
 endif()
 
 if (BUILD_TESTING)
@@ -60,9 +99,20 @@ if (BUILD_TESTING)
 		NAME mesh_adapters
 		COMMAND test_mesh_adapters ${CMAKE_CURRENT_SOURCE_DIR}/../tests/fixtures
 	)
+	add_executable(test_mapped_file ../tests/test_mapped_file.cpp)
+	target_link_libraries(test_mapped_file PRIVATE topoprocessor_io)
+	add_test(
+		NAME mapped_file
+		COMMAND test_mapped_file ${CMAKE_CURRENT_BINARY_DIR}
+	)
 	add_test(
 		NAME recovered_mesh_invariants
 		COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tests/test_recovered_meshes.py
+	)
+	add_test(
+		NAME python_in_memory_adapters
+		COMMAND ${Python3_EXECUTABLE}
+			${CMAKE_CURRENT_SOURCE_DIR}/../tests/test_in_memory_adapters.py
 	)
 	if (TOPOPROCESSOR_BUILD_PYTHON)
 		add_test(
@@ -70,8 +120,9 @@ if (BUILD_TESTING)
 			COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tests/test_python_bindings.py
 		)
 		set_tests_properties(
-			python_mesh_bindings
-			PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:topoprocessor_python>"
+			python_in_memory_adapters python_mesh_bindings
+			PROPERTIES ENVIRONMENT
+				"PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/python"
 		)
 	endif()
 endif()

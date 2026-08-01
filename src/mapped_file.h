@@ -28,35 +28,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// #pragma once
 #ifndef MAPPED_FILE_H
 #define MAPPED_FILE_H
 
+#include <string>
+#include <vector>
+
 class mapped_file
 {
-    const char *    _start;
-    const char *    _end;
-    std::string     _name;
-    int             _fd;
-    size_t          _length;
-    const char *    _addr;
-    bool            _is_open;
-    
-    bool            map(const std::string&);
-    bool            unmap(void);
-    
+    std::vector<char> _buffer;
+    const char*       _start;
+    const char*       _end;
+    bool              _is_open;
+
+    bool load(const std::string& name);
+    void reset() noexcept;
+
 public:
-                    mapped_file();
-                    mapped_file(const std::string& name);
-                    ~mapped_file();
-    
-    void            open(const std::string& name);
-    void            close();
-    bool            is_open(void) const;
-    
-    bool            end(void) const;
-    std::string     get_line(void);
-    const char *    mem(void);
+    mapped_file();
+    explicit mapped_file(const std::string& name);
+    ~mapped_file();
+
+    mapped_file(const mapped_file&) = delete;
+    mapped_file& operator=(const mapped_file&) = delete;
+
+    void open(const std::string& name);
+    void close() noexcept;
+    bool is_open() const noexcept;
+
+    bool end() const noexcept;
+    std::string get_line();
+    const char* mem() const noexcept;
 };
 
 #endif
