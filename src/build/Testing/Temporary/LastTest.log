@@ -1,0 +1,49 @@
+Start testing: Aug 01 01:47 W. Europe Daylight Time
+----------------------------------------------------------
+1/3 Testing: mesh_core
+1/3 Test: mesh_core
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/Debug/test_mesh.exe"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/src/build
+"mesh_core" start time: Aug 01 01:47 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mesh_core" end time: Aug 01 01:47 W. Europe Daylight Time
+"mesh_core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/3 Testing: mesh_adapters
+2/3 Test: mesh_adapters
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/src/build/Debug/test_mesh_adapters.exe" "C:/Users/Bernard Kapidani/repos/topoprocessor/src/../tests/fixtures"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/src/build
+"mesh_adapters" start time: Aug 01 01:47 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.42 sec
+----------------------------------------------------------
+Test Passed.
+"mesh_adapters" end time: Aug 01 01:47 W. Europe Daylight Time
+"mesh_adapters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/3 Testing: recovered_mesh_invariants
+3/3 Test: recovered_mesh_invariants
+Command: "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe" "C:/Users/Bernard Kapidani/repos/topoprocessor/src/../tests/test_recovered_meshes.py"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/src/build
+"recovered_mesh_invariants" start time: Aug 01 01:47 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+recovered tetrahedral and hexahedral mesh invariants passed
+<end of output>
+Test time =   0.40 sec
+----------------------------------------------------------
+Test Passed.
+"recovered_mesh_invariants" end time: Aug 01 01:47 W. Europe Daylight Time
+"recovered_mesh_invariants" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 01 01:47 W. Europe Daylight Time

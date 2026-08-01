@@ -1,0 +1,10 @@
+^C:\USERS\BERNARD KAPIDANI\REPOS\TOPOPROCESSOR\BUILD\IN-MEMORY-ADAPTERS\CMAKEFILES\1614DD9BABC362F1F3A6C9C5D0D426DC\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/Bernard Kapidani/repos/topoprocessor/src" "-BC:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "C:/Users/Bernard Kapidani/repos/topoprocessor/build/in-memory-adapters/topoprocessor.slnx"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

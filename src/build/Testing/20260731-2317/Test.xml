@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="Win32-MSBuild"
+	BuildStamp="20260731-2317-Experimental"
+	Name="DESKTOP-BK"
+	Generator="ctest-4.4.2"
+	CompilerName="C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+	CompilerVersion="19.51.36252.0"
+	OSName="Windows"
+	Hostname="DESKTOP-BK"
+	OSRelease="10.0.26200"
+	OSVersion="Windows 10"
+	OSPlatform="AMD64"
+	Is64Bits="1"
+	VendorString="GenuineIntel"
+	VendorID="Intel Corporation"
+	FamilyID="6"
+	ModelID="14"
+	ModelName=""
+	ProcessorCacheSize="-1"
+	NumberOfLogicalCPU="12"
+	NumberOfPhysicalCPU="6"
+	TotalVirtualMemory="5120"
+	TotalPhysicalMemory="32605"
+	LogicalProcessorsPerPhysical="2"
+	ProcessorClockFrequency="2400.000000"
+	>
+	<Testing>
+		<StartDateTime>Aug 01 01:18 W. Europe Daylight Time</StartDateTime>
+		<StartTestTime>1785539898</StartTestTime>
+		<TestList/>
+		<EndDateTime>Aug 01 01:18 W. Europe Daylight Time</EndDateTime>
+		<EndTestTime>1785539898</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>
