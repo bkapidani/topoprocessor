@@ -26,7 +26,7 @@ if ( ${CMAKE_SYSTEM_NAME} MATCHES "Apple" )
 	set(LINK_LIBS ${LINK_LIBS})
 endif( )
 
-set(SOURCE lean_cohomology.cpp generic_two_manifold.cpp mapped_file.cpp timecounter.cpp)
+set(SOURCE lean_cohomology.cpp generic_two_manifold.cpp timecounter.cpp)
 
 include_directories(./)
 
@@ -36,8 +36,14 @@ target_compile_options(
 	topoprocessor_mesh PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/EHsc>)
 set_target_properties(topoprocessor_mesh PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+add_library(topoprocessor_io STATIC mapped_file.cpp)
+target_include_directories(topoprocessor_io PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_options(
+	topoprocessor_io PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/EHsc>)
+
 add_executable(topoprocessor ./main/main.cpp ${SOURCE})
-target_link_libraries(topoprocessor PRIVATE topoprocessor_mesh ${LINK_LIBS})
+target_link_libraries(
+	topoprocessor PRIVATE topoprocessor_mesh topoprocessor_io ${LINK_LIBS})
 install (TARGETS topoprocessor DESTINATION .)
 
 option(TOPOPROCESSOR_BUILD_PYTHON "Build the Python mesh bindings" OFF)
@@ -92,6 +98,12 @@ if (BUILD_TESTING)
 	add_test(
 		NAME mesh_adapters
 		COMMAND test_mesh_adapters ${CMAKE_CURRENT_SOURCE_DIR}/../tests/fixtures
+	)
+	add_executable(test_mapped_file ../tests/test_mapped_file.cpp)
+	target_link_libraries(test_mapped_file PRIVATE topoprocessor_io)
+	add_test(
+		NAME mapped_file
+		COMMAND test_mapped_file ${CMAKE_CURRENT_BINARY_DIR}
 	)
 	add_test(
 		NAME recovered_mesh_invariants
