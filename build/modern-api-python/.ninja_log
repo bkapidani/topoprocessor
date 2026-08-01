@@ -1,0 +1,32 @@
+# ninja log v7
+121	1860	8072510812602048	CMakeFiles/test_mesh.dir/C_/Users/Bernard_Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/tests/test_mesh.cpp.obj	5248157e036d7cc4
+84	3003	8072507608798903	CMakeFiles/topoprocessor_io.dir/mapped_file.cpp.obj	f91492d257ee8c72
+117	3485	8072507609140077	CMakeFiles/topoprocessor.dir/timecounter.cpp.obj	ae0cc9d6c0cac006
+132	2702	8072510812707632	CMakeFiles/test_mesh_adapters.dir/C_/Users/Bernard_Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/tests/test_mesh_adapters.cpp.obj	1cb15c702d1ebf6d
+22	1689	8072512307485201	CMakeFiles/test_topology.dir/C_/Users/Bernard_Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/tests/test_topology.cpp.obj	48746292885c6425
+3004	4168	8072507638013962	topoprocessor_io.lib	c2b2fdf1d341168e
+152	2439	8072510812902529	CMakeFiles/test_recovered_topology.dir/C_/Users/Bernard_Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/tests/test_recovered_topology.cpp.obj	d73deca52be7128c
+79	2116	8072510812174193	CMakeFiles/topoprocessor_mesh.dir/mesh.cpp.obj	41e17282e6e3cf21
+169	2748	8072507609677372	CMakeFiles/test_mapped_file.dir/C_/Users/Bernard_Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/tests/test_mapped_file.cpp.obj	1f7ad33fdc944f50
+91	5010	8072507608872527	CMakeFiles/topoprocessor.dir/main/main.cpp.obj	900285eee59e99c8
+4168	5069	8072507649659275	test_mapped_file.exe	12589cacfc2eb845
+100	5252	8072510812382493	CMakeFiles/topoprocessor_mesh.dir/topology.cpp.obj	1f901edeb200c37a
+90	4888	8072510812292499	CMakeFiles/topoprocessor_mesh.dir/mesh_adapters.cpp.obj	4463fd912ad10993
+5252	5361	8072510863902442	topoprocessor_mesh.lib	938300d376cbe0a1
+107	6960	8072507609051424	CMakeFiles/topoprocessor.dir/generic_two_manifold.cpp.obj	cbb6ce53c1926548
+5372	5641	8072510865104460	test_mesh.exe	841c92bfa7192f1d
+5387	5662	8072510865254683	test_mesh_adapters.exe	21934d50f3b5466b
+1690	1940	8072512324253454	test_topology.exe	b4c0e9e862e7b96a
+5418	5697	8072510865566796	test_recovered_topology.exe	42c6a5cd33155ae0
+98	9700	8072507608957130	CMakeFiles/topoprocessor.dir/lean_cohomology.cpp.obj	149ba962b207e7c9
+5361	5649	8072510864985421	topoprocessor.exe	4ce3acf5dcd9c193
+109	8695	8072510812476472	CMakeFiles/topoprocessor_python.dir/python_bindings.cpp.obj	c69b624e1fc576ec
+8695	16198	8072510898330477	python/topoprocessor/_core.cp312-win_amd64.pyd	12a82400c6253dca
+48	583	8072514356435425	build.ninja	f8e6a67b316f3b83
+48	583	8072514356268682	C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python/cmake_install.cmake	f8e6a67b316f3b83
+48	583	8072514356351538	C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python/CTestTestfile.cmake	f8e6a67b316f3b83
+38	468	8072514356435425	build.ninja	f8e6a67b316f3b83
+38	468	8072514356435425	C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python/cmake_install.cmake	f8e6a67b316f3b83
+38	468	8072514356435425	C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python/CTestTestfile.cmake	f8e6a67b316f3b83
+63	4777	8072514357601752	CMakeFiles/topoprocessor_python.dir/python_bindings.cpp.obj	c69b624e1fc576ec
+4778	11953	8072514404753656	python/topoprocessor/_core.cp312-win_amd64.pyd	12a82400c6253dca

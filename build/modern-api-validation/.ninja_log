@@ -1,0 +1,25 @@
+# ninja log v7
+108	1592	8072495305560317	CMakeFiles/test_mesh.dir/C_/Users/Bernard_Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/tests/test_mesh.cpp.obj	80c3648c8bb8deb7
+99	1701	8072495305470301	CMakeFiles/topoprocessor.dir/timecounter.cpp.obj	bbf5db8ac1884b8c
+65	1735	8072495305141758	CMakeFiles/topoprocessor_io.dir/mapped_file.cpp.obj	ae816a0091f0fc2
+42	2306	8072495304899616	CMakeFiles/topoprocessor_mesh.dir/mesh.cpp.obj	8614d579097ab98a
+1736	2767	8072495321840489	topoprocessor_io.lib	c2b2fdf1d341168e
+140	2831	8072495305871298	CMakeFiles/test_mapped_file.dir/C_/Users/Bernard_Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/tests/test_mapped_file.cpp.obj	6f72d8fd80bc9df8
+122	2859	8072495305700247	CMakeFiles/test_mesh_adapters.dir/C_/Users/Bernard_Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/tests/test_mesh_adapters.cpp.obj	7139a0522412f851
+74	3123	8072495305221758	CMakeFiles/topoprocessor.dir/main/main.cpp.obj	c92dda21097007fb
+131	3132	8072495305780367	CMakeFiles/test_topology.dir/C_/Users/Bernard_Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/tests/test_topology.cpp.obj	28dbb23eaf5c4dfb
+2832	3987	8072495332798642	test_mapped_file.exe	12589cacfc2eb845
+50	4843	8072495304981058	CMakeFiles/topoprocessor_mesh.dir/mesh_adapters.cpp.obj	bf8ebe5f08008f55
+32	2337	8072496980859921	CMakeFiles/topoprocessor_mesh.dir/topology.cpp.obj	599c19d00f5ec50f
+2338	2426	8072497003862211	topoprocessor_mesh.lib	938300d376cbe0a1
+92	6569	8072495305399656	CMakeFiles/topoprocessor.dir/generic_two_manifold.cpp.obj	4782238f3bfdf536
+6367	6722	8072495368151460	test_mesh.exe	841c92bfa7192f1d
+6386	6741	8072495368337920	test_mesh_adapters.exe	21934d50f3b5466b
+2426	2601	8072497004784929	test_topology.exe	b4c0e9e862e7b96a
+84	7926	8072495305325574	CMakeFiles/topoprocessor.dir/lean_cohomology.cpp.obj	74d445ea965e80b2
+7927	8126	8072495383742336	topoprocessor.exe	4ce3acf5dcd9c193
+33	728	8072497597219538	build.ninja	9ceeeb263f14183c
+33	728	8072497597219538	C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation/cmake_install.cmake	9ceeeb263f14183c
+33	728	8072497597219538	C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation/CTestTestfile.cmake	9ceeeb263f14183c
+52	1054	8072497598178509	CMakeFiles/test_recovered_topology.dir/C_/Users/Bernard_Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/tests/test_recovered_topology.cpp.obj	3fd38477d30036df
+1056	1253	8072497608349286	test_recovered_topology.exe	42c6a5cd33155ae0

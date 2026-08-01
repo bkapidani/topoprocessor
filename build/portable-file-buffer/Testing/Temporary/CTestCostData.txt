@@ -1,0 +1,6 @@
+mesh_core 2 0.0066161
+mesh_adapters 2 0.265816
+mapped_file 2 0.0343293
+recovered_mesh_invariants 2 0.198913
+python_in_memory_adapters 2 0.0885115
+---
