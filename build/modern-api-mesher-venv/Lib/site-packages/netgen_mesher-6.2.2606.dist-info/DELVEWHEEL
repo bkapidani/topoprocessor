@@ -1,0 +1,2 @@
+Version: 1.13.0
+Arguments: ['C:\\Python312\\Lib\\site-packages\\delvewheel\\__main__.py', 'repair', '--ignore-existing', '--exclude', 'TK*.dll', '-w', 'wheelhouse', 'C:\\gitlabci\\tools\\builds\\3zsqG5ns9\\1\\ngsolve\\netgen\\dist\\netgen_mesher-6.2.2606-cp312-cp312-win_amd64.whl']

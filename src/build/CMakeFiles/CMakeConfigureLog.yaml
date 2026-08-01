@@ -3271,3 +3271,76 @@ events:
         - "C:/Program Files/CMake"
         - "C:/Program Files/topoprocessor"
 ...
+
+---
+events:
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-4.4/Modules/FindPython/Support.cmake:2621 (find_program)"
+      - "C:/Program Files/CMake/share/cmake-4.4/Modules/FindPython3.cmake:699 (include)"
+      - "CMakeLists.txt:92 (find_package)"
+    mode: "program"
+    variable: "_Python3_EXECUTABLE_DEBUG"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "python3.12_d"
+      - "python3_d"
+      - "python_d"
+    candidate_directories:
+      - "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/"
+    searched_directories:
+      - "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python3.12_d.com"
+      - "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python3.12_d.exe"
+      - "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python3.12_d"
+      - "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python3_d.com"
+      - "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python3_d.exe"
+      - "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python3_d"
+      - "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python_d.com"
+      - "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python_d.exe"
+      - "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python_d"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.51.36231\\bin\\HostX64\\x64"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\VC\\VCPackages"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\MSBuild\\Current\\bin\\Roslyn"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\Extensions\\Microsoft\\CodeCoverage.Console"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\\\x64"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\\\x64"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\\\MSBuild\\Current\\Bin\\amd64"
+        - "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\Tools\\"
+        - "C:\\WINDOWS\\system32"
+        - "C:\\WINDOWS"
+        - "C:\\WINDOWS\\System32\\Wbem"
+        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\WINDOWS\\System32\\OpenSSH\\"
+        - "C:\\Program Files\\GitHub CLI\\"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Program Files\\CMake\\bin"
+        - "C:\\Users\\Bernard Kapidani\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\Bernard Kapidani\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\Bernard Kapidani\\AppData\\Local\\Python\\bin"
+        - "C:\\Users\\Bernard Kapidani\\AppData\\Local\\Microsoft\\WinGet\\Links"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\Ninja"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\VC\\Linux\\bin\\ConnectionManagerExe"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\vcpkg"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files/topoprocessor"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/CMake"
+        - "C:/Program Files/topoprocessor"
+...

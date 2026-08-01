@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: netgen-mesher
+Version: 6.2.2606
+Summary: Netgen mesh generator
+Author: The Netgen team
+License-Expression: LGPL-2.1-only
+Requires-Python: >=3.10
+Requires-Dist: netgen-occt==7.8.1
+Requires-Dist: numpy
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
+

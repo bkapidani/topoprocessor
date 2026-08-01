@@ -174,6 +174,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
+    <ProjectReference Include="C:\Users\Bernard Kapidani\repos\topoprocessor\src\build\test_mapped_file.vcxproj">
+      <Project>{70ACC92E-7E45-3EA0-836D-D1152B4BA2CF}</Project>
+      <Name>test_mapped_file</Name>
+    </ProjectReference>
     <ProjectReference Include="C:\Users\Bernard Kapidani\repos\topoprocessor\src\build\test_mesh.vcxproj">
       <Project>{3D5D9A69-9EEB-34D4-A6A9-25426B8C44A7}</Project>
       <Name>test_mesh</Name>
@@ -185,6 +189,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="C:\Users\Bernard Kapidani\repos\topoprocessor\src\build\topoprocessor.vcxproj">
       <Project>{8E7E8298-D095-303C-AE81-6385F5283DB8}</Project>
       <Name>topoprocessor</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\Bernard Kapidani\repos\topoprocessor\src\build\topoprocessor_io.vcxproj">
+      <Project>{1CF0D3DA-0B7B-320C-96EE-F52EF5B04851}</Project>
+      <Name>topoprocessor_io</Name>
     </ProjectReference>
     <ProjectReference Include="C:\Users\Bernard Kapidani\repos\topoprocessor\src\build\topoprocessor_mesh.vcxproj">
       <Project>{A28DB8CC-73C7-3A35-BFF5-0295A08E51CC}</Project>

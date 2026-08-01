@@ -1,0 +1,156 @@
+Start testing: Aug 01 03:37 W. Europe Daylight Time
+----------------------------------------------------------
+1/9 Testing: mesh_core
+1/9 Test: mesh_core
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python/test_mesh.exe"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python
+"mesh_core" start time: Aug 01 03:37 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mesh_core" end time: Aug 01 03:37 W. Europe Daylight Time
+"mesh_core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/9 Testing: mesh_adapters
+2/9 Test: mesh_adapters
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python/test_mesh_adapters.exe" "C:/Users/Bernard Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/src/../tests/fixtures"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python
+"mesh_adapters" start time: Aug 01 03:37 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"mesh_adapters" end time: Aug 01 03:37 W. Europe Daylight Time
+"mesh_adapters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/9 Testing: topology_core
+3/9 Test: topology_core
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python/test_topology.exe"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python
+"topology_core" start time: Aug 01 03:37 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"topology_core" end time: Aug 01 03:37 W. Europe Daylight Time
+"topology_core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/9 Testing: recovered_topology
+4/9 Test: recovered_topology
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python/test_recovered_topology.exe" "C:/Users/Bernard Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/src/../tests/fixtures"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python
+"recovered_topology" start time: Aug 01 03:37 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+furch b1=1
+torus b1=1
+<end of output>
+Test time =   0.41 sec
+----------------------------------------------------------
+Test Passed.
+"recovered_topology" end time: Aug 01 03:37 W. Europe Daylight Time
+"recovered_topology" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/9 Testing: mapped_file
+5/9 Test: mapped_file
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python/test_mapped_file.exe" "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python
+"mapped_file" start time: Aug 01 03:37 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mapped_file" end time: Aug 01 03:37 W. Europe Daylight Time
+"mapped_file" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/9 Testing: recovered_mesh_invariants
+6/9 Test: recovered_mesh_invariants
+Command: "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe" "C:/Users/Bernard Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/src/../tests/test_recovered_meshes.py"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python
+"recovered_mesh_invariants" start time: Aug 01 03:37 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+recovered tetrahedral and hexahedral mesh invariants passed
+<end of output>
+Test time =   0.29 sec
+----------------------------------------------------------
+Test Passed.
+"recovered_mesh_invariants" end time: Aug 01 03:37 W. Europe Daylight Time
+"recovered_mesh_invariants" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/9 Testing: python_in_memory_adapters
+7/9 Test: python_in_memory_adapters
+Command: "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe" "C:/Users/Bernard Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/src/../tests/test_in_memory_adapters.py"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python
+"python_in_memory_adapters" start time: Aug 01 03:37 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.002s
+
+OK
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"python_in_memory_adapters" end time: Aug 01 03:37 W. Europe Daylight Time
+"python_in_memory_adapters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/9 Testing: python_current_mesher_files
+8/9 Test: python_current_mesher_files
+Command: "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe" "C:/Users/Bernard Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/src/../tests/test_current_mesher_files.py"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python
+"python_current_mesher_files" start time: Aug 01 03:37 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+ss
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+OK (skipped=2)
+<end of output>
+Test time =   0.16 sec
+----------------------------------------------------------
+Test Passed.
+"python_current_mesher_files" end time: Aug 01 03:37 W. Europe Daylight Time
+"python_current_mesher_files" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/9 Testing: python_mesh_bindings
+9/9 Test: python_mesh_bindings
+Command: "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe" "C:/Users/Bernard Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/src/../tests/test_python_bindings.py"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-python
+"python_mesh_bindings" start time: Aug 01 03:37 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 0.002s
+
+OK
+<end of output>
+Test time =   0.16 sec
+----------------------------------------------------------
+Test Passed.
+"python_mesh_bindings" end time: Aug 01 03:37 W. Europe Daylight Time
+"python_mesh_bindings" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 01 03:37 W. Europe Daylight Time

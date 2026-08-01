@@ -1,0 +1,99 @@
+Start testing: Aug 01 03:05 W. Europe Daylight Time
+----------------------------------------------------------
+1/6 Testing: mesh_core
+1/6 Test: mesh_core
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation/test_mesh.exe"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation
+"mesh_core" start time: Aug 01 03:05 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"mesh_core" end time: Aug 01 03:05 W. Europe Daylight Time
+"mesh_core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/6 Testing: mesh_adapters
+2/6 Test: mesh_adapters
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation/test_mesh_adapters.exe" "C:/Users/Bernard Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/src/../tests/fixtures"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation
+"mesh_adapters" start time: Aug 01 03:05 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"mesh_adapters" end time: Aug 01 03:05 W. Europe Daylight Time
+"mesh_adapters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/6 Testing: topology_core
+3/6 Test: topology_core
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation/test_topology.exe"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation
+"topology_core" start time: Aug 01 03:05 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.21 sec
+----------------------------------------------------------
+Test Failed.
+"topology_core" end time: Aug 01 03:05 W. Europe Daylight Time
+"topology_core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/6 Testing: mapped_file
+4/6 Test: mapped_file
+Command: "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation/test_mapped_file.exe" "C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation
+"mapped_file" start time: Aug 01 03:05 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"mapped_file" end time: Aug 01 03:05 W. Europe Daylight Time
+"mapped_file" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/6 Testing: recovered_mesh_invariants
+5/6 Test: recovered_mesh_invariants
+Command: "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe" "C:/Users/Bernard Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/src/../tests/test_recovered_meshes.py"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation
+"recovered_mesh_invariants" start time: Aug 01 03:05 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+recovered tetrahedral and hexahedral mesh invariants passed
+<end of output>
+Test time =   0.27 sec
+----------------------------------------------------------
+Test Passed.
+"recovered_mesh_invariants" end time: Aug 01 03:05 W. Europe Daylight Time
+"recovered_mesh_invariants" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/6 Testing: python_in_memory_adapters
+6/6 Test: python_in_memory_adapters
+Command: "C:/Users/Bernard Kapidani/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe" "C:/Users/Bernard Kapidani/AppData/Local/Temp/topoprocessor-publish-in-memory-portable-io/src/../tests/test_in_memory_adapters.py"
+Directory: C:/Users/Bernard Kapidani/repos/topoprocessor/build/modern-api-validation
+"python_in_memory_adapters" start time: Aug 01 03:05 W. Europe Daylight Time
+Output:
+----------------------------------------------------------
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 0.001s
+
+OK
+<end of output>
+Test time =   0.14 sec
+----------------------------------------------------------
+Test Passed.
+"python_in_memory_adapters" end time: Aug 01 03:05 W. Europe Daylight Time
+"python_in_memory_adapters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 01 03:05 W. Europe Daylight Time

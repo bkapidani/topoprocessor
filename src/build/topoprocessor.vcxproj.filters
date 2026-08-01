@@ -10,9 +10,6 @@
     <ClCompile Include="C:\Users\Bernard Kapidani\repos\topoprocessor\src\generic_two_manifold.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\Bernard Kapidani\repos\topoprocessor\src\mapped_file.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="C:\Users\Bernard Kapidani\repos\topoprocessor\src\timecounter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
