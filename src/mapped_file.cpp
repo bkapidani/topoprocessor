@@ -27,26 +27,22 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#include <iostream>
-#include <string>
 #include <cstring>
+#include <cstdint>
+#include <fstream>
+#include <limits>
 #include <stdexcept>
-
-#include <cstdio>
+#include <string>
+#include <vector>
 
 #include "mapped_file.h"
 
 mapped_file::mapped_file()
-    : _is_open(false)
+    : _start(nullptr), _end(nullptr), _is_open(false)
 {}
 
 mapped_file::mapped_file(const std::string& name)
-    : _is_open(false)
+    : mapped_file()
 {
     open(name);
 }
@@ -59,111 +55,94 @@ mapped_file::~mapped_file()
 void
 mapped_file::open(const std::string& name)
 {
-    _is_open = map(name);
+    close();
+    _is_open = load(name);
 }
 
 void
-mapped_file::close(void)
+mapped_file::close() noexcept
 {
-    unmap();
+    reset();
 }
 
 bool
-mapped_file::map(const std::string& name)
+mapped_file::load(const std::string& name)
 {
-    int fd = ::open(name.c_str(), O_RDONLY);
-    if (fd == -1)
-    {
-        perror("open");
+    std::ifstream input(name, std::ios::binary | std::ios::ate);
+    if (!input) {
         return false;
     }
-    _fd = fd;
-    
-    struct stat sb;
-    if (fstat(fd, &sb) == -1)
-    {
-        perror("fstat");
-        ::close(fd);
-        return false;
-    }
-    _length = sb.st_size;
-    
-    const char* _addr = static_cast<const char*>(
-                         mmap(NULL, _length, PROT_READ, MAP_PRIVATE, fd, 0u)
-                       );
-    if (_addr == MAP_FAILED)
-    {
-        perror("mmap");
-        ::close(fd);
-        return false;
-    }
-    
-    madvise((void*)_addr, sb.st_size, MADV_SEQUENTIAL);
-    
-    _name = name;
-    
-    _start = _addr;
-    _end = _addr + _length;
-    
-    return true;
-    
-}
 
-bool
-mapped_file::unmap(void)
-{
-    munmap((void *)_addr, _length);
-    ::close(_fd);
+    const std::streamoff length = input.tellg();
+    if (length < 0 ||
+        length > std::numeric_limits<std::streamsize>::max()) {
+        return false;
+    }
+
+    const std::uintmax_t unsigned_length =
+        static_cast<std::uintmax_t>(length);
+    if (unsigned_length >= _buffer.max_size()) {
+        return false;
+    }
+    const std::size_t size = static_cast<std::size_t>(unsigned_length);
+
+    _buffer.assign(size + 1U, '\0');
+    input.seekg(0, std::ios::beg);
+    if (size != 0U &&
+        !input.read(_buffer.data(), static_cast<std::streamsize>(size))) {
+        reset();
+        return false;
+    }
+
+    _start = _buffer.data();
+    _end = _start + size;
     return true;
 }
 
+void
+mapped_file::reset() noexcept
+{
+    std::vector<char>().swap(_buffer);
+    _start = nullptr;
+    _end = nullptr;
+    _is_open = false;
+}
+
 bool
-mapped_file::is_open(void) const
+mapped_file::is_open() const noexcept
 {
     return _is_open;
 }
 
 bool
-mapped_file::end(void) const
+mapped_file::end() const noexcept
 {
-    return _start && _start != _end;
+    return !_is_open || _start == _end;
 }
 
 std::string
-mapped_file::get_line(void)
+mapped_file::get_line()
 {
-    auto old = _start;
-    _start = static_cast<const char *>(memchr(_start, '\n', _end - _start));
-    if (!_start)
-        throw std::out_of_range("");
-    
-    _start++;
-    
-    return std::string(old, _start-1);
+    if (end()) {
+        throw std::out_of_range("no more lines in mapped_file");
+    }
+
+    const char* const line_start = _start;
+    const void* const newline =
+        std::memchr(_start, '\n', static_cast<std::size_t>(_end - _start));
+    if (newline == nullptr) {
+        _start = _end;
+        return std::string(line_start, _end);
+    }
+
+    const char* const line_end = static_cast<const char*>(newline);
+    _start = line_end + 1;
+    return std::string(line_start, line_end);
 }
 
-const char *
-mapped_file::mem()
+const char*
+mapped_file::mem() const noexcept
 {
     return _start;
 }
-
-
-
-/*
-
-int main(void)
-{
-    mapped_file mf("b104.mesh");
-    
-    std::cout << mf.get_line() << std::endl;
-    std::cout << mf.get_line() << std::endl;
-    std::cout << mf.get_line() << std::endl;
-    std::cout << mf.get_line() << std::endl;
-    
-    mf.close();
-    
-    return 0;
-}
-*/
 

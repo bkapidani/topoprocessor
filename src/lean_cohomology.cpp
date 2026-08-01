@@ -679,7 +679,12 @@ bool lean_cohomology :: read_mesh(const std::string& _filename, std::vector<uint
    uint32_t   lines, linecount;
    
    mapped_file mf(_filename);
-   
+   if (!mf.is_open())
+   {
+      std::cout << "    Could not read mesh file: " << _filename << std::endl;
+      return false;
+   }
+
    std::cout << "     * * * Reading NETGEN format mesh * * * ";
    std::cout << std::endl;
    
